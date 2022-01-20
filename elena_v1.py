@@ -1,4 +1,5 @@
 import sys
+import os
 import time
 import json
 import logging
@@ -121,8 +122,17 @@ def iterate(p_robot_filename, exchange, p_elena):
 
 binance = Exchange()
 
-robot_filename = sys.argv[1]
-logging.basicConfig(filename=robot_filename+'.log', level=logging.INFO, format='%(asctime)s %(message)s')
+if len(sys.argv) > 1:
+    robots = [sys.argv[1]]
+else:
+    robots = []
+    dire = '.'
+    for filename in os.listdir(dire):
+        if filename.endswith('.json'):
+            f = os.path.join(dire, filename)
+            robots.append(f)
 
-elena = read_state(robot_filename)
-iterate(robot_filename, binance, elena)
+for robot_filename in robots:
+    logging.basicConfig(filename=robot_filename+'.log', level=logging.INFO, format='%(asctime)s %(message)s')
+    elena = read_state(robot_filename)
+    iterate(robot_filename, binance, elena)
