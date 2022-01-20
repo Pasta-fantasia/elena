@@ -14,9 +14,13 @@ class Exchange:
 
     def connect_client(self):
         if not self.client:
-            api_key = config('api_key')
-            api_secret = config('api_secret')
-            self.client = Client(api_key, api_secret)
+            try:
+                api_key = config('api_key')
+                api_secret = config('api_secret')
+                self.client = Client(api_key, api_secret)
+            except:
+                print(".env file not found")
+                exit(-1)
         return
 
     def get_candles(self, p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=1000):
