@@ -24,10 +24,17 @@ Ejemplo para una Raspberry Pi
 - Crear usuario 
   - ```` sudo adduser elena ````
 - Con el nuevo usario
+  - Poner claves .ssh (es más fácil)
+  - Configurar git, recomendado pero no necesario si no se haran commits
+  - ````
+    git config --global user.name "TU NOMBRE"
+    git config --global user.email "TU MAIL"
+    git config --global push.default simple
+    ````
   - Descargar código 
-    - ```` ````
-- Ejecutar  install.sh
-- Crear cron de ejecución cada minuto apuntando a _elena.sh_
+    - ```` git clone git@github.com:Ciskam-Lab/elena.git ````
+  - Ejecutar install.sh
+  - Crear cron de ejecución cada minuto apuntando a _elena.sh_
 
 ## getdata.py
 
