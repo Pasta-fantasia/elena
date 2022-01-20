@@ -121,6 +121,7 @@ def iterate(p_robot_filename, exchange, p_elena):
 
 
 binance = Exchange()
+logging.basicConfig(filename='elena.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
 if len(sys.argv) > 1:
     robots = [sys.argv[1]]
@@ -133,7 +134,6 @@ else:
             robots.append(f)
 
 for robot_filename in robots:
-    logging.basicConfig(filename='elena.log', level=logging.INFO, format='%(asctime)s %(message)s')
     llog(robot_filename)
     elena = read_state(robot_filename)
     iterate(robot_filename, binance, elena)
