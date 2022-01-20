@@ -15,7 +15,7 @@ da mejor resultado haciendo [HODL](https://en.wikipedia.org/wiki/Bitcoin#Term_%2
 - La primera estrategia no utiliza _stop limit_
 
 
-## Instlación de _v1
+## Instalación de _v1
 
 Ejemplo para una Raspberry Pi
 
@@ -33,7 +33,7 @@ Ejemplo para una Raspberry Pi
     ````
   - Descargar código 
     - ```` git clone git@github.com:Ciskam-Lab/elena.git ````
-  - Ejecutar install.sh
+  - Ejecutar install.sh (en una Pi puede tardar hasta 40 minutos)
   - Crear un fichero _.env_ con las claves de las API. Ver [dot_env_sample.txt](dot_env_sample.txt)
   - Pruebas
     - En el directorio sample_bots he dejado uno de pruebas.
