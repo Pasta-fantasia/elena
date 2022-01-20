@@ -1,0 +1,14 @@
+{
+  "symbol": "ETHBUSD",
+  "max_order": 50,
+  "algo": 0,
+  "margin": 6.0,
+  "data_samples": 45,
+  "tendence_tolerance": 2.0,
+  "active": 1,
+  "buy_order_id": "",
+  "sell_order_id": "",
+  "sleep_until": 0,
+  "buy": 0,
+  "sell": 0
+}

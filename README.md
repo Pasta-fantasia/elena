@@ -34,21 +34,20 @@ Ejemplo para una Raspberry Pi
   - Descargar código 
     - ```` git clone git@github.com:Ciskam-Lab/elena.git ````
   - Ejecutar install.sh
-  - Crear cron de ejecución cada minuto apuntando a _elena.sh_
-
-## getdata.py
-
+  - En el directorio sample_bots he dejado uno de pruebas.
+  - Cuando esteis listos para pronerlo en el cron podéis usar el install-cron.sh
+  
 
 ## Canales de YouTube
-https://www.youtube.com/c/HealthyPockets
-https://www.youtube.com/c/CoinBureau
+- https://www.youtube.com/c/HealthyPockets
+- https://www.youtube.com/c/CoinBureau
 
 ## Podcast
-https://open.spotify.com/episode/0REubw0OVlEEGWRHKnT8MB?si=B-_OVL8aTdGqnr25QGThoQ&context=spotify%3Ashow%3A6XmXYWqm1zByvMedjtaiN4&nd=1
+- https://open.spotify.com/episode/0REubw0OVlEEGWRHKnT8MB?si=B-_OVL8aTdGqnr25QGThoQ&context=spotify%3Ashow%3A6XmXYWqm1zByvMedjtaiN4&nd=1
 
 
 ## Otros bots
-https://github.com/DeviaVir/zenbot
-https://github.com/CyberPunkMetalHead/Binance-volatility-trading-bot
+- https://github.com/DeviaVir/zenbot
+- https://github.com/CyberPunkMetalHead/Binance-volatility-trading-bot
 
 
