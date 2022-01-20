@@ -134,5 +134,6 @@ else:
 
 for robot_filename in robots:
     logging.basicConfig(filename=robot_filename+'.log', level=logging.INFO, format='%(asctime)s %(message)s')
+    llog(robot_filename)
     elena = read_state(robot_filename)
     iterate(robot_filename, binance, elena)
