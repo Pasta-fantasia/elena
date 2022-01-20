@@ -37,13 +37,13 @@ Ejemplo para una Raspberry Pi
   - Crear un fichero _.env_ con las claves de las API. Ver [dot_env_sample.txt](dot_env_sample.txt)
   - Pruebas
     - En el directorio sample_bots he dejado uno de pruebas.
-    - El código está probado teniendo los .json en el mismo directorio que el elena_v1.py.
+    - El código está probado teniendo todos los .json en el mismo directorio que el elena_v1.py.
     - Se lo puede probar pasándole un fichero como parámetro.
     - Para ejecutarlo siempre hay que activar el virtual env primero con
       - ```` source $HOME/venv/bin/activate ````
     - Luego se puede hacer un 
       - ```` python elena_v1.py fichero_bot.json ```` 
-  - Cuando esteis listos para pronerlo en el cron podéis usar el install-cron.sh
+  - Cuando estéis listos para pronerlo en el cron podéis usar el install-cron.sh
   
 
 ## Canales de YouTube
@@ -57,5 +57,3 @@ Ejemplo para una Raspberry Pi
 ## Otros bots
 - https://github.com/DeviaVir/zenbot
 - https://github.com/CyberPunkMetalHead/Binance-volatility-trading-bot
-
-
