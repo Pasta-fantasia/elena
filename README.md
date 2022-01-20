@@ -34,6 +34,7 @@ Ejemplo para una Raspberry Pi
   - Descargar código 
     - ```` git clone git@github.com:Ciskam-Lab/elena.git ````
   - Ejecutar install.sh
+  - Crear un fichero _.env_ con las claves de las API. Ver [dot_env_sample.txt](dot_env_sample.txt)
   - Pruebas
     - En el directorio sample_bots he dejado uno de pruebas.
     - El código está probado teniendo los .json en el mismo directorio que el elena_v1.py.
