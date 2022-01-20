@@ -127,4 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# PyCharm / Idea
 /.idea/
+
+# Joe's backups
+*~
+
+# Elena's bots
+*.json
