@@ -34,7 +34,14 @@ Ejemplo para una Raspberry Pi
   - Descargar código 
     - ```` git clone git@github.com:Ciskam-Lab/elena.git ````
   - Ejecutar install.sh
-  - En el directorio sample_bots he dejado uno de pruebas.
+  - Pruebas
+    - En el directorio sample_bots he dejado uno de pruebas.
+    - El código está probado teniendo los .json en el mismo directorio que el elena_v1.py.
+    - Se lo puede probar pasándole un fichero como parámetro.
+    - Para ejecutarlo siempre hay que activar el virtual env primero con
+      - ```` source $HOME/venv/bin/activate ````
+    - Luego se puede hacer un 
+      - ```` python elena_v1.py fichero_bot.json ```` 
   - Cuando esteis listos para pronerlo en el cron podéis usar el install-cron.sh
   
 
