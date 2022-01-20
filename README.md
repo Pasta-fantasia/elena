@@ -15,10 +15,18 @@ da mejor resultado haciendo [HODL](https://en.wikipedia.org/wiki/Bitcoin#Term_%2
 - La primera estrategia no utiliza _stop limit_
 
 
-## Instlación de _v0
+## Instlación de _v1
 
-- Crear virtual env
-- Ejecutar  install-dev.sh
+Ejemplo para una Raspberry Pi
+
+- Requisitos de sistema en debian/ubuntu
+  - ```` sudo apt-get install git python3-pip python3-venv python3-psutil build-essential python3-dev python3-wheel cython3 libffi-dev libxml2-dev  libssl-dev libevent-dev zlib1g-dev ````
+- Crear usuario 
+  - ```` sudo adduser elena ````
+- Con el nuevo usario
+  - Descargar código 
+    - ```` ````
+- Ejecutar  install.sh
 - Crear cron de ejecución cada minuto apuntando a _elena.sh_
 
 ## getdata.py
