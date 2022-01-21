@@ -24,7 +24,7 @@ Ejemplo para una Raspberry Pi
 - Crear usuario 
   - ```` sudo adduser elena ````
 - Con el nuevo usario
-  - Poner claves .ssh (es más fácil)
+  - Copiar la claves .ssh de GitHub (es más fácil)
   - Configurar git, recomendado pero no necesario si no se haran commits
   - ````
     git config --global user.name "TU NOMBRE"
@@ -43,7 +43,11 @@ Ejemplo para una Raspberry Pi
       - ```` source $HOME/venv/bin/activate ````
     - Luego se puede hacer un 
       - ```` python elena_v1.py fichero_bot.json ```` 
-  - Cuando estéis listos para pronerlo en el cron podéis usar el install-cron.sh
+  - Cuando estéis listos para ponerlo en el cron:
+      - para configurar crontab por primera vez: `crontab -e` 
+      - programar la ejecución periódica de elena: `./install-cron.sh` 
+  - Se puede consultar el log de la ejecución de elena con:
+    - `tail -f elena.log`
   
 
 ## Canales de YouTube
