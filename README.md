@@ -20,7 +20,7 @@ da mejor resultado haciendo [HODL](https://en.wikipedia.org/wiki/Bitcoin#Term_%2
 Ejemplo para una Raspberry Pi
 
 - Requisitos de sistema en debian/ubuntu
-  - ```` sudo apt-get install git python3-pip python3-venv python3-psutil build-essential python3-dev python3-wheel cython3 libffi-dev libxml2-dev  libssl-dev libevent-dev zlib1g-dev ````
+  - ```` sudo apt-get install git python3-pip python3-venv python3-psutil build-essential python3-dev python3-wheel cython3 libffi-dev libxml2-dev  libssl-dev libevent-dev zlib1g-dev libatlas-base-dev ````
 - Crear usuario 
   - ```` sudo adduser elena ````
 - Con el nuevo usario
