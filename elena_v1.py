@@ -17,6 +17,8 @@ from elena.utils import get_time
 
 
 def buy_sell(candles_df_buy_sell, algo, margin, tendence_tolerance):
+    sell = 0
+    buy = 0
     avg_price = candles_df_buy_sell["Close"].mean()
     # candles_df_buy_sell['avg_price']=avg_price
 
@@ -37,9 +39,36 @@ def buy_sell(candles_df_buy_sell, algo, margin, tendence_tolerance):
             buy = candles_df_buy_sell['High'][candles_df_buy_sell.index[-1]]
             buy = buy.astype(float)
             sell = buy * (1 + ((margin) / 100))
-    else:
-        sell = 0
-        buy = 0
+        if algo == 4:
+            regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
+            next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
+
+            regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Close"], 1)
+            next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1) + regression_close[1]
+
+            if next_close / next_low > 1.0005:  # ensure sell is higher than buy at least by 5 per thousand to pay fees
+                buy = next_low
+                sell = next_close
+        if algo == 5:
+            regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
+            next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
+
+            regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["High"], 1)
+            next_high = regression_close[0] * (candles_df_buy_sell.index[-1] + 1) + regression_close[1]
+
+            if next_high / next_low > 1.0005:  # ensure sell is higher than buy at least by 5 per thousand to pay fees
+                buy = next_low
+                sell = next_high
+    if algo == 3:
+        regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
+        next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
+
+        regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Close"], 1)
+        next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1) + regression_close[1]
+
+        if next_close / next_low > 1.0005:  # ensure sell is higher than buy at least by 5 per thousand to pay fees
+            buy = next_low
+            sell = next_close
 
     return buy, sell
 
