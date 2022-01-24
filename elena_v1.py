@@ -162,6 +162,7 @@ else:
             f = os.path.join(dire, filename)
             robots.append(f)
 
+llog('time', get_time())
 for robot_filename in robots:
     llog(robot_filename)
     elena = read_state(robot_filename)
