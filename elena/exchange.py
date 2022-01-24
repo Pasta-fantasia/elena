@@ -83,12 +83,12 @@ class Exchange:
 
         symbol_info = self.get_symbol_info(symbol=p_elena['symbol'])
         llog(symbol_info)
-        balance=self.client.get_asset_balance(asset=symbol_info['quoteAsset'])
+        balance = self.client.get_asset_balance(asset=symbol_info['quoteAsset'])
         llog(balance)
         free_balance = float(balance['free'])
-        if quantity > free_balance:
+        if p_elena['max_order'] > free_balance:
             # rounds may decrease balance in the quoteAsset
-            quantity = free_balance
+            quantity = free_balance / buy
             llog('buy using balance')
 
         q = self.round_buy_sell_for_filters(p_elena['symbol'], buy_coin=True, amount=quantity)
