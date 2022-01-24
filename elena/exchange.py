@@ -42,9 +42,9 @@ class Exchange:
         return candles_df
 
     @lru_cache(maxsize=128)
-    def get_symbol_info(self, p_symbol):
+    def get_symbol_info(self, symbol):
         self.connect_client()
-        symbol_info = self.client.get_symbol_info(p_symbol)
+        symbol_info = self.client.get_symbol_info(symbol)
         return symbol_info
 
 
