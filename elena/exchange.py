@@ -4,6 +4,7 @@ from decouple import config
 import pandas as pd
 import numpy as np
 
+from elena.logging import llog
 
 # Exchange
 
