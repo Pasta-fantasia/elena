@@ -82,10 +82,7 @@ class Exchange:
         quantity = p_elena['max_order'] / buy
 
         symbol_info = self.get_symbol_info(symbol=p_elena['symbol'])
-        llog(symbol_info)
-        balance = self.client.get_asset_balance(asset=symbol_info['quoteAsset'])
-        llog(balance)
-        free_balance = float(balance['free'])
+        free_balance = float(self.client.get_asset_balance(asset=symbol_info['quoteAsset'])['free'])
         if p_elena['max_order'] > free_balance:
             # rounds may decrease balance in the quoteAsset
             quantity = free_balance / buy
