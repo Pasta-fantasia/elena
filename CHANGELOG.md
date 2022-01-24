@@ -5,3 +5,6 @@
   - cache symbol_info with lru_cache
   - TODOs
 - Logging multiple parameters
+
+# 1.0
+Initial version
