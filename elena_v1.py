@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 
 from elena.logging import llog
+from elena.exchange import OrderStatus
 from elena.exchange import Exchange
 from elena.elena_bot import read_state
 from elena.elena_bot import save_state
@@ -112,13 +113,13 @@ def iterate(p_robot_filename, exchange, p_elena):
                 p_elena['sell_order_id'] = new_sell_order_id
                 save_state(p_robot_filename, p_elena)
             else:
-                status = exchange.check_buy_order_execution_status(p_elena)
-                if not status == 'CANCELED':
+                status = exchange.check_order_status(p_elena)
+                if not status == OrderStatus.CANCELED:
                     p_elena['sleep_until'] = sleep_until(get_time(), 5)
                     save_state(p_robot_filename, p_elena)
                     llog("waiting purchase")
                 else:
-                    llog("cancellation")
+                    llog("buy cancellation")
                     save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
                     p_elena['sleep_until'] = sleep_until(get_time(), 5)
                     p_elena['buy_order_id'] = ''
@@ -129,12 +130,21 @@ def iterate(p_robot_filename, exchange, p_elena):
             return
 
         if p_elena['buy_order_id'] and p_elena['sell_order_id']:
-            sell_execution_time = exchange.check_sell_order_execution_time(p_elena)
-            if sell_execution_time > 0:
+            status, order_update_time = exchange.check_order_status(p_elena)
+            if status == OrderStatus.FILLED:
                 llog("save history")
                 save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
                 llog("set sleep")
-                p_elena['sleep_until'] = sleep_until(sell_execution_time, p_elena['data_samples'] * 1.5)
+                p_elena['sleep_until'] = sleep_until(order_update_time, p_elena['data_samples'] * 1.5)
+                p_elena['buy_order_id'] = ''
+                p_elena['sell_order_id'] = ''
+                p_elena['buy'] = 0
+                p_elena['sell'] = 0
+                save_state(p_robot_filename, p_elena)
+            elif status == OrderStatus.CANCELED:
+                llog("sell cancellation, save history")
+                save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
+                p_elena['active'] = 0
                 p_elena['buy_order_id'] = ''
                 p_elena['sell_order_id'] = ''
                 p_elena['buy'] = 0

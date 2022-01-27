@@ -1,20 +1,33 @@
 from binance.client import Client
 from decouple import config
 from functools import lru_cache
+from enum import Enum
 
 import pandas as pd
 import numpy as np
 
 from elena.logging import llog
 
+
 # Exchange
+
+# Duplicated from Binance. Done from decouple from Binance module
+class OrderStatus(Enum):
+    NEW = 'NEW'
+    PARTIALLY_FILLED = 'PARTIALLY_FILLED'
+    FILLED = 'FILLED'
+    CANCELED = 'CANCELED'
+    PENDING_CANCEL = 'PENDING_CANCEL'
+    REJECTED = 'REJECTED'
+    EXPIRED = 'EXPIRED'
+
 
 class Exchange:
     def __init__(self):
         self.client = None
         self.symbol_info = None
 
-    def connect_client(self):
+    def _connect_client(self):
         if not self.client:
             try:
                 api_key = config('api_key')
@@ -26,7 +39,7 @@ class Exchange:
         return
 
     def get_candles(self, p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=1000):
-        self.connect_client()
+        self._connect_client()
 
         # TODO: .client
         candles = self.client.get_klines(symbol=p_symbol, interval=p_interval, limit=p_limit)
@@ -42,19 +55,18 @@ class Exchange:
         return candles_df
 
     @lru_cache(maxsize=128)
-    def get_symbol_info(self, symbol):
-        self.connect_client()
-        symbol_info = self.client.get_symbol_info(symbol)
+    def _get_symbol_info(self, symbol):
+        self._connect_client()
+        symbol_info = self.client._get_symbol_info(symbol)
         return symbol_info
 
-
-    def round_buy_sell_for_filters(self, p_symbol='ETHBUSD', buy_coin=True, amount=0):
+    def _round_buy_sell_for_filters(self, p_symbol='ETHBUSD', buy_coin=True, amount=0):
         def truncate(n, decimals=0):
             multiplier = 10 ** decimals
             return int(n * multiplier) / multiplier
 
-        self.connect_client()
-        symbol_info = self.get_symbol_info(p_symbol)
+        self._connect_client()
+        symbol_info = self._get_symbol_info(p_symbol)
 
         for filter in symbol_info['filters']:
             if filter['filterType'] == 'PRICE_FILTER':
@@ -73,23 +85,20 @@ class Exchange:
         amt_str = "{:0.0{}f}".format(amount, decimal_places)
         return amt_str
 
-    def create_buy_order_test(self, p_elena, buy):
-        return "hola"
+    def create_buy_order(self, p_elena, buy_price):
+        self._connect_client()
 
-    def create_buy_order(self, p_elena, buy):
-        self.connect_client()
+        quantity = p_elena['max_order'] / buy_price
 
-        quantity = p_elena['max_order'] / buy
-
-        symbol_info = self.get_symbol_info(symbol=p_elena['symbol'])
+        symbol_info = self._get_symbol_info(symbol=p_elena['symbol'])
         free_balance = float(self.client.get_asset_balance(asset=symbol_info['quoteAsset'])['free'])
         if p_elena['max_order'] > free_balance:
             # rounds may decrease balance in the quoteAsset
-            quantity = free_balance / buy
+            quantity = free_balance / buy_price
             llog('buy using balance')
 
-        q = self.round_buy_sell_for_filters(p_elena['symbol'], buy_coin=True, amount=quantity)
-        p = self.round_buy_sell_for_filters(p_elena['symbol'], buy_coin=False, amount=buy)
+        q = self._round_buy_sell_for_filters(p_elena['symbol'], buy_coin=True, amount=quantity)
+        p = self._round_buy_sell_for_filters(p_elena['symbol'], buy_coin=False, amount=buy_price)
 
         buy_order_id = 0
         try:
@@ -104,14 +113,14 @@ class Exchange:
         return buy_order_id
 
     def create_sell_order(self, p_elena):
-        self.connect_client()
+        self._connect_client()
         # TODO: .client
         o = self.client.get_order(symbol=p_elena['symbol'], orderId=p_elena['buy_order_id'])
         sell_client_order_id = ''
 
-        if o['status'] == 'FILLED':
+        if o['status'] == OrderStatus.FILLED:
             sell_quantity = float(o['executedQty'])
-            symbol_info = self.get_symbol_info(symbol=p_elena['symbol'])
+            symbol_info = self._get_symbol_info(symbol=p_elena['symbol'])
             # TODO: .client
             free_balance = float(self.client.get_asset_balance(asset=symbol_info['baseAsset'])['free'])
 
@@ -120,8 +129,8 @@ class Exchange:
                 sell_quantity = free_balance
                 llog('sell using balance')
 
-            q = self.round_buy_sell_for_filters(p_elena['symbol'], buy_coin=True, amount=sell_quantity)
-            p = self.round_buy_sell_for_filters(p_elena['symbol'], buy_coin=False, amount=p_elena['sell'])
+            q = self._round_buy_sell_for_filters(p_elena['symbol'], buy_coin=True, amount=sell_quantity)
+            p = self._round_buy_sell_for_filters(p_elena['symbol'], buy_coin=False, amount=p_elena['sell'])
             # TODO: .client
             order_sell = self.client.order_limit_sell(
                 symbol=p_elena['symbol'],
@@ -130,21 +139,11 @@ class Exchange:
             sell_client_order_id = order_sell['orderId']
         return sell_client_order_id
 
-    # TODO: use single parameter and make it check_order_status
-    def check_buy_order_execution_status(self, p_elena):
-        self.connect_client()
+    def check_order_status(self, p_elena):
+        self._connect_client()
         # TODO: .client
         o = self.client.get_order(symbol=p_elena['symbol'], orderId=p_elena['buy_order_id'])
-        return o['status']
+        order_update_time = int(o['updateTime'])
+        return o['status'], order_update_time
 
-    def check_sell_order_execution_time(self, p_elena):
-        # find the updateTime of the full filled sell ('status': 'FILLED')
-        self.connect_client()
-        # TODO: .client
-        o = self.client.get_order(symbol=p_elena['symbol'], orderId=p_elena['sell_order_id'])
-        sell_updateTime = 0
-        if o['status']=='FILLED':
-            sell_updateTime=int(o['updateTime'])
-        if o['status']=='CANCELL':
-            sell_updateTime=-1
-        return sell_updateTime
+
