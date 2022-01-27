@@ -5,6 +5,9 @@
   - cache symbol_info with lru_cache
   - TODOs
 - Logging multiple parameters
+- Enum OrderStatus
+- Refactor private methods
+- check_order_status
 
 # 1.0
 Initial version
