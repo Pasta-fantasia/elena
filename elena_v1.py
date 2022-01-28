@@ -121,7 +121,7 @@ def iterate(p_robot_filename, exchange, p_elena):
                 else:
                     llog("buy cancellation")
                     save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
-                    p_elena['sleep_until'] = sleep_until(get_time(), 5)
+                    p_elena['sleep_until'] = 0
                     p_elena['buy_order_id'] = ''
                     p_elena['sell_order_id'] = ''
                     p_elena['buy'] = 0
