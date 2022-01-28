@@ -118,7 +118,7 @@ class Exchange:
         o = self.client.get_order(symbol=p_elena['symbol'], orderId=p_elena['buy_order_id'])
         sell_client_order_id = ''
 
-        if o['status'] == OrderStatus.FILLED:
+        if o['status'] == OrderStatus.FILLED.value:
             sell_quantity = float(o['executedQty'])
             symbol_info = self._get_symbol_info(symbol=p_elena['symbol'])
             # TODO: .client
