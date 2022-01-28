@@ -139,10 +139,10 @@ class Exchange:
             sell_client_order_id = order_sell['orderId']
         return sell_client_order_id
 
-    def check_order_status(self, p_elena):
+    def check_order_status(self, p_symbol, p_order_id):
         self._connect_client()
         # TODO: .client
-        o = self.client.get_order(symbol=p_elena['symbol'], orderId=p_elena['buy_order_id'])
+        o = self.client.get_order(symbol=p_symbol, orderId=p_order_id)
         order_update_time = int(o['updateTime'])
         return o['status'], order_update_time
 
