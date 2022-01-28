@@ -113,8 +113,8 @@ def iterate(p_robot_filename, exchange, p_elena):
                 p_elena['sell_order_id'] = new_sell_order_id
                 save_state(p_robot_filename, p_elena)
             else:
-                status = exchange.check_order_status(p_elena)
-                if not status == OrderStatus.CANCELED:
+                status, order_update_time = exchange.check_order_status(p_elena)
+                if not status == OrderStatus.CANCELED.value:
                     p_elena['sleep_until'] = sleep_until(get_time(), 5)
                     save_state(p_robot_filename, p_elena)
                     llog("waiting purchase")
@@ -131,7 +131,7 @@ def iterate(p_robot_filename, exchange, p_elena):
 
         if p_elena['buy_order_id'] and p_elena['sell_order_id']:
             status, order_update_time = exchange.check_order_status(p_elena)
-            if status == OrderStatus.FILLED:
+            if status == OrderStatus.FILLED.value:
                 llog("save history")
                 save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
                 llog("set sleep")
@@ -141,7 +141,7 @@ def iterate(p_robot_filename, exchange, p_elena):
                 p_elena['buy'] = 0
                 p_elena['sell'] = 0
                 save_state(p_robot_filename, p_elena)
-            elif status == OrderStatus.CANCELED:
+            elif status == OrderStatus.CANCELED.value:
                 llog("sell cancellation, save history")
                 save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
                 p_elena['active'] = 0
