@@ -57,7 +57,7 @@ class Exchange:
     @lru_cache(maxsize=128)
     def _get_symbol_info(self, symbol):
         self._connect_client()
-        symbol_info = self.client._get_symbol_info(symbol)
+        symbol_info = self.client.get_symbol_info(symbol)
         return symbol_info
 
     def _round_buy_sell_for_filters(self, p_symbol='ETHBUSD', buy_coin=True, amount=0):
