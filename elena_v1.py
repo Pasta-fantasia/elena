@@ -1,22 +1,23 @@
-import sys
-import os
-import time
-import json
 import logging
+import os
+import sys
 
-import pandas as pd
 import numpy as np
 
-from elena.logging import llog
-from elena.exchange import Exchange
 from elena.elena_bot import read_state
 from elena.elena_bot import save_state
+from elena.exchange import Exchange
+from elena.exchange import OrderStatus
+from elena.logging import llog
 from elena.utils import get_time
+
 
 # Algorithm
 
 
 def buy_sell(candles_df_buy_sell, algo, margin, tendence_tolerance):
+    sell = 0
+    buy = 0
     avg_price = candles_df_buy_sell["Close"].mean()
     # candles_df_buy_sell['avg_price']=avg_price
 
@@ -28,18 +29,45 @@ def buy_sell(candles_df_buy_sell, algo, margin, tendence_tolerance):
             margin_local = margin * (2 / 3)
             buy = avg_price * (1 - ((margin_local / 2) / 100))
             buy = buy.astype(float)
-            sell = avg_price * (1 + ((margin_local) / 100))
+            sell = avg_price * (1 + (margin_local / 100))
         if algo == 1:
             buy = candles_df_buy_sell['Close'][candles_df_buy_sell.index[-1]]
             buy = buy.astype(float)
-            sell = buy * (1 + ((margin) / 100))
+            sell = buy * (1 + (margin / 100))
         if algo == 2:
             buy = candles_df_buy_sell['High'][candles_df_buy_sell.index[-1]]
             buy = buy.astype(float)
-            sell = buy * (1 + ((margin) / 100))
-    else:
-        sell = 0
-        buy = 0
+            sell = buy * (1 + (margin / 100))
+        if algo == 4:
+            regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
+            next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
+
+            regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Close"], 1)
+            next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1) + regression_close[1]
+
+            if next_close / next_low > 1.0005:  # ensure sell is higher than buy at least by 5 per thousand to pay fees
+                buy = next_low
+                sell = next_close
+        if algo == 5:
+            regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
+            next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
+
+            regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["High"], 1)
+            next_high = regression_close[0] * (candles_df_buy_sell.index[-1] + 1) + regression_close[1]
+
+            if next_high / next_low > 1.0005:  # ensure sell is higher than buy at least by 5 per thousand to pay fees
+                buy = next_low
+                sell = next_high
+    if algo == 3:
+        regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
+        next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
+
+        regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Close"], 1)
+        next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1) + regression_close[1]
+
+        if next_close / next_low > 1.0005:  # ensure sell is higher than buy at least by 5 per thousand to pay fees
+            buy = next_low
+            sell = next_close
 
     return buy, sell
 
@@ -63,7 +91,7 @@ def iterate(p_robot_filename, exchange, p_elena):
             buy, sell = estimate_buy_sel(exchange, p_elena)
             if buy > 0:
                 llog("create a new buy order")
-                new_buy_order_id = exchange.create_buy_order(p_elena, buy)
+                new_buy_order_id = exchange.create_buy_order(p_elena['max_order'], p_elena['symbol'], buy)
                 p_elena['sleep_until'] = 0
                 p_elena['buy_order_id'] = new_buy_order_id
                 p_elena['sell_order_id'] = ''
@@ -77,21 +105,21 @@ def iterate(p_robot_filename, exchange, p_elena):
             return
 
         if p_elena['buy_order_id'] and not p_elena['sell_order_id']:
-            new_sell_order_id = exchange.create_sell_order(p_elena)
+            new_sell_order_id = exchange.create_sell_order(p_elena['symbol'], p_elena['buy_order_id'], p_elena['sell'])
             if new_sell_order_id:
                 llog("create a new sell order")
                 p_elena['sell_order_id'] = new_sell_order_id
                 save_state(p_robot_filename, p_elena)
             else:
-                status = exchange.check_buy_order_execution_status(p_elena)
-                if not status == 'CANCELED':
+                status, order_update_time = exchange.check_order_status(p_elena['symbol'], p_elena['buy_order_id'])
+                if not status == OrderStatus.CANCELED.value:
                     p_elena['sleep_until'] = sleep_until(get_time(), 5)
                     save_state(p_robot_filename, p_elena)
                     llog("waiting purchase")
                 else:
-                    llog("cancellation")
+                    llog("buy cancellation")
                     save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
-                    p_elena['sleep_until'] = sleep_until(get_time(), 5)
+                    p_elena['sleep_until'] = 0
                     p_elena['buy_order_id'] = ''
                     p_elena['sell_order_id'] = ''
                     p_elena['buy'] = 0
@@ -100,12 +128,21 @@ def iterate(p_robot_filename, exchange, p_elena):
             return
 
         if p_elena['buy_order_id'] and p_elena['sell_order_id']:
-            sell_execution_time = exchange.check_sell_order_execution_time(p_elena)
-            if sell_execution_time > 0:
+            status, order_update_time = exchange.check_order_status(p_elena['symbol'], p_elena['sell_order_id'])
+            if status == OrderStatus.FILLED.value:
                 llog("save history")
                 save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
                 llog("set sleep")
-                p_elena['sleep_until'] = sleep_until(sell_execution_time, p_elena['data_samples'] * 1.5)
+                p_elena['sleep_until'] = sleep_until(order_update_time, p_elena['data_samples'] * 1.5)
+                p_elena['buy_order_id'] = ''
+                p_elena['sell_order_id'] = ''
+                p_elena['buy'] = 0
+                p_elena['sell'] = 0
+                save_state(p_robot_filename, p_elena)
+            elif status == OrderStatus.CANCELED.value:
+                llog("sell cancellation, save history")
+                save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
+                p_elena['active'] = 0
                 p_elena['buy_order_id'] = ''
                 p_elena['sell_order_id'] = ''
                 p_elena['buy'] = 0
@@ -133,6 +170,7 @@ else:
             f = os.path.join(dire, filename)
             robots.append(f)
 
+llog('time', get_time())
 for robot_filename in robots:
     llog(robot_filename)
     elena = read_state(robot_filename)
