@@ -29,15 +29,15 @@ def buy_sell(candles_df_buy_sell, algo, margin, tendence_tolerance):
             margin_local = margin * (2 / 3)
             buy = avg_price * (1 - ((margin_local / 2) / 100))
             buy = buy.astype(float)
-            sell = avg_price * (1 + ((margin_local) / 100))
+            sell = avg_price * (1 + (margin_local / 100))
         if algo == 1:
             buy = candles_df_buy_sell['Close'][candles_df_buy_sell.index[-1]]
             buy = buy.astype(float)
-            sell = buy * (1 + ((margin) / 100))
+            sell = buy * (1 + (margin / 100))
         if algo == 2:
             buy = candles_df_buy_sell['High'][candles_df_buy_sell.index[-1]]
             buy = buy.astype(float)
-            sell = buy * (1 + ((margin) / 100))
+            sell = buy * (1 + (margin / 100))
         if algo == 4:
             regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
             next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]

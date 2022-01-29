@@ -67,16 +67,16 @@ class Exchange:
         self._connect_client()
         symbol_info = self._get_symbol_info(p_symbol)
 
-        for filter in symbol_info['filters']:
-            if filter['filterType'] == 'PRICE_FILTER':
-                tickSize = filter['tickSize']
-            if filter['filterType'] == 'LOT_SIZE':
-                stepSize = filter['stepSize']
+        for _filter in symbol_info['filters']:
+            if _filter['filterType'] == 'PRICE_FILTER':
+                tick_size = _filter['tickSize']
+            if _filter['filterType'] == 'LOT_SIZE':
+                step_size = _filter['stepSize']
 
         if buy_coin:
-            fraction = float(stepSize)
+            fraction = float(step_size)
         else:
-            fraction = float(tickSize)
+            fraction = float(tick_size)
 
         decimal_places = int(f'{fraction:e}'.split('e')[-1]) * -1
         amount = truncate(amount, decimal_places)
