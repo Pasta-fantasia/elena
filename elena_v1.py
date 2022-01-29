@@ -1,18 +1,16 @@
-import sys
-import os
-import time
-import json
 import logging
+import os
+import sys
 
-import pandas as pd
 import numpy as np
 
-from elena.logging import llog
-from elena.exchange import OrderStatus
-from elena.exchange import Exchange
 from elena.elena_bot import read_state
 from elena.elena_bot import save_state
+from elena.exchange import Exchange
+from elena.exchange import OrderStatus
+from elena.logging import llog
 from elena.utils import get_time
+
 
 # Algorithm
 
@@ -93,7 +91,7 @@ def iterate(p_robot_filename, exchange, p_elena):
             buy, sell = estimate_buy_sel(exchange, p_elena)
             if buy > 0:
                 llog("create a new buy order")
-                new_buy_order_id = exchange.create_buy_order(p_elena, buy)
+                new_buy_order_id = exchange.create_buy_order(p_elena['max_order'], p_elena['symbol'], buy)
                 p_elena['sleep_until'] = 0
                 p_elena['buy_order_id'] = new_buy_order_id
                 p_elena['sell_order_id'] = ''
@@ -107,7 +105,7 @@ def iterate(p_robot_filename, exchange, p_elena):
             return
 
         if p_elena['buy_order_id'] and not p_elena['sell_order_id']:
-            new_sell_order_id = exchange.create_sell_order(p_elena)
+            new_sell_order_id = exchange.create_sell_order(p_elena['symbol'], p_elena['buy_order_id'], p_elena['sell'])
             if new_sell_order_id:
                 llog("create a new sell order")
                 p_elena['sell_order_id'] = new_sell_order_id

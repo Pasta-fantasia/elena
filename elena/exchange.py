@@ -1,10 +1,9 @@
-from binance.client import Client
-from decouple import config
-from functools import lru_cache
 from enum import Enum
+from functools import lru_cache
 
 import pandas as pd
-import numpy as np
+from binance.client import Client
+from decouple import config
 
 from elena.logging import llog
 
@@ -85,42 +84,42 @@ class Exchange:
         amt_str = "{:0.0{}f}".format(amount, decimal_places)
         return amt_str
 
-    def create_buy_order(self, p_elena, buy_price):
+    def create_buy_order(self, max_order, symbol, buy_price):
         self._connect_client()
 
-        quantity = p_elena['max_order'] / buy_price
+        quantity = max_order / buy_price
 
-        symbol_info = self._get_symbol_info(symbol=p_elena['symbol'])
+        symbol_info = self._get_symbol_info(symbol=symbol)
         free_balance = float(self.client.get_asset_balance(asset=symbol_info['quoteAsset'])['free'])
-        if p_elena['max_order'] > free_balance:
+        if max_order > free_balance:
             # rounds may decrease balance in the quoteAsset
             quantity = free_balance / buy_price
             llog('buy using balance')
 
-        q = self._round_buy_sell_for_filters(p_elena['symbol'], buy_coin=True, amount=quantity)
-        p = self._round_buy_sell_for_filters(p_elena['symbol'], buy_coin=False, amount=buy_price)
+        q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=quantity)
+        p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=buy_price)
 
         buy_order_id = 0
         try:
             order = self.client.order_limit_buy(
-                symbol=p_elena['symbol'],
+                symbol=symbol,
                 quantity=q,
                 price=p)
             buy_order_id = order['orderId']
         except:
-            llog("error buying", q, p, p_elena)
+            llog("error buying", q, p, 'max_order:' + max_order, 'buy_price:' + buy_price, 'symbol:' + symbol),
 
         return buy_order_id
 
-    def create_sell_order(self, p_elena):
+    def create_sell_order(self, symbol, buy_order_id, sell):
         self._connect_client()
         # TODO: .client
-        o = self.client.get_order(symbol=p_elena['symbol'], orderId=p_elena['buy_order_id'])
+        o = self.client.get_order(symbol=symbol, orderId=buy_order_id)
         sell_client_order_id = ''
 
         if o['status'] == OrderStatus.FILLED.value:
             sell_quantity = float(o['executedQty'])
-            symbol_info = self._get_symbol_info(symbol=p_elena['symbol'])
+            symbol_info = self._get_symbol_info(symbol=symbol)
             # TODO: .client
             free_balance = float(self.client.get_asset_balance(asset=symbol_info['baseAsset'])['free'])
 
@@ -129,11 +128,11 @@ class Exchange:
                 sell_quantity = free_balance
                 llog('sell using balance')
 
-            q = self._round_buy_sell_for_filters(p_elena['symbol'], buy_coin=True, amount=sell_quantity)
-            p = self._round_buy_sell_for_filters(p_elena['symbol'], buy_coin=False, amount=p_elena['sell'])
+            q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=sell_quantity)
+            p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=sell)
             # TODO: .client
             order_sell = self.client.order_limit_sell(
-                symbol=p_elena['symbol'],
+                symbol=symbol,
                 quantity=q,
                 price=p)
             sell_client_order_id = order_sell['orderId']
@@ -145,5 +144,3 @@ class Exchange:
         o = self.client.get_order(symbol=p_symbol, orderId=p_order_id)
         order_update_time = int(o['updateTime'])
         return o['status'], order_update_time
-
-
