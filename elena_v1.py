@@ -71,85 +71,75 @@ def buy_sell(candles_df_buy_sell, algo, margin, tendence_tolerance):
     return buy, sell
 
 
-# Elena
-
-def estimate_buy_sel(exchange, p_elena):
-    candles_df = exchange.get_candles(p_symbol=p_elena['symbol'], p_limit=p_elena['data_samples'])
-    return buy_sell(candles_df, p_elena['algo'], p_elena['margin'], p_elena['tendence_tolerance'])
-
-
-def sleep_until(sell_execution_time, minutes):
-    return sell_execution_time + minutes * 60 * 1000  # 45' after the sale
-
-
 # Elena - State machine
-def iterate(p_robot_filename, exchange, p_elena):
-    if p_elena['sleep_until'] < get_time():
+def iterate(p_robot_filename, exchange, elena):
+    state = elena.read_state(robot_filename)
+    if state['sleep_until'] < get_time():
 
-        if not p_elena['buy_order_id'] and p_elena['active']:
-            buy, sell = estimate_buy_sel(exchange, p_elena)
+        if not state['buy_order_id'] and state['active']:
+            buy, sell = elena.estimate_buy_sel(exchange, state, buy_sell)
             if buy > 0:
                 llog("create a new buy order")
-                new_buy_order_id = exchange.create_buy_order(p_elena['max_order'], p_elena['symbol'], buy)
-                p_elena['sleep_until'] = 0
-                p_elena['buy_order_id'] = new_buy_order_id
-                p_elena['sell_order_id'] = ''
-                p_elena['buy'] = buy
-                p_elena['sell'] = sell
-                Elena.save_state(p_robot_filename, p_elena)
+                new_buy_order_id = exchange.create_buy_order(state['max_order'], state['symbol'], buy)
+                state['sleep_until'] = 0
+                state['buy_order_id'] = new_buy_order_id
+                state['sell_order_id'] = ''
+                state['buy'] = buy
+                state['sell'] = sell
+                elena.save_state(p_robot_filename, state)
             else:
-                p_elena['sleep_until'] = sleep_until(get_time(), 5)
-                Elena.save_state(p_robot_filename, p_elena)
+                state['sleep_until'] = elena.sleep_until(get_time(), 5)
+                elena.save_state(p_robot_filename, state)
                 llog("don't buy")
             return
 
-        if p_elena['buy_order_id'] and not p_elena['sell_order_id']:
-            new_sell_order_id = exchange.create_sell_order(p_elena['symbol'], p_elena['buy_order_id'], p_elena['sell'])
+        if state['buy_order_id'] and not state['sell_order_id']:
+            new_sell_order_id = exchange.create_sell_order(state['symbol'], state['buy_order_id'], state['sell'])
             if new_sell_order_id:
                 llog("create a new sell order")
-                p_elena['sell_order_id'] = new_sell_order_id
-                Elena.save_state(p_robot_filename, p_elena)
+                state['sell_order_id'] = new_sell_order_id
+                elena.save_state(p_robot_filename, state)
             else:
-                status, order_update_time = exchange.check_order_status(p_elena['symbol'], p_elena['buy_order_id'])
+                status, order_update_time = exchange.check_order_status(state['symbol'], state['buy_order_id'])
                 if not status == OrderStatus.CANCELED.value:
-                    p_elena['sleep_until'] = sleep_until(get_time(), 5)
-                    Elena.save_state(p_robot_filename, p_elena)
+                    state['sleep_until'] = elena.sleep_until(get_time(), 5)
+                    elena.save_state(p_robot_filename, state)
                     llog("waiting purchase")
                 else:
                     llog("buy cancellation")
-                    Elena.save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
-                    p_elena['sleep_until'] = 0
-                    p_elena['buy_order_id'] = ''
-                    p_elena['sell_order_id'] = ''
-                    p_elena['buy'] = 0
-                    p_elena['sell'] = 0
-                    Elena.save_state(p_robot_filename, p_elena)
+                    elena.save_state('history/' + str(get_time()) + '_' + str(state['buy_order_id']) + '.json', state)
+                    state['sleep_until'] = 0
+                    state['buy_order_id'] = ''
+                    state['sell_order_id'] = ''
+                    state['buy'] = 0
+                    state['sell'] = 0
+                    elena.save_state(p_robot_filename, state)
             return
 
-        if p_elena['buy_order_id'] and p_elena['sell_order_id']:
-            status, order_update_time = exchange.check_order_status(p_elena['symbol'], p_elena['sell_order_id'])
+        if state['buy_order_id'] and state['sell_order_id']:
+            status, order_update_time = exchange.check_order_status(state['symbol'], state['sell_order_id'])
             if status == OrderStatus.FILLED.value:
                 llog("save history")
-                Elena.save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
+                elena.save_state('history/' + str(get_time()) + '_' + str(state['buy_order_id']) + '.json', state)
                 llog("set sleep")
-                p_elena['sleep_until'] = sleep_until(order_update_time, p_elena['data_samples'] * 1.5)
-                p_elena['buy_order_id'] = ''
-                p_elena['sell_order_id'] = ''
-                p_elena['buy'] = 0
-                p_elena['sell'] = 0
-                Elena.save_state(p_robot_filename, p_elena)
+                state['sleep_until'] = elena.sleep_until(order_update_time, state['data_samples'] * 1.5)
+                state['buy_order_id'] = ''
+                state['sell_order_id'] = ''
+                state['buy'] = 0
+                state['sell'] = 0
+                elena.save_state(p_robot_filename, state)
             elif status == OrderStatus.CANCELED.value:
                 llog("sell cancellation, save history")
-                Elena.save_state('history/' + str(get_time()) + '_' + str(p_elena['buy_order_id']) + '.json', p_elena)
-                p_elena['active'] = 0
-                p_elena['buy_order_id'] = ''
-                p_elena['sell_order_id'] = ''
-                p_elena['buy'] = 0
-                p_elena['sell'] = 0
-                Elena.save_state(p_robot_filename, p_elena)
+                elena.save_state('history/' + str(get_time()) + '_' + str(state['buy_order_id']) + '.json', state)
+                state['active'] = 0
+                state['buy_order_id'] = ''
+                state['sell_order_id'] = ''
+                state['buy'] = 0
+                state['sell'] = 0
+                elena.save_state(p_robot_filename, state)
             else:
-                p_elena['sleep_until'] = sleep_until(get_time(), 15)
-                Elena.save_state(p_robot_filename, p_elena)
+                state['sleep_until'] = elena.sleep_until(get_time(), 15)
+                elena.save_state(p_robot_filename, state)
                 llog("waiting sell")
             return
     else:
@@ -172,5 +162,5 @@ else:
 llog('time', get_time())
 for robot_filename in robots:
     llog(robot_filename)
-    elena = Elena.read_state(robot_filename)
-    iterate(robot_filename, binance, elena)
+    _elena = Elena()
+    iterate(robot_filename, binance, _elena)
