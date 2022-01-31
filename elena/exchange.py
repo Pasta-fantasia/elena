@@ -65,11 +65,16 @@ class Exchange:
 
         symbol_info = self._get_symbol_info(p_symbol)
 
+        step_size = -1
+        tick_size = -1
         for _filter in symbol_info['filters']:
             if _filter['filterType'] == 'PRICE_FILTER':
                 tick_size = _filter['tickSize']
             if _filter['filterType'] == 'LOT_SIZE':
                 step_size = _filter['stepSize']
+
+        if step_size == -1 or tick_size == -1:
+            raise RuntimeError('error: undefined PRICE_FILTER and LOT_SIZE')
 
         if buy_coin:
             fraction = float(step_size)
@@ -110,7 +115,7 @@ class Exchange:
         return float(self.client.get_asset_balance(asset=symbol_info['quoteAsset'])['free'])
 
     def _get_order_limit_buy(self, p, q, symbol):
-        return self.client.order_limit_buy( symbol=symbol, quantity=q, price=p)
+        return self.client.order_limit_buy(symbol=symbol, quantity=q, price=p)
 
     def create_sell_order(self, symbol, buy_order_id, sell):
         self._connect_client()
