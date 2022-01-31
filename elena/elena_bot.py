@@ -37,10 +37,11 @@ class Elena:
         # candles_df_buy_sell['avg_price']=avg_price
 
         regression = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Close"], 1)
-        tendence = regression[0]
+        tendency = regression[0]
 
-        if tendence > tendence_tolerance:
+        if tendency > tendence_tolerance:
             if algo == 0:
+                # TODO Pair review: extract methods?
                 margin_local = margin * (2 / 3)
                 buy = avg_price * (1 - ((margin_local / 2) / 100))
                 buy = buy.astype(float)
@@ -54,12 +55,14 @@ class Elena:
                 buy = buy.astype(float)
                 sell = buy * (1 + (margin / 100))
             if algo == 4:
+                # TODO Pair review: duplicated code with lines 80-90
                 regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
                 next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
 
                 regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Close"], 1)
                 next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1) + regression_close[1]
 
+                # TODO Pair review: review logic and extract method
                 if next_close / next_low > 1.0005:  # ensure sell is higher than buy at least by 5 per thousand to pay fees
                     buy = next_low
                     sell = next_close
@@ -70,16 +73,19 @@ class Elena:
                 regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["High"], 1)
                 next_high = regression_close[0] * (candles_df_buy_sell.index[-1] + 1) + regression_close[1]
 
+                # TODO Pair review: review logic and extract method
                 if next_high / next_low > 1.0005:  # ensure sell is higher than buy at least by 5 per thousand to pay fees
                     buy = next_low
                     sell = next_high
         if algo == 3:
+            # TODO Pair review: duplicated code with lines 57-67
             regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
             next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
 
             regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Close"], 1)
             next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1) + regression_close[1]
 
+            # TODO Pair review: review logic and extract method
             if next_close / next_low > 1.0005:  # ensure sell is higher than buy at least by 5 per thousand to pay fees
                 buy = next_low
                 sell = next_close
