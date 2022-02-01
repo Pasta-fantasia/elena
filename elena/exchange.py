@@ -3,6 +3,7 @@ from enum import Enum
 import pandas as pd
 from binance.client import Client
 
+from elena import utils
 from elena.binance import Binance
 from elena.logging import llog
 
@@ -24,6 +25,10 @@ class Exchange:
     def __init__(self, api: Binance):
         self.symbol_info = None  # TODO remove?
         self._api = api
+        self._recorder = None
+
+    def reset_recorder(self):
+        self._recorder = utils.TestDataRecorder()
 
     def get_candles(self, p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=1000):
         candles = self._api.get_klines(p_interval, p_limit, p_symbol)
