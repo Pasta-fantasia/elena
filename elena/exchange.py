@@ -11,8 +11,7 @@ from elena.logging import llog
 # Exchange
 
 # Duplicated from Binance. Done from decouple from Binance module
-
-
+# TODO: don't use Enum this is not Pascal :)
 class OrderStatus(Enum):
     NEW = 'NEW'
     PARTIALLY_FILLED = 'PARTIALLY_FILLED'
