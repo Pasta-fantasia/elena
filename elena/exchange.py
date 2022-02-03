@@ -86,7 +86,7 @@ class Exchange:
         quantity = max_order / buy_price
 
         symbol_info = self._api.get_symbol_info(symbol=symbol)
-        free_balance = self._api.get_quote_asset_balance(symbol_info)
+        free_balance = self._api.get_asset_balance(symbol_info['quoteAsset'])
         if max_order > free_balance:
             # rounds may decrease balance in the quoteAsset
             quantity = free_balance / buy_price
@@ -111,7 +111,7 @@ class Exchange:
         if o['status'] == OrderStatus.FILLED.value:
             sell_quantity = float(o['executedQty'])
             symbol_info = self._api.get_symbol_info(symbol=symbol)
-            free_balance = self._api.get_base_asset_balance(symbol_info)
+            free_balance = self._api.get_asset_balance(symbol_info['baseAsset'])
 
             if sell_quantity > free_balance:
                 # if the order was processed as "taker" we don't have the information about the fee
