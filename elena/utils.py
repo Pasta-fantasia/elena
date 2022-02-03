@@ -14,18 +14,24 @@ class TestDataRecorder:
         self._path = path
         self._filename = None
         self._current_record = {}
+        self._recording = False
 
     def start(self):
         self._filename = f'{self._path}/{self._file_prefix}-{get_time()}.json.data'
         self._current_record = {}
+        self._recording = True
 
     def func_in(self, function: str, **kargs):
+        if not self._recording:
+            return
         if function in self._current_record:
             raise RuntimeError(f'function {function} already exists')
         self._current_record[function] = {}
         self._current_record[function]['input'] = kargs
 
     def call_in(self, function: str, call: str, **kargs):
+        if not self._recording:
+            return
         if not function in self._current_record:
             raise RuntimeError(f'function {function} does not exists')
         if call in self._current_record[function]:
@@ -34,6 +40,8 @@ class TestDataRecorder:
         self._current_record[function][call] = d
 
     def call_out(self, function: str, call: str, **kargs):
+        if not self._recording:
+            return
         if not function in self._current_record:
             raise RuntimeError(f'function {function} does not exists')
         if not call in self._current_record[function]:
@@ -45,6 +53,8 @@ class TestDataRecorder:
         self._current_record[function][call] = d
 
     def func_out(self, function: str, **kargs):
+        if not self._recording:
+            return
         if not function in self._current_record:
             raise RuntimeError(f'function {function} does not exists')
         if 'output' in self._current_record[function]:
@@ -52,6 +62,9 @@ class TestDataRecorder:
         self._current_record[function]['output'] = kargs
 
     def stop(self):
+        if not self._recording:
+            return
+        self._recording = False
         fp = open(self._filename, 'w')
         json.dump(self._current_record, fp, indent=4)
         fp.close()
