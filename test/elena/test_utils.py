@@ -22,10 +22,10 @@ df_dict = {
 }
 
 
-def test_method_input():
+def test_function_input():
     sut = TestDataRecorder('test_utils')
     sut.start()
-    sut.method_input('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
 
     actual = sut._current_record
 
@@ -40,20 +40,20 @@ def test_method_input():
     }
 
 
-def test_call_input_duplicated_method():
+def test_call_input_duplicated_function():
     sut = TestDataRecorder('test_utils')
     sut.start()
-    sut.method_input('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
     with raises(RuntimeError) as err:
-        sut.method_input('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    assert err.value.args[0] == 'method get_candles already exists'
+        sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    assert err.value.args[0] == 'function get_candles already exists'
 
 
 def test_call_input():
     sut = TestDataRecorder('test_utils')
     sut.start()
-    sut.method_input('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_input('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
 
     actual = sut._current_record
 
@@ -75,31 +75,31 @@ def test_call_input():
     }
 
 
-def test_call_input_method_does_not_exists():
+def test_call_input_function_does_not_exists():
     sut = TestDataRecorder('test_utils')
     sut.start()
 
     with raises(RuntimeError) as err:
-        sut.call_input('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    assert err.value.args[0] == 'method get_candles does not exists'
+        sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    assert err.value.args[0] == 'function get_candles does not exists'
 
 
 def test_call_input_duplicated_call():
     sut = TestDataRecorder('test_utils')
     sut.start()
-    sut.method_input('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_input('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
     with raises(RuntimeError) as err:
-        sut.call_input('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    assert err.value.args[0] == 'call input _api.get_klines for method get_candles already exists'
+        sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    assert err.value.args[0] == 'call input _api.get_klines for function get_candles already exists'
 
 
 def test_call_output():
     sut = TestDataRecorder('test_utils')
     sut.start()
-    sut.method_input('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_input('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_output('get_candles', '_api.get_klines', klines=df_dict)
+    sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_out('get_candles', '_api.get_klines', klines=df_dict)
 
     actual = sut._current_record
 
@@ -124,46 +124,46 @@ def test_call_output():
     }
 
 
-def test_call_output_method_does_not_exists():
+def test_call_output_function_does_not_exists():
     sut = TestDataRecorder('test_utils')
     sut.start()
 
     with raises(RuntimeError) as err:
-        sut.call_output('get_candles', '_api.get_klines', klines=df_dict)
-    assert err.value.args[0] == 'method get_candles does not exists'
+        sut.call_out('get_candles', '_api.get_klines', klines=df_dict)
+    assert err.value.args[0] == 'function get_candles does not exists'
 
 
 def test_call_output_call_does_not_exists():
     sut = TestDataRecorder('test_utils')
     sut.start()
-    sut.method_input('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
 
     with raises(RuntimeError) as err:
-        sut.call_output('get_candles', '_api.get_klines', klines=df_dict)
-    assert err.value.args[0] == 'call _api.get_klines for method get_candles does not exists'
+        sut.call_out('get_candles', '_api.get_klines', klines=df_dict)
+    assert err.value.args[0] == 'call _api.get_klines for function get_candles does not exists'
 
 
 # noinspection DuplicatedCode
 def test_call_output_duplicated_call():
     sut = TestDataRecorder('test_utils')
     sut.start()
-    sut.method_input('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_input('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_output('get_candles', '_api.get_klines', klines=df_dict)
+    sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_out('get_candles', '_api.get_klines', klines=df_dict)
 
     with raises(RuntimeError) as err:
-        sut.call_output('get_candles', '_api.get_klines', klines=df_dict)
-    assert err.value.args[0] == 'call output _api.get_klines for method get_candles already exists'
+        sut.call_out('get_candles', '_api.get_klines', klines=df_dict)
+    assert err.value.args[0] == 'call output _api.get_klines for function get_candles already exists'
 
 
 # noinspection DuplicatedCode
-def test_method_output():
+def test_function_output():
     sut = TestDataRecorder('test_utils')
     sut.start()
-    sut.method_input('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_input('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_output('get_candles', '_api.get_klines', klines=df_dict)
-    sut.method_output('get_candles', candles_df=df_dict)
+    sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_out('get_candles', '_api.get_klines', klines=df_dict)
+    sut.func_out('get_candles', candles_df=df_dict)
 
     actual = sut._current_record
 
@@ -192,17 +192,17 @@ def test_method_output():
 
 
 # noinspection DuplicatedCode
-def test_method_output_duplicated_call():
+def test_function_output_duplicated_call():
     sut = TestDataRecorder('test_utils')
     sut.start()
-    sut.method_input('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_input('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_output('get_candles', '_api.get_klines', klines=df_dict)
-    sut.method_output('get_candles', candles_df=df_dict)
+    sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_out('get_candles', '_api.get_klines', klines=df_dict)
+    sut.func_out('get_candles', candles_df=df_dict)
 
     with raises(RuntimeError) as err:
-        sut.method_output('get_candles', candles_df=df_dict)
-    assert err.value.args[0] == 'method get_candles already exists'
+        sut.func_out('get_candles', candles_df=df_dict)
+    assert err.value.args[0] == 'function get_candles already exists'
 
 
 # noinspection DuplicatedCode
@@ -211,10 +211,10 @@ def test_stop():
 
     sut = TestDataRecorder('test_utils', '.')
     sut.start()
-    sut.method_input('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_input('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
-    sut.call_output('get_candles', '_api.get_klines', klines="FAKE KLINES")
-    sut.method_output('get_candles', candles_df="FAKE KLINES")
+    sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
+    sut.call_out('get_candles', '_api.get_klines', klines="FAKE KLINES")
+    sut.func_out('get_candles', candles_df="FAKE KLINES")
     sut.stop()
 
     expected = {
