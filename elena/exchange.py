@@ -25,7 +25,6 @@ class OrderStatus(Enum):
 
 class Exchange:
     def __init__(self, api: Binance):
-        self.symbol_info = None  # TODO remove?
         self._api = api
         self._rec = utils.TestDataRecorder('Exchange', '../../test_data')
 
