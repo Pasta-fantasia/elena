@@ -11,6 +11,8 @@ from elena.logging import llog
 # Exchange
 
 # Duplicated from Binance. Done from decouple from Binance module
+
+
 class OrderStatus(Enum):
     NEW = 'NEW'
     PARTIALLY_FILLED = 'PARTIALLY_FILLED'
@@ -25,13 +27,21 @@ class Exchange:
     def __init__(self, api: Binance):
         self.symbol_info = None  # TODO remove?
         self._api = api
-        self._recorder = None
+        self._rec = utils.TestDataRecorder('Exchange', '../../test_data')
 
-    def reset_recorder(self):
-        self._recorder = utils.TestDataRecorder()
+    def start_recorder(self):
+        self._rec.start()
+
+    def stop_recorder(self):
+        self._rec.stop()
 
     def get_candles(self, p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=1000):
+        self._rec.func_in('get_candles', p_symbol=p_symbol, p_interval=p_interval, p_limit=p_limit)
+
+        self._rec.call_in('get_candles', '_api.get_klines', p_interval=p_interval, p_limit=p_limit, p_symbol=p_symbol)
         candles = self._api.get_klines(p_interval, p_limit, p_symbol)
+        self._rec.call_out('get_candles', '_api.get_klines', candles=candles)
+
         candles_df = pd.DataFrame(candles)
         candles_df.columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close time', 'Quote asset volume',
                               'Number of trades', 'Taker buy base asset volume', 'Taker buy quote asset volume',
@@ -40,6 +50,7 @@ class Exchange:
         candles_df["Low"] = pd.to_numeric(candles_df["Low"], downcast="float")
         candles_df["Close"] = pd.to_numeric(candles_df["Close"], downcast="float")
 
+        self._rec.func_out('get_candles', candles_df=candles_df.to_json())
         return candles_df
 
     def _round_buy_sell_for_filters(self, p_symbol='ETHBUSD', buy_coin=True, amount=0.0):
