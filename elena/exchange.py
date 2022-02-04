@@ -11,8 +11,7 @@ from elena.logging import llog
 # Exchange
 
 # Duplicated from Binance. Done from decouple from Binance module
-
-
+# TODO: don't use Enum this is not Pascal :)
 class OrderStatus(Enum):
     NEW = 'NEW'
     PARTIALLY_FILLED = 'PARTIALLY_FILLED'
@@ -25,7 +24,6 @@ class OrderStatus(Enum):
 
 class Exchange:
     def __init__(self, api: Binance):
-        self.symbol_info = None  # TODO remove?
         self._api = api
         self._rec = utils.TestDataRecorder('Exchange', '../../test_data')
 
@@ -86,7 +84,7 @@ class Exchange:
         quantity = max_order / buy_price
 
         symbol_info = self._api.get_symbol_info(symbol=symbol)
-        free_balance = self._api.get_quote_asset_balance(symbol_info)
+        free_balance = self._api.get_asset_balance(symbol_info['quoteAsset'])
         if max_order > free_balance:
             # rounds may decrease balance in the quoteAsset
             quantity = free_balance / buy_price
@@ -111,7 +109,7 @@ class Exchange:
         if o['status'] == OrderStatus.FILLED.value:
             sell_quantity = float(o['executedQty'])
             symbol_info = self._api.get_symbol_info(symbol=symbol)
-            free_balance = self._api.get_base_asset_balance(symbol_info)
+            free_balance = self._api.get_asset_balance(symbol_info['baseAsset'])
 
             if sell_quantity > free_balance:
                 # if the order was processed as "taker" we don't have the information about the fee

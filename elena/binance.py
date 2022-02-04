@@ -29,14 +29,9 @@ class Binance:
         self._connect()
         return self.client.get_symbol_info(symbol)
 
-    # TODO Join get_quote_asset_balance and get_base_asset_balance methods
-    def get_quote_asset_balance(self, symbol_info):
+    def get_asset_balance(self, asset):
         self._connect()
-        return float(self.client.get_asset_balance(asset=symbol_info['quoteAsset'])['free'])
-
-    def get_base_asset_balance(self, symbol_info):
-        self._connect()
-        return float(self.client.get_asset_balance(asset=symbol_info['baseAsset'])['free'])
+        return float(self.client.get_asset_balance(asset=asset)['free'])
 
     def get_order_limit_buy(self, p, q, symbol):
         self._connect()
