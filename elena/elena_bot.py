@@ -21,14 +21,14 @@ class Elena:
                 if buy > 0:
                     llog("create a new buy order")
                     new_buy_order_id = self._exchange.create_buy_order(state['max_order'], state['symbol'], buy)
-                    state['_sleep_until'] = 0
+                    state['sleep_until'] = 0
                     state['buy_order_id'] = new_buy_order_id
                     state['sell_order_id'] = ''
                     state['buy'] = buy
                     state['sell'] = sell
                     self._save_state(state)
                 else:
-                    state['_sleep_until'] = self._sleep_until(get_time(), 5)
+                    state['sleep_until'] = self._sleep_until(get_time(), 5)
                     self._save_state(state)
                     llog("don't buy")
                 return
@@ -44,14 +44,14 @@ class Elena:
                     status, order_update_time = self._exchange.check_order_status(state['symbol'],
                                                                                   state['buy_order_id'])
                     if not status == OrderStatus.CANCELED.value:
-                        state['_sleep_until'] = self._sleep_until(get_time(), 5)
+                        state['sleep_until'] = self._sleep_until(get_time(), 5)
                         self._save_state(state)
                         llog("waiting purchase")
                     else:
                         llog("buy cancellation")
                         filename = f"history/{str(get_time())}_{str(state['buy_order_id'])}.json"
                         self._save_state(state, filename)
-                        state['_sleep_until'] = 0
+                        state['sleep_until'] = 0
                         state['buy_order_id'] = ''
                         state['sell_order_id'] = ''
                         state['buy'] = 0
@@ -65,7 +65,7 @@ class Elena:
                     llog("save history")
                     self._save_state('history/' + str(get_time()) + '_' + str(state['buy_order_id']) + '.json', state)
                     llog("set sleep")
-                    state['_sleep_until'] = self._sleep_until(order_update_time, state['data_samples'] * 1.5)
+                    state['sleep_until'] = self._sleep_until(order_update_time, state['data_samples'] * 1.5)
                     state['buy_order_id'] = ''
                     state['sell_order_id'] = ''
                     state['buy'] = 0
@@ -81,7 +81,7 @@ class Elena:
                     state['sell'] = 0
                     self._save_state(state)
                 else:
-                    state['_sleep_until'] = self._sleep_until(get_time(), 15)
+                    state['sleep_until'] = self._sleep_until(get_time(), 15)
                     self._save_state(state)
                     llog("waiting sell")
                 return
