@@ -14,7 +14,7 @@ class Elena:
 
     def iterate(self):
         state = self._read_state()
-        if state['_sleep_until'] < get_time():
+        if state['sleep_until'] < get_time():
 
             if not state['buy_order_id'] and state['active']:
                 buy, sell = self._estimate_buy_sel(state)
