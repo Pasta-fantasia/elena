@@ -8,7 +8,8 @@ from elena.binance import Binance
 from elena.logging import llog
 from elena.utils import get_time
 
-binance = Exchange(Binance)
+
+binance = Exchange(Binance())
 logging.basicConfig(filename='elena.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
 if len(sys.argv) > 1:
