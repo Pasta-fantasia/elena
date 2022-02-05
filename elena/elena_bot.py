@@ -63,7 +63,8 @@ class Elena:
                 status, order_update_time = self._exchange.check_order_status(state['symbol'], state['sell_order_id'])
                 if status == OrderStatus.FILLED.value:
                     llog("save history")
-                    self._save_state('history/' + str(get_time()) + '_' + str(state['buy_order_id']) + '.json', state)
+                    filename = 'history/' + str(get_time()) + '_' + str(state['buy_order_id']) + '.json'
+                    self._save_state(state, filename)
                     llog("set sleep")
                     state['sleep_until'] = self._sleep_until(order_update_time, state['data_samples'] * 1.5)
                     state['buy_order_id'] = ''
@@ -73,7 +74,8 @@ class Elena:
                     self._save_state(state)
                 elif status == OrderStatus.CANCELED.value:
                     llog("sell cancellation, save history")
-                    self._save_state('history/' + str(get_time()) + '_' + str(state['buy_order_id']) + '.json', state)
+                    filename = 'history/' + str(get_time()) + '_' + str(state['buy_order_id']) + '.json'
+                    self._save_state(state, filename)
                     state['active'] = 0
                     state['buy_order_id'] = ''
                     state['sell_order_id'] = ''
