@@ -1,4 +1,4 @@
-# 1.2 Refactor and testing
+# 1.2 Refactor and testing first iteration
 - Refactor Exchange class. [#2](https://github.com/Ciskam-Lab/elena/issues/2) [#9](https://github.com/Ciskam-Lab/elena/issues/9)
 - Exchange class public method should not uses Binance directly. [#3](https://github.com/Ciskam-Lab/elena/issues/3) [#10](https://github.com/Ciskam-Lab/elena/issues/10) 
 - Create Elena Class. [#4](https://github.com/Ciskam-Lab/elena/issues/4) [#11](https://github.com/Ciskam-Lab/elena/issues/11) 
