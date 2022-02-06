@@ -112,25 +112,39 @@ class Elena:
         return sell_execution_time + minutes * 60 * 1000  # 45' after the sale
 
     @staticmethod
-    def _ensure_sell_is_higher_than_buy_by(next_sell, next_buy, buy, sell, minimum_profit=1.0005):
+    def _ensure_sell_is_higher_than_buy_by(next_sell, next_buy, minimum_profit=1.0005):
         # ensure sell is higher than buy at least by 5 per thousand to pay fees
         if next_sell / next_buy > minimum_profit:
             buy = next_buy
             sell = next_sell
+        else:
+            buy = 0
+            sell = 0
+        return buy, sell
+
+    @staticmethod
+    def _buy_sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=0):
+        regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
+        next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
+
+        # TODO: reusing margin but is the number of steps to extrapolate
+        regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell[sell_field], 1)
+        next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1 + margin) + regression_close[1]
+
+        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low)
         return buy, sell
 
     @staticmethod
     def _buy_sell(candles_df_buy_sell, algo, margin, tendence_tolerance):
         sell = 0
         buy = 0
-        avg_price = candles_df_buy_sell["Close"].mean()
-        # candles_df_buy_sell['avg_price']=avg_price
 
         regression = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Close"], 1)
         tendency = regression[0]
 
         if tendency > tendence_tolerance:
             if algo == 0:
+                avg_price = candles_df_buy_sell["Close"].mean()
                 margin_local = margin * (2 / 3)
                 buy = avg_price * (1 - ((margin_local / 2) / 100))
                 buy = buy.astype(float)
@@ -144,31 +158,14 @@ class Elena:
                 buy = buy.astype(float)
                 sell = buy * (1 + (margin / 100))
             if algo == 4:
-                # TODO: delete 3 or 4 depending on simultaion results
-                regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
-                next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
-
-                regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Close"], 1)
-                next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1) + regression_close[1]
-
-                buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, buy, sell)
-
+                buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=0)
             if algo == 5:
-                regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
-                next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
-
-                regression_high = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["High"], 1)
-                next_high = regression_high[0] * (candles_df_buy_sell.index[-1] + 1) + regression_high[1]
-
-                buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_high, next_low, buy, sell)
-
+                buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=0)
+            if algo == 6:
+                buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=margin)
+            if algo == 7:
+                buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=margin)
         if algo == 3:
-            regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
-            next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
-
-            regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Close"], 1)
-            next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1) + regression_close[1]
-
-            buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, buy, sell)
+            buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=0)
 
         return buy, sell
