@@ -106,7 +106,8 @@ class Elena:
     def _delete_state(self):
         os.rename(self._robot_filename, self._robot_filename + '.inactive')
 
-    def _save_history_state_and_profit(self, state):
+    def _save_history_state_and_profit(self, in_state):
+        state = dict(in_state)
         filename = f"history/{str(get_time())}_{str(state['buy_order_id'])}.json"
         buy_order = ''
         sell_order = ''
