@@ -52,12 +52,15 @@ class Elena:
                     else:
                         llog("buy cancellation")
                         self._save_history_state_and_profit(state)
-                        state['sleep_until'] = 0
-                        state['buy_order_id'] = ''
-                        state['sell_order_id'] = ''
-                        state['buy'] = 0
-                        state['sell'] = 0
-                        self._save_state(state)
+                        if state['active'] == 1:
+                            state['sleep_until'] = 0
+                            state['buy_order_id'] = ''
+                            state['sell_order_id'] = ''
+                            state['buy'] = 0
+                            state['sell'] = 0
+                            self._save_state(state)
+                        else:
+                            self._delete_state()
                 return
 
             if state['buy_order_id'] and state['sell_order_id']:
