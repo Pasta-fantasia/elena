@@ -21,6 +21,7 @@ class Elena:
                 if buy > 0:
                     llog("create a new buy order")
                     new_buy_order_id = self._exchange.create_buy_order(state['max_order'], state['symbol'], buy)
+                    # TODO: create a reset_state
                     state['sleep_until'] = 0
                     state['buy_order_id'] = new_buy_order_id
                     state['sell_order_id'] = ''
@@ -49,8 +50,7 @@ class Elena:
                         llog("waiting purchase")
                     else:
                         llog("buy cancellation")
-                        filename = f"history/{str(get_time())}_{str(state['buy_order_id'])}.json"
-                        self._save_state(state, filename)
+                        self._save_history_state_and_profit(state)
                         state['sleep_until'] = 0
                         state['buy_order_id'] = ''
                         state['sell_order_id'] = ''
@@ -63,8 +63,7 @@ class Elena:
                 status, order_update_time = self._exchange.check_order_status(state['symbol'], state['sell_order_id'])
                 if status == OrderStatus.FILLED.value:
                     llog("save history")
-                    filename = 'history/' + str(get_time()) + '_' + str(state['buy_order_id']) + '.json'
-                    self._save_state(state, filename)
+                    self._save_history_state_and_profit(state)
                     llog("set sleep")
                     state['sleep_until'] = self._sleep_until(order_update_time, state['data_samples'] * 1.5)
                     state['buy_order_id'] = ''
@@ -74,8 +73,7 @@ class Elena:
                     self._save_state(state)
                 elif status == OrderStatus.CANCELED.value:
                     llog("sell cancellation, save history")
-                    filename = 'history/' + str(get_time()) + '_' + str(state['buy_order_id']) + '.json'
-                    self._save_state(state, filename)
+                    self._save_history_state_and_profit(state)
                     state['active'] = 0
                     state['buy_order_id'] = ''
                     state['sell_order_id'] = ''
@@ -96,16 +94,43 @@ class Elena:
         fp.close()
         return state
 
-    def _estimate_buy_sel(self, state):
-        candles_df = self._exchange.get_candles(p_symbol=state['symbol'], p_limit=state['data_samples'])
-        return self._buy_sell(candles_df, state['algo'], state['margin'], state['tendence_tolerance'])
-
     def _save_state(self, state, filename=None):
         if not filename:
             filename = self._robot_filename
         fp = open(filename, 'w')
         json.dump(state, fp)
         fp.close()
+
+    def _save_history_state_and_profit(self, state):
+        filename = f"history/{str(get_time())}_{str(state['buy_order_id'])}.json"
+        buy_order = ''
+        sell_order = ''
+        iteration_benefit = 0
+        iteration_margin = 0
+        left_on_asset = 0
+
+        if state['buy_order_id']:
+            buy_order = self._exchange.get_order(state['buy_order_id'], state['symbol'] )
+            if state['sell_order_id']:
+                sell_order = self._exchange.get_order(state['sell_order_id'], state['symbol'])
+                if sell_order['status'] == OrderStatus.FILLED.value:
+                    iteration_benefit = float(sell_order['cummulativeQuoteQty']) - float(buy_order['cummulativeQuoteQty'])
+                    iteration_margin = (iteration_benefit / float(buy_order['cummulativeQuoteQty'])) * 100
+                    left_on_asset = float(buy_order['executedQty']) - float(sell_order['executedQty'])
+
+        state['buy_order'] = buy_order
+        state['sell_order'] = sell_order
+        state['iteration_benefit'] = iteration_benefit
+        state['iteration_margin'] = iteration_margin
+        state['left_on_asset'] = left_on_asset
+
+        fp = open(filename, 'w')
+        json.dump(state, fp)
+        fp.close()
+
+    def _estimate_buy_sel(self, state):
+        candles_df = self._exchange.get_candles(p_symbol=state['symbol'], p_limit=state['data_samples'])
+        return self._buy_sell(candles_df, state['algo'], state['margin'], state['tendence_tolerance'])
 
     @staticmethod
     def _sleep_until(sell_execution_time, minutes):

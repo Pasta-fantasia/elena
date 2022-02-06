@@ -1,3 +1,9 @@
+# 1.3 New algos and order details on history jsons
+- New algos 6, 7.
+- Refactor algo for better understanding.
+- _save_history_state_and_profit: saves buy and sell orders details, iteration_benefit, iteration_margin and left_on_asset into the history .json
+- Some TODOs
+
 # 1.2 Refactor and testing first iteration
 - Refactor Exchange class. [#2](https://github.com/Ciskam-Lab/elena/issues/2) [#9](https://github.com/Ciskam-Lab/elena/issues/9)
 - Exchange class public method should not uses Binance directly. [#3](https://github.com/Ciskam-Lab/elena/issues/3) [#10](https://github.com/Ciskam-Lab/elena/issues/10) 

@@ -57,7 +57,6 @@ class Exchange:
             return int(n * multiplier) / multiplier
 
         symbol_info = self._api.get_symbol_info(p_symbol)
-
         step_size = -1
         tick_size = -1
         for _filter in symbol_info['filters']:
@@ -79,6 +78,9 @@ class Exchange:
 
         amt_str = "{:0.0{}f}".format(amount, decimal_places)
         return amt_str
+
+    def get_order(self, p_order_id, p_symbol):
+        return self._api.get_order(p_order_id, p_symbol)
 
     def create_buy_order(self, max_order, symbol, buy_price):
         quantity = max_order / buy_price
@@ -103,7 +105,7 @@ class Exchange:
         return buy_order_id
 
     def create_sell_order(self, symbol, buy_order_id, sell):
-        o = self._api.get_order(buy_order_id, symbol)
+        o = self.get_order(buy_order_id, symbol)
         sell_client_order_id = ''
 
         if o['status'] == OrderStatus.FILLED.value:
@@ -123,6 +125,6 @@ class Exchange:
         return sell_client_order_id
 
     def check_order_status(self, p_symbol, p_order_id):
-        o = self._api.get_order(p_order_id, p_symbol)
+        o = self.get_order(p_order_id, p_symbol)
         order_update_time = int(o['updateTime'])
         return o['status'], order_update_time
