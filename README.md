@@ -33,6 +33,8 @@ Ejemplo para una Raspberry Pi
     ````
   - Descargar código 
     - ```` git clone git@github.com:Ciskam-Lab/elena.git ````
+  - Pasarse a la versión estable 
+    - ```` git fetch --all --tags ; git checkout tags/v1.1.0 -b v1.1.0-branch ````
   - Ejecutar install.sh (en una Pi puede tardar hasta 40 minutos)
   - Crear un fichero _.env_ con las claves de las API. Ver [dot_env_sample.txt](dot_env_sample.txt)
   - Pruebas
