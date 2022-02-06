@@ -2,6 +2,7 @@
 - New algos 6, 7.
 - Refactor algo for better understanding.
 - _save_history_state_and_profit: saves buy and sell orders details, iteration_benefit, iteration_margin and left_on_asset into the history .json
+- _delete_state if the state is not active when the cycle is over "delete it" (it actually renames it to .inactive)
 - Some TODOs
 
 # 1.2 Refactor and testing first iteration

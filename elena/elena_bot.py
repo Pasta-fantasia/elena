@@ -1,4 +1,5 @@
 import json
+import os
 
 import numpy as np
 
@@ -64,22 +65,20 @@ class Elena:
                 if status == OrderStatus.FILLED.value:
                     llog("save history")
                     self._save_history_state_and_profit(state)
-                    llog("set sleep")
-                    state['sleep_until'] = self._sleep_until(order_update_time, state['data_samples'] * 1.5)
-                    state['buy_order_id'] = ''
-                    state['sell_order_id'] = ''
-                    state['buy'] = 0
-                    state['sell'] = 0
-                    self._save_state(state)
+                    if state['active'] == 1:
+                        llog("set sleep")
+                        state['sleep_until'] = self._sleep_until(order_update_time, state['data_samples'] * 1.5)
+                        state['buy_order_id'] = ''
+                        state['sell_order_id'] = ''
+                        state['buy'] = 0
+                        state['sell'] = 0
+                        self._save_state(state)
+                    else:
+                        self._delete_state()
                 elif status == OrderStatus.CANCELED.value:
                     llog("sell cancellation, save history")
                     self._save_history_state_and_profit(state)
-                    state['active'] = 0
-                    state['buy_order_id'] = ''
-                    state['sell_order_id'] = ''
-                    state['buy'] = 0
-                    state['sell'] = 0
-                    self._save_state(state)
+                    self._delete_state()
                 else:
                     state['sleep_until'] = self._sleep_until(get_time(), 15)
                     self._save_state(state)
@@ -101,6 +100,9 @@ class Elena:
         json.dump(state, fp)
         fp.close()
 
+    def _delete_state(self):
+        os.rename(self._robot_filename, self._robot_filename + '.inactive')
+
     def _save_history_state_and_profit(self, state):
         filename = f"history/{str(get_time())}_{str(state['buy_order_id'])}.json"
         buy_order = ''
@@ -118,6 +120,7 @@ class Elena:
                     iteration_margin = (iteration_benefit / float(buy_order['cummulativeQuoteQty'])) * 100
                     left_on_asset = float(buy_order['executedQty']) - float(sell_order['executedQty'])
 
+        state['active'] = -1
         state['buy_order'] = buy_order
         state['sell_order'] = sell_order
         state['iteration_benefit'] = iteration_benefit
