@@ -112,34 +112,21 @@ class Elena:
         os.rename(self._robot_filename, self._robot_filename + '.inactive')
 
     def _save_history_state_and_profit(self, in_state):
-        history_state = dict(in_state)
-        filename = f"history/{str(get_time())}_{str(history_state['buy_order_id'])}.json"
         buy_order = ''
         sell_order = ''
         iteration_benefit = 0
         iteration_margin = 0
         left_on_asset = 0
 
-        if history_state['buy_order_id']:
+        if in_state['buy_order_id']:
             buy_order = self._exchange.get_order(history_state['buy_order_id'], history_state['symbol'])
-            if history_state['sell_order_id']:
+            if in_state['sell_order_id']:
                 sell_order = self._exchange.get_order(history_state['sell_order_id'], history_state['symbol'])
                 if sell_order['status'] == OrderStatus.FILLED.value:
                     iteration_benefit = float(sell_order['cummulativeQuoteQty']) - float(
                         buy_order['cummulativeQuoteQty'])
                     iteration_margin = (iteration_benefit / float(buy_order['cummulativeQuoteQty'])) * 100
                     left_on_asset = float(buy_order['executedQty']) - float(sell_order['executedQty'])
-
-        history_state['active'] = -1
-        history_state['buy_order'] = buy_order
-        history_state['sell_order'] = sell_order
-        history_state['iteration_benefit'] = iteration_benefit
-        history_state['iteration_margin'] = iteration_margin
-        history_state['left_on_asset'] = left_on_asset
-
-        fp = open(filename, 'w')
-        json.dump(history_state, fp)
-        fp.close()
 
         if in_state.get('accumulated_benefit') is None:
             in_state['accumulated_benefit'] = 0
@@ -155,6 +142,20 @@ class Elena:
         if iteration_benefit != 0:
             in_state['sales'] = in_state['sales'] + 1
         in_state['cycles'] = in_state['cycles'] + 1
+
+        history_state = dict(in_state)
+        filename = f"history/{str(get_time())}_{str(history_state['buy_order_id'])}.json"
+
+        history_state['active'] = -1
+        history_state['buy_order'] = buy_order
+        history_state['sell_order'] = sell_order
+        history_state['iteration_benefit'] = iteration_benefit
+        history_state['iteration_margin'] = iteration_margin
+        history_state['left_on_asset'] = left_on_asset
+
+        fp = open(filename, 'w')
+        json.dump(history_state, fp)
+        fp.close()
 
     def _estimate_buy_sel(self, state):
         candles_df = self._exchange.get_candles(p_symbol=state['symbol'], p_limit=state['data_samples'])
