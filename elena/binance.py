@@ -33,11 +33,11 @@ class Binance:
         self._connect()
         return float(self.client.get_asset_balance(asset=asset)['free'])
 
-    def get_order_limit_buy(self, p, q, symbol):
+    def order_limit_buy(self, p, q, symbol):
         self._connect()
         return self.client.order_limit_buy(symbol=symbol, quantity=q, price=p)
 
-    def get_order_limit_sell(self, p, q, symbol):
+    def order_limit_sell(self, p, q, symbol):
         self._connect()
         return self.client.order_limit_sell(symbol=symbol, quantity=q, price=p)
 

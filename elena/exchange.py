@@ -86,7 +86,7 @@ class Exchange:
         bid, ask = self._api.get_order_book_first_bids_asks(symbol)
         if buy_price > bid:
             buy_price = bid
-            llog('changed buy to bid')
+            llog('changed buy to bid', buy_price, bid)
 
         quantity = max_order / buy_price
 
@@ -102,7 +102,7 @@ class Exchange:
 
         buy_order_id = 0
         try:
-            order = self._api.get_order_limit_buy(p, q, symbol)
+            order = self._api.order_limit_buy(p, q, symbol)
             buy_order_id = order['orderId']
         except:
             llog("error buying", q, p, 'max_order:' + max_order, 'buy_price:' + buy_price, 'symbol:' + symbol),
@@ -117,7 +117,7 @@ class Exchange:
             bid, ask = self._api.get_order_book_first_bids_asks(symbol)
             if sell < ask:
                 sell = ask
-                llog('changed sell to ask')
+                llog('changed sell to ask',sell, ask)
 
             sell_quantity = float(o['executedQty'])
 
@@ -131,7 +131,7 @@ class Exchange:
 
             q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=sell_quantity)
             p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=sell)
-            order_sell = self._api.get_order_limit_sell(p, q, symbol)
+            order_sell = self._api.order_limit_sell(p, q, symbol)
             sell_client_order_id = order_sell['orderId']
         return sell_client_order_id
 
