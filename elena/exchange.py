@@ -85,8 +85,8 @@ class Exchange:
     def create_buy_order(self, max_order, symbol, buy_price):
         bid, ask = self._api.get_order_book_first_bids_asks(symbol)
         if buy_price > bid:
+            llog('changing buy to bid', buy_price, bid)
             buy_price = bid
-            llog('changed buy to bid', buy_price, bid)
 
         quantity = max_order / buy_price
 
@@ -116,8 +116,8 @@ class Exchange:
         if o['status'] == OrderStatus.FILLED.value:
             bid, ask = self._api.get_order_book_first_bids_asks(symbol)
             if sell < ask:
+                llog('changing sell to ask', sell, ask)
                 sell = ask
-                llog('changed sell to ask',sell, ask)
 
             sell_quantity = float(o['executedQty'])
 
