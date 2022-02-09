@@ -136,3 +136,4 @@ dmypy.json
 
 # Elena's bots
 *.json
+*.json.inactive
