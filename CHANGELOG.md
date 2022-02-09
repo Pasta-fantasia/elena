@@ -1,3 +1,7 @@
+# 1.4
+- Only create orders above or upper the current price #17
+- Status in active .jsons #16
+
 # 1.3 New algos and order details on history jsons
 - New algos 6, 7.
 - Refactor algo for better understanding.
