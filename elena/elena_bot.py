@@ -119,9 +119,9 @@ class Elena:
         left_on_asset = 0
 
         if in_state['buy_order_id']:
-            buy_order = self._exchange.get_order(history_state['buy_order_id'], history_state['symbol'])
+            buy_order = self._exchange.get_order(in_state['buy_order_id'], in_state['symbol'])
             if in_state['sell_order_id']:
-                sell_order = self._exchange.get_order(history_state['sell_order_id'], history_state['symbol'])
+                sell_order = self._exchange.get_order(in_state['sell_order_id'], in_state['symbol'])
                 if sell_order['status'] == OrderStatus.FILLED.value:
                     iteration_benefit = float(sell_order['cummulativeQuoteQty']) - float(
                         buy_order['cummulativeQuoteQty'])
