@@ -44,3 +44,8 @@ class Binance:
     def get_order(self, p_order_id, p_symbol):
         self._connect()
         return self.client.get_order(symbol=p_symbol, orderId=p_order_id)
+
+    def get_order_book_first_bids_asks(self, p_symbol):
+        self._connect()
+        book = self.client.get_order_book(symbol=p_symbol)
+        return float(book['bids'][0]), float(book['asks'][0])

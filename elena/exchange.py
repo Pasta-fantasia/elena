@@ -83,6 +83,11 @@ class Exchange:
         return self._api.get_order(p_order_id, p_symbol)
 
     def create_buy_order(self, max_order, symbol, buy_price):
+        bid, ask = self._api.get_order_book_first_bids_asks(symbol)
+        if buy_price > bid:
+            buy_price = bid
+            llog('changed buy to bid')
+
         quantity = max_order / buy_price
 
         symbol_info = self._api.get_symbol_info(symbol=symbol)
@@ -109,7 +114,13 @@ class Exchange:
         sell_client_order_id = ''
 
         if o['status'] == OrderStatus.FILLED.value:
+            bid, ask = self._api.get_order_book_first_bids_asks(symbol)
+            if sell < ask:
+                sell = ask
+                llog('changed sell to ask')
+
             sell_quantity = float(o['executedQty'])
+
             symbol_info = self._api.get_symbol_info(symbol=symbol)
             free_balance = self._api.get_asset_balance(symbol_info['baseAsset'])
 
