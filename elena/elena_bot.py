@@ -145,11 +145,15 @@ class Elena:
             in_state['accumulated_benefit'] = 0
         if in_state.get('accumulated_margin') is None:
             in_state['accumulated_margin'] = 0
+        if in_state.get('sales') is None:
+            in_state['sales'] = 0
         if in_state.get('cycles') is None:
             in_state['cycles'] = 0
 
         in_state['accumulated_benefit'] = in_state['accumulated_benefit'] + iteration_benefit
         in_state['accumulated_margin'] = in_state['accumulated_margin'] + iteration_margin
+        if iteration_benefit != 0:
+            in_state['sales'] = in_state['sales'] + 1
         in_state['cycles'] = in_state['cycles'] + 1
 
     def _estimate_buy_sel(self, state):
