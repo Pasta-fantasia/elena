@@ -28,9 +28,11 @@ class Elena:
                     state['sell_order_id'] = ''
                     state['buy'] = buy
                     state['sell'] = sell
+                    state['status'] = 'buying'
                     self._save_state(state)
                 else:
                     state['sleep_until'] = self._sleep_until(get_time(), 5)
+                    state['status'] = "waiting - don't buy"
                     self._save_state(state)
                     llog("don't buy")
                 return
@@ -41,6 +43,7 @@ class Elena:
                 if new_sell_order_id:
                     llog("create a new sell order")
                     state['sell_order_id'] = new_sell_order_id
+                    state['status'] = 'selling'
                     self._save_state(state)
                 else:
                     status, order_update_time = self._exchange.check_order_status(state['symbol'],
@@ -58,6 +61,7 @@ class Elena:
                             state['sell_order_id'] = ''
                             state['buy'] = 0
                             state['sell'] = 0
+                            state['status'] = 'buy cancellation'
                             self._save_state(state)
                         else:
                             self._delete_state()
@@ -75,12 +79,16 @@ class Elena:
                         state['sell_order_id'] = ''
                         state['buy'] = 0
                         state['sell'] = 0
+                        state['status'] = 'waiting'
                         self._save_state(state)
                     else:
+                        self._save_state(state)
                         self._delete_state()
                 elif status == OrderStatus.CANCELED.value:
                     llog("sell cancellation, save history")
+                    state['status'] = 'sell cancellation'
                     self._save_history_state_and_profit(state)
+                    self._save_state(state)
                     self._delete_state()
                 else:
                     state['sleep_until'] = self._sleep_until(get_time(), 15)
@@ -107,32 +115,49 @@ class Elena:
         os.rename(self._robot_filename, self._robot_filename + '.inactive')
 
     def _save_history_state_and_profit(self, in_state):
-        state = dict(in_state)
-        filename = f"history/{str(get_time())}_{str(state['buy_order_id'])}.json"
         buy_order = ''
         sell_order = ''
         iteration_benefit = 0
         iteration_margin = 0
         left_on_asset = 0
 
-        if state['buy_order_id']:
-            buy_order = self._exchange.get_order(state['buy_order_id'], state['symbol'] )
-            if state['sell_order_id']:
-                sell_order = self._exchange.get_order(state['sell_order_id'], state['symbol'])
+        if in_state['buy_order_id']:
+            buy_order = self._exchange.get_order(in_state['buy_order_id'], in_state['symbol'])
+            if in_state['sell_order_id']:
+                sell_order = self._exchange.get_order(in_state['sell_order_id'], in_state['symbol'])
                 if sell_order['status'] == OrderStatus.FILLED.value:
-                    iteration_benefit = float(sell_order['cummulativeQuoteQty']) - float(buy_order['cummulativeQuoteQty'])
+                    iteration_benefit = float(sell_order['cummulativeQuoteQty']) - float(
+                        buy_order['cummulativeQuoteQty'])
                     iteration_margin = (iteration_benefit / float(buy_order['cummulativeQuoteQty'])) * 100
                     left_on_asset = float(buy_order['executedQty']) - float(sell_order['executedQty'])
 
-        state['active'] = -1
-        state['buy_order'] = buy_order
-        state['sell_order'] = sell_order
-        state['iteration_benefit'] = iteration_benefit
-        state['iteration_margin'] = iteration_margin
-        state['left_on_asset'] = left_on_asset
+        if in_state.get('accumulated_benefit') is None:
+            in_state['accumulated_benefit'] = 0
+        if in_state.get('accumulated_margin') is None:
+            in_state['accumulated_margin'] = 0
+        if in_state.get('sales') is None:
+            in_state['sales'] = 0
+        if in_state.get('cycles') is None:
+            in_state['cycles'] = 0
+
+        in_state['accumulated_benefit'] = in_state['accumulated_benefit'] + iteration_benefit
+        in_state['accumulated_margin'] = in_state['accumulated_margin'] + iteration_margin
+        if iteration_benefit != 0:
+            in_state['sales'] = in_state['sales'] + 1
+        in_state['cycles'] = in_state['cycles'] + 1
+
+        history_state = dict(in_state)
+        filename = f"history/{str(get_time())}_{str(history_state['buy_order_id'])}.json"
+
+        history_state['active'] = -1
+        history_state['buy_order'] = buy_order
+        history_state['sell_order'] = sell_order
+        history_state['iteration_benefit'] = iteration_benefit
+        history_state['iteration_margin'] = iteration_margin
+        history_state['left_on_asset'] = left_on_asset
 
         fp = open(filename, 'w')
-        json.dump(state, fp)
+        json.dump(history_state, fp)
         fp.close()
 
     def _estimate_buy_sel(self, state):

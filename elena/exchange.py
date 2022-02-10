@@ -83,6 +83,11 @@ class Exchange:
         return self._api.get_order(p_order_id, p_symbol)
 
     def create_buy_order(self, max_order, symbol, buy_price):
+        bid, ask = self._api.get_order_book_first_bids_asks(symbol)
+        if buy_price > bid:
+            llog('changing buy to bid', buy_price, bid)
+            buy_price = bid
+
         quantity = max_order / buy_price
 
         symbol_info = self._api.get_symbol_info(symbol=symbol)
@@ -97,7 +102,7 @@ class Exchange:
 
         buy_order_id = 0
         try:
-            order = self._api.get_order_limit_buy(p, q, symbol)
+            order = self._api.order_limit_buy(p, q, symbol)
             buy_order_id = order['orderId']
         except:
             llog("error buying", q, p, 'max_order:' + max_order, 'buy_price:' + buy_price, 'symbol:' + symbol),
@@ -109,7 +114,13 @@ class Exchange:
         sell_client_order_id = ''
 
         if o['status'] == OrderStatus.FILLED.value:
+            bid, ask = self._api.get_order_book_first_bids_asks(symbol)
+            if sell < ask:
+                llog('changing sell to ask', sell, ask)
+                sell = ask
+
             sell_quantity = float(o['executedQty'])
+
             symbol_info = self._api.get_symbol_info(symbol=symbol)
             free_balance = self._api.get_asset_balance(symbol_info['baseAsset'])
 
@@ -120,7 +131,7 @@ class Exchange:
 
             q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=sell_quantity)
             p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=sell)
-            order_sell = self._api.get_order_limit_sell(p, q, symbol)
+            order_sell = self._api.order_limit_sell(p, q, symbol)
             sell_client_order_id = order_sell['orderId']
         return sell_client_order_id
 
