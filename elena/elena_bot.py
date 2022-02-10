@@ -32,6 +32,7 @@ class Elena:
                     self._save_state(state)
                 else:
                     state['sleep_until'] = self._sleep_until(get_time(), 5)
+                    state['status'] = "waiting - don't buy"
                     self._save_state(state)
                     llog("don't buy")
                 return
