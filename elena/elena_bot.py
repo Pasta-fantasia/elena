@@ -81,11 +81,13 @@ class Elena:
                         state['status'] = 'waiting'
                         self._save_state(state)
                     else:
+                        self._save_state(state)
                         self._delete_state()
                 elif status == OrderStatus.CANCELED.value:
                     llog("sell cancellation, save history")
                     state['status'] = 'sell cancellation'
                     self._save_history_state_and_profit(state)
+                    self._save_state(state)
                     self._delete_state()
                 else:
                     state['sleep_until'] = self._sleep_until(get_time(), 15)
