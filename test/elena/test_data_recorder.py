@@ -5,7 +5,7 @@ from _pytest.python_api import raises
 from mockito import when
 
 from elena.utils import get_time
-from elena.test_data_recorder import TestDataRecorder
+from elena.data_recorder import DataRecorder
 
 df_dict = {
     'Open time': [get_time()],
@@ -24,7 +24,7 @@ df_dict = {
 
 
 def test_function_input():
-    sut = TestDataRecorder('test_utils')
+    sut = DataRecorder('test_utils')
     sut.start()
     sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
 
@@ -42,7 +42,7 @@ def test_function_input():
 
 
 def test_call_input_duplicated_function():
-    sut = TestDataRecorder('test_utils')
+    sut = DataRecorder('test_utils')
     sut.start()
     sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
     with raises(RuntimeError) as err:
@@ -51,7 +51,7 @@ def test_call_input_duplicated_function():
 
 
 def test_call_input():
-    sut = TestDataRecorder('test_utils')
+    sut = DataRecorder('test_utils')
     sut.start()
     sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
     sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
@@ -77,7 +77,7 @@ def test_call_input():
 
 
 def test_call_input_function_does_not_exists():
-    sut = TestDataRecorder('test_utils')
+    sut = DataRecorder('test_utils')
     sut.start()
 
     with raises(RuntimeError) as err:
@@ -86,7 +86,7 @@ def test_call_input_function_does_not_exists():
 
 
 def test_call_input_duplicated_call():
-    sut = TestDataRecorder('test_utils')
+    sut = DataRecorder('test_utils')
     sut.start()
     sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
     sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
@@ -96,7 +96,7 @@ def test_call_input_duplicated_call():
 
 
 def test_call_output():
-    sut = TestDataRecorder('test_utils')
+    sut = DataRecorder('test_utils')
     sut.start()
     sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
     sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
@@ -126,7 +126,7 @@ def test_call_output():
 
 
 def test_call_output_function_does_not_exists():
-    sut = TestDataRecorder('test_utils')
+    sut = DataRecorder('test_utils')
     sut.start()
 
     with raises(RuntimeError) as err:
@@ -135,7 +135,7 @@ def test_call_output_function_does_not_exists():
 
 
 def test_call_output_call_does_not_exists():
-    sut = TestDataRecorder('test_utils')
+    sut = DataRecorder('test_utils')
     sut.start()
     sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
 
@@ -146,7 +146,7 @@ def test_call_output_call_does_not_exists():
 
 # noinspection DuplicatedCode
 def test_call_output_duplicated_call():
-    sut = TestDataRecorder('test_utils')
+    sut = DataRecorder('test_utils')
     sut.start()
     sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
     sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
@@ -159,7 +159,7 @@ def test_call_output_duplicated_call():
 
 # noinspection DuplicatedCode
 def test_function_output():
-    sut = TestDataRecorder('test_utils')
+    sut = DataRecorder('test_utils')
     sut.start()
     sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
     sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
@@ -194,7 +194,7 @@ def test_function_output():
 
 # noinspection DuplicatedCode
 def test_function_output_duplicated_call():
-    sut = TestDataRecorder('test_utils')
+    sut = DataRecorder('test_utils')
     sut.start()
     sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
     sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
@@ -210,7 +210,7 @@ def test_function_output_duplicated_call():
 def test_stop():
     when(time).time().thenReturn(1)
 
-    sut = TestDataRecorder('test_utils', '.')
+    sut = DataRecorder('test_utils', '.')
     sut.start()
     sut.func_in('get_candles', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)
     sut.call_in('get_candles', '_api.get_klines', p_symbol='ETHBUSD', p_interval='1m', p_limit=1000)

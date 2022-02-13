@@ -3,7 +3,7 @@ from enum import Enum
 import pandas as pd
 from binance.client import Client
 
-import elena.test_data_recorder
+import elena.data_recorder
 from elena import utils
 from elena.binance import Binance
 from elena.logging import llog
@@ -26,7 +26,7 @@ class OrderStatus(Enum):
 class Exchange:
     def __init__(self, api: Binance):
         self._api = api
-        self._rec = elena.test_data_recorder.TestDataRecorder('Exchange', '../../test_data')
+        self._rec = elena.test_data_recorder.DataRecorder('Exchange', '../../test_data')
 
     def start_recorder(self):
         self._rec.start()

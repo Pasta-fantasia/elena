@@ -3,7 +3,7 @@ import json
 from elena.utils import get_time
 
 
-class TestDataRecorder:
+class DataRecorder:
     def __init__(self, file_prefix, path='../test_data'):
         self._file_prefix = file_prefix
         self._path = path
