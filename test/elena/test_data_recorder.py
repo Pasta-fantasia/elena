@@ -4,7 +4,8 @@ import time
 from _pytest.python_api import raises
 from mockito import when
 
-from elena.utils import TestDataRecorder, get_time
+from elena.utils import get_time
+from elena.test_data_recorder import TestDataRecorder
 
 df_dict = {
     'Open time': [get_time()],
@@ -240,7 +241,7 @@ def test_stop():
         }
     }
 
-    with open('./test_utils-1000.json') as f:
+    with open('test_data_recorder-1000.json') as f:
         actual = json.load(f)
 
     assert actual == expected
