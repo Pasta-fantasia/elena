@@ -160,6 +160,13 @@ class Elena:
         json.dump(history_state, fp)
         fp.close()
 
+        # TODO: refactor this method. It's doing more than one thing.
+        # re-invest
+        if in_state.get('reinvest') is not None:
+            if in_state['reinvest'] == 1:
+                in_state['max_order'] = in_state['max_order'] + iteration_benefit
+
+
     def _estimate_buy_sel(self, state):
         candles_df = self._exchange.get_candles(p_symbol=state['symbol'], p_limit=state['data_samples'])
         return self._buy_sell(candles_df, state['algo'], state['margin'], state['tendence_tolerance'])
