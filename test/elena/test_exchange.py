@@ -8,8 +8,8 @@ from elena.binance import Binance
 from elena.exchange import Exchange
 
 
-def load_test_data(filename: str) -> dict:
-    with open('../../test_data/' + filename) as json_file:
+def load_test_data(filePath: str) -> dict:
+    with open(filePath) as json_file:
         data = json.load(json_file)
     return data
 
@@ -19,26 +19,25 @@ def load_test_data(filename: str) -> dict:
 def _test_record_get_candles():
     binance = Binance()
     sut = Exchange(binance)
-    sut.start_recorder()
     sut.get_candles(p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=10)
-    sut.stop_recorder()
 
 
 # Test method get_candles with mocks based on previously recorded data
 def test_get_candles():
-    data = load_test_data('Exchange-1643865524441.json.data')
+    get_klines_data = load_test_data('../test_data/1644868841483-get_klines.json')
     api_mock = mock(spec=Binance)
     when(api_mock).get_klines(
-        data['get_candles']['_api.get_klines']['input']['p_interval'],
-        data['get_candles']['_api.get_klines']['input']['p_limit'],
-        data['get_candles']['_api.get_klines']['input']['p_symbol'],
-    ).thenReturn(data['get_candles']['_api.get_klines']['output']['candles'])
+        get_klines_data['input']['p_interval'],
+        get_klines_data['input']['p_limit'],
+        get_klines_data['input']['p_symbol'],
+    ).thenReturn(get_klines_data['output'])
 
+    get_candles_data = load_test_data('../test_data/1644868841486-get_candles.json')
     sut = Exchange(api_mock)
     actual = sut.get_candles(
-        data['get_candles']['input']['p_symbol'],
-        data['get_candles']['input']['p_interval'],
-        data['get_candles']['input']['p_limit'],
+        get_candles_data['input']['p_symbol'],
+        get_candles_data['input']['p_interval'],
+        get_candles_data['input']['p_limit'],
     )
 
-    assert actual.to_json() == data['get_candles']['output']['candles_df']
+    assert actual.to_json() == get_candles_data['output']

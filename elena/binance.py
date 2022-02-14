@@ -3,6 +3,8 @@ from functools import lru_cache
 from binance.client import Client
 from decouple import AutoConfig
 
+from elena.record import record
+
 
 class Binance:
     def __init__(self):
@@ -20,6 +22,7 @@ class Binance:
                 exit(-1)
         return
 
+    @record
     def get_klines(self, p_interval, p_limit, p_symbol):
         self._connect()
         return self.client.get_klines(symbol=p_symbol, interval=p_interval, limit=p_limit)
