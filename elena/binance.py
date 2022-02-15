@@ -22,7 +22,7 @@ class Binance:
                 exit(-1)
         return
 
-    @Record(True)
+    @Record()
     def get_klines(self, p_interval, p_limit, p_symbol):
         self._connect()
         return self.client.get_klines(symbol=p_symbol, interval=p_interval, limit=p_limit)

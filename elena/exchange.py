@@ -26,7 +26,7 @@ class Exchange:
     def __init__(self, api: Binance):
         self._api = api
 
-    @Record(True)
+    @Record()
     def get_candles(self, p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=1000):
         candles = self._api.get_klines(p_interval=p_interval, p_limit=p_limit, p_symbol=p_symbol)
 

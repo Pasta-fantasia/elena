@@ -1,20 +1,26 @@
 import json
 import pandas as pd
+
+from config.record_config import record
 from elena.utils import get_time
 
 
 class Record:
-    def __init__(self, enable_recording):
-        self._enabled = enable_recording
-
     def __call__(self, func):
         def wrapper(*args, **kwargs):
             _output = func(*args, **kwargs)
-            if self._enabled:
+            if self._is_enabled(func.__name__):
                 self._record(kwargs, _output, func.__name__)
             return _output
 
         return wrapper
+
+    @staticmethod
+    def _is_enabled(function_name) -> bool:
+        # TODO consider a better approach
+        if record['enabled'] and function_name in record['functions']:
+            return record['functions'][function_name]
+        return False
 
     def _record(self, kwargs, output, function_name):
         _time = get_time()
