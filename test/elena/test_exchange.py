@@ -22,7 +22,7 @@ def _test_record_get_candles():
     sut.get_candles(p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=10)
 
 
-# Test method get_candles with mocks based on previously recorded data
+# Test method get_candles with get_klines mock based on previously recorded data
 def test_get_candles():
     get_klines_data = load_test_data('../test_data/1644868841483-get_klines.json')
     api_mock = mock(spec=Binance)
