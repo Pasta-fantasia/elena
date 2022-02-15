@@ -27,17 +27,17 @@ def test_get_candles():
     get_klines_data = load_test_data('../test_data/1644868841483-get_klines.json')
     api_mock = mock(spec=Binance)
     when(api_mock).get_klines(
-        get_klines_data['input']['p_interval'],
-        get_klines_data['input']['p_limit'],
-        get_klines_data['input']['p_symbol'],
+        p_interval=get_klines_data['input']['p_interval'],
+        p_limit=get_klines_data['input']['p_limit'],
+        p_symbol=get_klines_data['input']['p_symbol'],
     ).thenReturn(get_klines_data['output'])
 
     get_candles_data = load_test_data('../test_data/1644868841486-get_candles.json')
     sut = Exchange(api_mock)
     actual = sut.get_candles(
-        get_candles_data['input']['p_symbol'],
-        get_candles_data['input']['p_interval'],
-        get_candles_data['input']['p_limit'],
+        p_symbol=get_candles_data['input']['p_symbol'],
+        p_interval=get_candles_data['input']['p_interval'],
+        p_limit=get_candles_data['input']['p_limit'],
     )
 
     assert actual.to_json() == get_candles_data['output']
