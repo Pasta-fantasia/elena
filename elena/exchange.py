@@ -5,7 +5,7 @@ from binance.client import Client
 
 from elena.binance import Binance
 from elena.logging import llog
-from elena.record import record
+from elena.record import Record
 
 
 # Exchange
@@ -26,7 +26,7 @@ class Exchange:
     def __init__(self, api: Binance):
         self._api = api
 
-    @record
+    @Record(True)
     def get_candles(self, p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=1000):
         candles = self._api.get_klines(p_interval=p_interval, p_limit=p_limit, p_symbol=p_symbol)
 
