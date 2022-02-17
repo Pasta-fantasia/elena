@@ -3,7 +3,7 @@ from functools import lru_cache
 from binance.client import Client
 from decouple import AutoConfig
 
-from elena.record import Record
+from elena.test_data_recording import Record
 
 
 class Binance:

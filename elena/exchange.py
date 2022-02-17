@@ -5,7 +5,7 @@ from binance.client import Client
 
 from elena.binance import Binance
 from elena.logging import llog
-from elena.record import Record
+from elena.test_data_recording import Record
 
 
 # Exchange
