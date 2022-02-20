@@ -67,8 +67,9 @@ class Elena:
                         self._save_state(state)
                     else:
                         self._delete_state()
-                elif status == OrderStatus.NEW.value and order_time > order_age_limit:
+                elif status == OrderStatus.NEW.value and order_time > order_age_limit:  # TODO: add auto_cancel parameter
                     llog("auto buy cancellation")
+                    # TODO: create exchange.cancel_order
                 else:
                     state['sleep_until'] = self._sleep_until(get_time(), 5)
                     self._save_state(state)
@@ -76,6 +77,7 @@ class Elena:
                 return
 
             if state['buy_order_id'] and state['sell_order_id']:
+                # TODO: use get_order
                 status, order_update_time = self._exchange.check_order_status(state['symbol'], state['sell_order_id'])
                 if status == OrderStatus.FILLED.value:
                     llog("save history")
