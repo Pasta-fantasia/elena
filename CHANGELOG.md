@@ -1,3 +1,7 @@
+# 1.5 
+- Reinvest benefit parameter #27
+- Buy order auto cancellation #14
+
 # 1.4
 - Only create orders above or upper the current price #17
 - Status in active .jsons #16
