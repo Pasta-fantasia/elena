@@ -163,8 +163,8 @@ class Elena:
         # TODO: refactor this method. It's doing more than one thing.
         # re-invest
         if in_state.get('reinvest') is not None:
-            if in_state['reinvest'] == 1 and iteration_benefit > 0:
-                in_state['max_order'] = in_state['max_order'] + iteration_benefit
+            if in_state['reinvest'] > 0 and iteration_benefit > 0:
+                in_state['max_order'] = in_state['max_order'] + (iteration_benefit * in_state['reinvest'] / 100)
 
         if iteration_benefit < 0:
             llog("iteration margin <0!", history_state)
