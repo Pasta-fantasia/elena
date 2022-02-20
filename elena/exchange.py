@@ -100,40 +100,34 @@ class Exchange:
         q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=quantity)
         p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=buy_price)
 
-        buy_order_id = 0
+        order = None
         try:
             order = self._api.order_limit_buy(p, q, symbol)
-            buy_order_id = order['orderId']
         except:
             llog("error buying", q, p, 'max_order:' + max_order, 'buy_price:' + buy_price, 'symbol:' + symbol),
 
-        return buy_order_id
+        return order
 
-    def create_sell_order(self, symbol, buy_order_id, sell):
-        o = self.get_order(buy_order_id, symbol)
-        sell_client_order_id = ''
+    def create_sell_order(self, symbol, sell_quantity, sell_price):
+        order_sell = None
+        bid, ask = self._api.get_order_book_first_bids_asks(symbol)
+        if sell_price < ask:
+            llog('changing sell to ask', sell_price, ask)
+            sell_price = ask
 
-        if o['status'] == OrderStatus.FILLED.value:
-            bid, ask = self._api.get_order_book_first_bids_asks(symbol)
-            if sell < ask:
-                llog('changing sell to ask', sell, ask)
-                sell = ask
+        symbol_info = self._api.get_symbol_info(symbol=symbol)
+        free_balance = self._api.get_asset_balance(symbol_info['baseAsset'])
 
-            sell_quantity = float(o['executedQty'])
+        if sell_quantity > free_balance:
+            # if the order was processed as "taker" we don't have the information about the fee
+            sell_quantity = free_balance
+            llog('sell using balance')
 
-            symbol_info = self._api.get_symbol_info(symbol=symbol)
-            free_balance = self._api.get_asset_balance(symbol_info['baseAsset'])
+        q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=sell_quantity)
+        p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=sell_price)
+        order_sell = self._api.order_limit_sell(p, q, symbol)
 
-            if sell_quantity > free_balance:
-                # if the order was processed as "taker" we don't have the information about the fee
-                sell_quantity = free_balance
-                llog('sell using balance')
-
-            q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=sell_quantity)
-            p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=sell)
-            order_sell = self._api.order_limit_sell(p, q, symbol)
-            sell_client_order_id = order_sell['orderId']
-        return sell_client_order_id
+        return order_sell
 
     def check_order_status(self, p_symbol, p_order_id):
         o = self.get_order(p_order_id, p_symbol)
