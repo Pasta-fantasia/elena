@@ -169,6 +169,12 @@ class Elena:
         if iteration_benefit < 0:
             llog("iteration margin <0!", history_state)
 
+        # temporary algo migration for testing
+        if self._state['algo'] == 6:
+            self._state['algo'] = 8
+        if self._state['algo'] == 7:
+            self._state['algo'] = 9
+
     def _estimate_buy_sel(self, state):
         candles_df = self._exchange.get_candles(p_symbol=state['symbol'], p_limit=state['data_samples'])
         return self._buy_sell(candles_df, state['algo'], state['margin'], state['tendence_tolerance'])
