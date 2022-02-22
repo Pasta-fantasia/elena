@@ -82,7 +82,7 @@ class Exchange:
     def get_order(self, p_order_id, p_symbol):
         return self._api.get_order(p_order_id, p_symbol)
 
-    def get_order_book_first_bids_asks(self, symbol)
+    def get_order_book_first_bids_asks(self, symbol):
         return self._api.get_order_book_first_bids_asks(symbol)
 
     def create_buy_order(self, max_order, symbol, buy_price):
