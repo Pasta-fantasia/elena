@@ -109,7 +109,7 @@ class Exchange:
             order = self._api.order_limit_buy(p, q, symbol)
             buy_order_id = order['orderId']
         except:
-            llog("error buying", q, p, 'max_order:' + max_order, 'buy_price:' + buy_price, 'symbol:' + symbol),
+            llog("error buying", q, p, 'max_order:', max_order, 'buy_price:', buy_price, 'symbol:',  symbol)
 
         return buy_order_id
 
