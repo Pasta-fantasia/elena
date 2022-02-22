@@ -18,8 +18,10 @@ class Elena:
         self._state['sleep_until'] = 0
         self._state['buy_order_id'] = ''
         self._state['sell_order_id'] = ''
-        self._state['buy'] = 0
-        self._state['sell'] = 0
+        self._state['buy_order_id'] = ''
+        self._state['buy_order'] = 0
+        self._state['sell_order_id'] = ''
+        self._state['sell_order'] = 0
         self._state['status'] = ''
 
     def iterate(self):
@@ -42,41 +44,35 @@ class Elena:
                     llog("don't buy")
                 return
 
-            if state['buy_order_id'] and not state['sell_order_id']:
-                buy_order = self._exchange.get_order(state['buy_order_id'], state['symbol'])
+            if self._state['buy_order_id'] and not self._state['sell_order_id']:
+                buy_order = self._exchange.get_order(self._state['buy_order_id'], self._state['symbol'])
                 status = buy_order['status']
                 order_time = int(buy_order['time'])
-                order_age_limit = order_time + (state['step'] * 60 * 1000 * 5)  # expires afet 5 times its _step_
+                order_age_limit = order_time + (self._state['step'] * 60 * 1000 * 5)  # expires afet 5 times its _step_
                 if status == OrderStatus.FILLED.value:
                     sell_quantity = float(buy_order['executedQty'])
-                    new_sell_order = self._exchange.create_sell_order(state['symbol'], sell_quantity, state['sell'])
+                    new_sell_order = self._exchange.create_sell_order(self._state['symbol'], sell_quantity, self._state['sell'])
                     if new_sell_order:
                         llog("created a new sell order")
-                        state['sell_order_id'] = new_sell_order['orderId']
-                        state['sell_order'] = new_sell_order
-                        state['status'] = 'selling'
-                        self._save_state(state)
+                        self._state['sell_order_id'] = new_sell_order['orderId']
+                        self._state['sell_order'] = new_sell_order
+                        self._state['status'] = 'selling'
+                        self._save_state()
                 elif status == OrderStatus.CANCELED.value:
                     llog("buy cancellation detected")
-                    self._save_history_state_and_profit(state)
-                    if state['active'] == 1:
-                        state['sleep_until'] = 0
-                        state['buy_order_id'] = ''
-                        state['buy_order'] = ''
-                        state['sell_order_id'] = ''
-                        state['sell_order'] = ''
-                        state['buy'] = 0
-                        state['sell'] = 0
+                    self._save_history_state_and_profit()
+                    if self._state['active'] == 1:
+                        self._reset_state()
                         state['status'] = 'buy cancellation'
-                        self._save_state(state)
+                        self._save_state()
                     else:
                         self._delete_state()
                 elif status == OrderStatus.NEW.value and order_time > order_age_limit:  # TODO: add auto_cancel parameter
                     llog("auto buy cancellation")
                     # TODO: create exchange.cancel_order
                 else:
-                    state['sleep_until'] = self._sleep_until(get_time(), 5)
-                    self._save_state(state)
+                    self._state['sleep_until'] = self._sleep_until(get_time(), 5)
+                    self._save_state()
                     llog("waiting purchase")
             if self._state['buy_order_id'] and not self._state['sell_order_id']:
                 new_sell_order_id = self._exchange.create_sell_order(self._state['symbol'], self._state['buy_order_id'],
