@@ -12,29 +12,33 @@ class Elena:
     def __init__(self, robot_filename: str, exchange: Exchange):
         self._robot_filename = robot_filename
         self._exchange = exchange
+        self._state = self._read_state()
+
+    def _reset_state(self):
+        self._state['sleep_until'] = 0
+        self._state['buy_order_id'] = ''
+        self._state['sell_order_id'] = ''
+        self._state['buy'] = 0
+        self._state['sell'] = 0
+        self._state['status'] = ''
 
     def iterate(self):
-        state = self._read_state()
-        if state['sleep_until'] < get_time():
-
-            if not state['buy_order_id'] and state['active']:
-                buy, sell = self._estimate_buy_sel(state)
+        if self._state['sleep_until'] < get_time():
+            if not self._state['buy_order_id'] and self._state['active']:
+                buy, sell = self._estimate_buy_sel(self._state)
                 if buy > 0:
                     llog("create a new buy order")
-                    new_buy_order = self._exchange.create_buy_order(state['max_order'], state['symbol'], buy)
-                    # TODO: create a reset_state
-                    state['sleep_until'] = 0
-                    state['buy_order_id'] = new_buy_order['orderId']
-                    state['buy_order'] = new_buy_order
-                    state['sell_order_id'] = ''
-                    state['buy'] = buy
-                    state['sell'] = sell
-                    state['status'] = 'buying'
-                    self._save_state(state)
+                    new_buy_order_id = self._exchange.create_buy_order(self._state['max_order'], self._state['symbol'], buy)
+                    self._reset_state()
+                    self._state['buy_order_id'] = new_buy_order_id
+                    self._state['buy'] = buy
+                    self._state['sell'] = sell
+                    self._state['status'] = 'buying'
+                    self._save_state()
                 else:
-                    state['sleep_until'] = self._sleep_until(get_time(), 5)
-                    state['status'] = "waiting - don't buy"
-                    self._save_state(state)
+                    self._state['sleep_until'] = self._sleep_until(get_time(), 5)
+                    self._state['status'] = "waiting - don't buy"
+                    self._save_state()
                     llog("don't buy")
                 return
 
@@ -74,37 +78,55 @@ class Elena:
                     state['sleep_until'] = self._sleep_until(get_time(), 5)
                     self._save_state(state)
                     llog("waiting purchase")
+            if self._state['buy_order_id'] and not self._state['sell_order_id']:
+                new_sell_order_id = self._exchange.create_sell_order(self._state['symbol'], self._state['buy_order_id'],
+                                                                     self._state['sell'])
+                if new_sell_order_id:
+                    llog("create a new sell order")
+                    self._state['sell_order_id'] = new_sell_order_id
+                    self._state['status'] = 'selling'
+                    self._save_state()
+                else:
+                    status, order_update_time = self._exchange.check_order_status(self._state['symbol'],
+                                                                                  self._state['buy_order_id'])
+                    if not status == OrderStatus.CANCELED.value:
+                        self._state['sleep_until'] = self._sleep_until(get_time(), 5)
+                        self._save_state()
+                        llog("waiting purchase")
+                    else:
+                        llog("buy cancellation")
+                        self._save_history_state_and_profit()
+                        if self._state['active'] == 1:
+                            self._reset_state()
+                            self._state['status'] = 'buy cancellation'
+                            self._save_state()
+                        else:
+                            self._delete_state()
                 return
 
-            if state['buy_order_id'] and state['sell_order_id']:
-                # TODO: use get_order
-                status, order_update_time = self._exchange.check_order_status(state['symbol'], state['sell_order_id'])
+            if self._state['buy_order_id'] and self._state['sell_order_id']:
+                status, order_update_time = self._exchange.check_order_status(self._state['symbol'], self._state['sell_order_id'])
                 if status == OrderStatus.FILLED.value:
                     llog("save history")
-                    self._save_history_state_and_profit(state)
-                    if state['active'] == 1:
+                    self._save_history_state_and_profit()
+                    if self._state['active'] == 1:
                         llog("set sleep")
-                        state['sleep_until'] = self._sleep_until(order_update_time, state['data_samples'] * 1.5)
-                        state['buy_order_id'] = ''
-                        state['buy_order'] = ''
-                        state['sell_order_id'] = ''
-                        state['sell_order'] = ''
-                        state['buy'] = 0
-                        state['sell'] = 0
-                        state['status'] = 'waiting'
-                        self._save_state(state)
+                        self._reset_state()
+                        self._state['sleep_until'] = self._sleep_until(order_update_time, self._state['data_samples'] * 1.5)
+                        self._state['status'] = 'waiting'
+                        self._save_state()
                     else:
-                        self._save_state(state)
+                        self._save_state()
                         self._delete_state()
                 elif status == OrderStatus.CANCELED.value:
                     llog("sell cancellation, save history")
-                    state['status'] = 'sell cancellation'
-                    self._save_history_state_and_profit(state)
-                    self._save_state(state)
+                    self._state['status'] = 'sell cancellation'
+                    self._save_history_state_and_profit()
+                    self._save_state()
                     self._delete_state()
                 else:
-                    state['sleep_until'] = self._sleep_until(get_time(), 15)
-                    self._save_state(state)
+                    self._state['sleep_until'] = self._sleep_until(get_time(), 15)
+                    self._save_state()
                     llog("waiting sell")
                 return
         else:
@@ -116,9 +138,11 @@ class Elena:
         fp.close()
         return state
 
-    def _save_state(self, state, filename=None):
+    def _save_state(self, state=None, filename=None):
         if not filename:
             filename = self._robot_filename
+        if not state:
+            state = self._state
         fp = open(filename, 'w')
         json.dump(state, fp)
         fp.close()
@@ -126,39 +150,39 @@ class Elena:
     def _delete_state(self):
         os.rename(self._robot_filename, self._robot_filename + '.inactive')
 
-    def _save_history_state_and_profit(self, in_state):
+    def _save_history_state_and_profit(self):
         buy_order = ''
         sell_order = ''
         iteration_benefit = 0
         iteration_margin = 0
         left_on_asset = 0
 
-        if in_state['buy_order_id']:
-            buy_order = self._exchange.get_order(in_state['buy_order_id'], in_state['symbol'])
-            if in_state['sell_order_id']:
-                sell_order = self._exchange.get_order(in_state['sell_order_id'], in_state['symbol'])
+        if self._state['buy_order_id']:
+            buy_order = self._exchange.get_order(self._state['buy_order_id'], self._state['symbol'])
+            if self._state['sell_order_id']:
+                sell_order = self._exchange.get_order(self._state['sell_order_id'], self._state['symbol'])
                 if sell_order['status'] == OrderStatus.FILLED.value:
                     iteration_benefit = float(sell_order['cummulativeQuoteQty']) - float(
                         buy_order['cummulativeQuoteQty'])
                     iteration_margin = (iteration_benefit / float(buy_order['cummulativeQuoteQty'])) * 100
                     left_on_asset = float(buy_order['executedQty']) - float(sell_order['executedQty'])
 
-        if in_state.get('accumulated_benefit') is None:
-            in_state['accumulated_benefit'] = 0
-        if in_state.get('accumulated_margin') is None:
-            in_state['accumulated_margin'] = 0
-        if in_state.get('sales') is None:
-            in_state['sales'] = 0
-        if in_state.get('cycles') is None:
-            in_state['cycles'] = 0
+        if self._state.get('accumulated_benefit') is None:
+            self._state['accumulated_benefit'] = 0
+        if self._state.get('accumulated_margin') is None:
+            self._state['accumulated_margin'] = 0
+        if self._state.get('sales') is None:
+            self._state['sales'] = 0
+        if self._state.get('cycles') is None:
+            self._state['cycles'] = 0
 
-        in_state['accumulated_benefit'] = in_state['accumulated_benefit'] + iteration_benefit
-        in_state['accumulated_margin'] = in_state['accumulated_margin'] + iteration_margin
+        self._state['accumulated_benefit'] = self._state['accumulated_benefit'] + iteration_benefit
+        self._state['accumulated_margin'] = self._state['accumulated_margin'] + iteration_margin
         if iteration_benefit != 0:
-            in_state['sales'] = in_state['sales'] + 1
-        in_state['cycles'] = in_state['cycles'] + 1
+            self._state['sales'] = self._state['sales'] + 1
+        self._state['cycles'] = self._state['cycles'] + 1
 
-        history_state = dict(in_state)
+        history_state = dict(self._state)
         filename = f"history/{str(get_time())}_{str(history_state['buy_order_id'])}.json"
 
         history_state['active'] = -1
@@ -174,13 +198,18 @@ class Elena:
 
         # TODO: refactor this method. It's doing more than one thing.
         # re-invest
-        if in_state.get('reinvest') is not None:
-            if in_state['reinvest'] > 0 and iteration_benefit > 0:
-                in_state['max_order'] = in_state['max_order'] + (iteration_benefit * in_state['reinvest'] / 100)
+        if self._state.get('reinvest') is not None:
+            if self._state['reinvest'] > 0 and iteration_benefit > 0:
+                self._state['max_order'] = self._state['max_order'] + (iteration_benefit * self._state['reinvest'] / 100)
 
         if iteration_benefit < 0:
             llog("iteration margin <0!", history_state)
 
+        # temporary algo migration for testing
+        if self._state['algo'] == 6:
+            self._state['algo'] = 8
+        if self._state['algo'] == 7:
+            self._state['algo'] = 9
 
     def _estimate_buy_sel(self, state):
         candles_df = self._exchange.get_candles(p_symbol=state['symbol'], p_limit=state['data_samples'])
@@ -213,8 +242,17 @@ class Elena:
         buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low)
         return buy, sell
 
-    @staticmethod
-    def _buy_sell(candles_df_buy_sell, algo, margin, tendence_tolerance):
+    def _buy_on_bid_sell_based_on_linear_regression(self, candles_df_buy_sell, sell_field, margin=0):
+        next_low, ask = self._exchange.get_order_book_first_bids_asks(self._state['symbol'])
+
+        # TODO: reusing margin but is the number of steps to extrapolate
+        regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell[sell_field], 1)
+        next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1 + margin) + regression_close[1]
+
+        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low)
+        return buy, sell
+
+    def _buy_sell(self, candles_df_buy_sell, algo, margin, tendence_tolerance):
         sell = 0
         buy = 0
 
@@ -244,6 +282,10 @@ class Elena:
                 buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=margin)
             if algo == 7:
                 buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=margin)
+            if algo == 8:
+                buy, sell = self._buy_on_bid_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=margin)
+            if algo == 9:
+                buy, sell = self._buy_on_bid_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=margin)
         if algo == 3:
             buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=0)
 

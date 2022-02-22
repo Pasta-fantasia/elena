@@ -1,5 +1,6 @@
 # 1.5 
 - Reinvest benefit parameter #27
+- Don't estimate buy, buy at lowest bid on the order book #31
 - Buy order auto cancellation #14
 
 # 1.4
