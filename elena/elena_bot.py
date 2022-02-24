@@ -89,7 +89,7 @@ class Elena:
                     self._save_state()
                     self._delete_state()
                 else:
-                    self._state['sleep_until'] = self._sleep_until(get_time(), 15)
+                    self._state['sleep_until'] = self._sleep_until(get_time(), 5)
                     self._save_state()
                     llog("waiting sell")
                 return
