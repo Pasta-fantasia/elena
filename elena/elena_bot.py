@@ -170,9 +170,9 @@ class Elena:
             llog("iteration margin <0!", history_state)
 
         # temporary algo migration for testing
-        if self._state['algo'] == 6:
+        if self._state['algo'] == 4 or self._state['algo'] == 6:
             self._state['algo'] = 8
-        if self._state['algo'] == 7:
+        if self._state['algo'] == 5 or self._state['algo'] == 7:
             self._state['algo'] = 9
 
     def _estimate_buy_sel(self, state):
