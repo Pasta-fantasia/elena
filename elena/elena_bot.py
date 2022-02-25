@@ -54,7 +54,7 @@ class Elena:
                     status, order_update_time = self._exchange.check_order_status(self._state['symbol'],
                                                                                   self._state['buy_order_id'])
                     if not status == OrderStatus.CANCELED.value:
-                        self._state['sleep_until'] = self._sleep_until(get_time(), 5)
+                        # self._state['sleep_until'] = self._sleep_until(get_time(), 5)
                         self._save_state()
                         llog("waiting purchase")
                     else:
