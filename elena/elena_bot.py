@@ -15,17 +15,17 @@ class Elena:
         self._state = self._read_state()
 
     def _reset_state(self):
-        self._state['sleep_until'] = 0
+        self._state['buy'] = 0.0
         self._state['buy_order_id'] = ''
+        self._state['buy_order'] = None
+        self._state['sell'] = 0.0
         self._state['sell_order_id'] = ''
-        self._state['buy_order_id'] = ''
-        self._state['buy_order'] = 0
-        self._state['sell_order_id'] = ''
-        self._state['sell_order'] = 0
+        self._state['sell_order'] = None
         self._state['status'] = ''
-        self._state['iteration_benefit'] = 0
-        self._state['iteration_margin'] = 0
-        self._state['left_on_asset'] = 0
+        self._state['iteration_benefit'] = 0.0
+        self._state['iteration_margin'] = 0.0
+        self._state['left_on_asset'] = 0.0
+        self._state['sleep_until'] = 0
 
     def iterate(self):
         if self._state['sleep_until'] < get_time():
