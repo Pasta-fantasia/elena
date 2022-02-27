@@ -79,7 +79,7 @@ class Elena:
                     cancellation = self._exchange.cancel_order(self._state['symbol'], self._state['buy_order_id'])
                     llog(cancellation)
                 else:
-                    self._state['sleep_until'] = self._sleep_until(get_time(), 5)
+                    self._state['sleep_until'] = self._sleep_until(get_time(), 2)
                     self._save_state()
                     llog("waiting purchase")
                 # return --- maybe the order is executed immediately
