@@ -46,7 +46,7 @@ class Elena:
                     self._state['status'] = "waiting - don't buy"
                     self._save_state()
                     llog("don't buy")
-                return
+                # return --- maybe the order is executed immediately
 
             if self._state['buy_order_id'] and not self._state['sell_order_id']:
                 self._update_orders_status_values_and_profits()
@@ -80,8 +80,7 @@ class Elena:
                     self._state['sleep_until'] = self._sleep_until(get_time(), 5)
                     self._save_state()
                     llog("waiting purchase")
-
-                return
+                # return --- maybe the order is executed immediately
 
             if self._state['buy_order_id'] and self._state['sell_order_id']:
                 self._update_orders_status_values_and_profits()
@@ -112,7 +111,7 @@ class Elena:
                     self._state['sleep_until'] = self._sleep_until(get_time(), 5)
                     self._save_state()
                     llog("waiting sell")
-                return
+                # return --- maybe the order is executed immediately
         else:
             llog("sleeping")
 
