@@ -113,6 +113,9 @@ class Exchange:
 
         return order
 
+    def cancel_order(self, symbol, order_id):
+        return self._api.cancel_order(symbol=symbol, order_id=order_id)
+
     def create_sell_order(self, symbol, sell_quantity, sell_price):
         order_sell = None
         bid, ask = self._api.get_order_book_first_bids_asks(symbol)

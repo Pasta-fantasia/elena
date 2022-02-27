@@ -37,6 +37,10 @@ class Binance:
         self._connect()
         return self.client.order_limit_buy(symbol=symbol, quantity=q, price=p)
 
+    def cancel_order(self, symbol, order_id):
+        self._connect()
+        return self.client.cancel_order(symbol=symbol, orderId=order_id)
+
     def order_limit_sell(self, p, q, symbol):
         self._connect()
         return self.client.order_limit_sell(symbol=symbol, quantity=q, price=p)

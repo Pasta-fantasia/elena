@@ -55,6 +55,7 @@ class Elena:
                 order_time = int(buy_order['time'])
                 # TODO: add auto_cancel parameter
                 order_age_limit = order_time + (self._state['data_samples'] * 60 * 1000 * 5)  # expires afet 5 times its _step_
+                now = get_time()
                 if status == OrderStatus.FILLED.value:
                     sell_quantity = float(buy_order['executedQty'])
                     new_sell_order = self._exchange.create_sell_order(self._state['symbol'], sell_quantity, self._state['sell'])
@@ -73,9 +74,10 @@ class Elena:
                         self._save_state()
                     else:
                         self._delete_state()
-                elif status == OrderStatus.NEW.value and order_time > order_age_limit:
-                    llog("TODO: auto buy cancellation")
-                    # TODO: create exchange.cancel_order
+                elif status == OrderStatus.NEW.value and now > order_age_limit:
+                    llog("auto buy cancellation")
+                    cancellation = self._exchange.cancel_order(self._state['symbol'], self._state['buy_order_id'])
+                    llog(cancellation)
                 else:
                     self._state['sleep_until'] = self._sleep_until(get_time(), 5)
                     self._save_state()
