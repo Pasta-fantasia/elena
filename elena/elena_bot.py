@@ -189,8 +189,8 @@ class Elena:
     def _reinvest(self):
         # re-invest
         if self._state.get('reinvest') is not None:
-            if self._state['reinvest'] > 0 and self._state['iteration_margin'] > 0:
-                self._state['max_order'] = self._state['max_order'] + (self._state['iteration_margin'] * self._state['reinvest'] / 100)
+            if self._state['reinvest'] > 0 and self._state['iteration_benefit'] > 0:
+                self._state['max_order'] = self._state['max_order'] + (self._state['iteration_benefit'] * self._state['reinvest'] / 100)
 
         # temporary algo migration for testing
         if self._state['algo'] == 4 or self._state['algo'] == 6:
