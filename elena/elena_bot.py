@@ -52,7 +52,7 @@ class Elena:
                 buy_order = self._state['buy_order']
                 status = buy_order['status']
                 order_time = int(buy_order['time'])
-                order_age_limit = order_time + (self._state['step'] * 60 * 1000 * 5)  # expires afet 5 times its _step_
+                order_age_limit = order_time + (self._state['data_samples'] * 60 * 1000 * 5)  # expires afet 5 times its _step_
                 if status == OrderStatus.FILLED.value:
                     sell_quantity = float(buy_order['executedQty'])
                     new_sell_order = self._exchange.create_sell_order(self._state['symbol'], sell_quantity, self._state['sell'])
