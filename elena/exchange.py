@@ -132,8 +132,3 @@ class Exchange:
         order_sell = self._api.order_limit_sell(p, q, symbol)
 
         return order_sell
-
-    def check_order_status(self, p_symbol, p_order_id):
-        o = self.get_order(p_order_id, p_symbol)
-        order_update_time = int(o['updateTime'])
-        return o['status'], order_update_time
