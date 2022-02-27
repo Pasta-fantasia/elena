@@ -2,6 +2,7 @@
 - Reinvest benefit parameter #27
 - Don't estimate buy, buy at lowest bid on the order book #31
 - Buy order auto cancellation #14
+- minimum_profit=1.002
 
 # 1.4
 - Only create orders above or upper the current price #17

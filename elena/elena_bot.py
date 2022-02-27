@@ -184,7 +184,7 @@ class Elena:
         return sell_execution_time + minutes * 60 * 1000  # 45' after the sale
 
     @staticmethod
-    def _ensure_sell_is_higher_than_buy_by(next_sell, next_buy, minimum_profit=1.0005):
+    def _ensure_sell_is_higher_than_buy_by(next_sell, next_buy, minimum_profit=1.002):
         # ensure sell is higher than buy at least by 5 per thousand to pay fees
         if next_sell / next_buy > minimum_profit:
             buy = next_buy
@@ -195,13 +195,16 @@ class Elena:
         return buy, sell
 
     @staticmethod
-    def _buy_sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=0):
+    def _sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=0):
+        # TODO: reusing margin but is the number of steps to extrapolate
+        regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell[sell_field], 1)
+        return regression_close[0] * (candles_df_buy_sell.index[-1] + 1 + margin) + regression_close[1]
+
+    def _buy_sell_based_on_linear_regression(self, candles_df_buy_sell, sell_field, margin=0):
         regression_low = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell["Low"], 1)
         next_low = regression_low[0] * (candles_df_buy_sell.index[-1] + 1) + regression_low[1]
 
-        # TODO: reusing margin but is the number of steps to extrapolate
-        regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell[sell_field], 1)
-        next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1 + margin) + regression_close[1]
+        next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
 
         buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low)
         return buy, sell
@@ -209,9 +212,7 @@ class Elena:
     def _buy_on_bid_sell_based_on_linear_regression(self, candles_df_buy_sell, sell_field, margin=0):
         next_low, ask = self._exchange.get_order_book_first_bids_asks(self._state['symbol'])
 
-        # TODO: reusing margin but is the number of steps to extrapolate
-        regression_close = np.polyfit(candles_df_buy_sell.index, candles_df_buy_sell[sell_field], 1)
-        next_close = regression_close[0] * (candles_df_buy_sell.index[-1] + 1 + margin) + regression_close[1]
+        next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
 
         buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low)
         return buy, sell
