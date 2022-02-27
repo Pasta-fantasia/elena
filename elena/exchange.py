@@ -107,8 +107,9 @@ class Exchange:
         order = None
         try:
             order = self._api.order_limit_buy(p, q, symbol)
-        except:
-            llog("error buying", q, p, 'max_order:' + max_order, 'buy_price:' + buy_price, 'symbol:' + symbol),
+        except Exception as e:
+            llog("error buying", q, p, 'max_order:', max_order, 'buy_price:', buy_price, 'symbol:', symbol)
+            llog(e)
 
         return order
 
@@ -129,6 +130,10 @@ class Exchange:
 
         q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=sell_quantity)
         p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=sell_price)
-        order_sell = self._api.order_limit_sell(p, q, symbol)
+        try:
+            order_sell = self._api.order_limit_sell(p, q, symbol)
+        except Exception as e:
+            llog("error selling", q, p, 'sell_quantity:', sell_quantity, 'sell_price:', sell_price, 'symbol:', symbol)
+            llog(e)
 
         return order_sell
