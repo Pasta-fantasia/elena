@@ -209,7 +209,7 @@ class Elena:
         return sell_execution_time + minutes * 60 * 1000  # 45' after the sale
 
     @staticmethod
-    def _ensure_sell_is_higher_than_buy_by(next_sell, next_buy, minimum_profit=1.002):
+    def _ensure_sell_is_higher_than_buy_by(next_sell, next_buy, minimum_profit=1.005):
         # ensure sell is higher than buy at least by 5 per thousand to pay fees
         if next_sell / next_buy > minimum_profit:
             buy = next_buy
