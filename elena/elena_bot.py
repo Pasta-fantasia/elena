@@ -52,6 +52,7 @@ class Elena:
                 buy_order = self._state['buy_order']
                 status = buy_order['status']
                 order_time = int(buy_order['time'])
+                # TODO: add auto_cancel parameter
                 order_age_limit = order_time + (self._state['data_samples'] * 60 * 1000 * 5)  # expires afet 5 times its _step_
                 if status == OrderStatus.FILLED.value:
                     sell_quantity = float(buy_order['executedQty'])
@@ -67,44 +68,18 @@ class Elena:
                     self._save_history()
                     if self._state['active'] == 1:
                         self._reset_state()
-                        state['status'] = 'buy cancellation'
+                        self._state['status'] = 'buy cancellation'
                         self._save_state()
                     else:
                         self._delete_state()
-                elif status == OrderStatus.NEW.value and order_time > order_age_limit:  # TODO: add auto_cancel parameter
-                    llog("auto buy cancellation")
+                elif status == OrderStatus.NEW.value and order_time > order_age_limit:
+                    llog("TODO: auto buy cancellation")
                     # TODO: create exchange.cancel_order
                 else:
                     self._state['sleep_until'] = self._sleep_until(get_time(), 5)
                     self._save_state()
                     llog("waiting purchase")
 
-            if self._state['buy_order_id'] and not self._state['sell_order_id']:
-                new_sell_order_id = self._exchange.create_sell_order(self._state['symbol'], self._state['buy_order_id'],
-                                                                     self._state['sell'])
-                if new_sell_order_id:
-                    llog("create a new sell order")
-                    self._state['sell_order_id'] = new_sell_order_id
-                    self._state['status'] = 'selling'
-                    self._save_state()
-                else:
-                    self._update_orders_status_values_and_profits()
-                    sell_order = self._state['sell_order']
-                    status = sell_order['status']
-
-                    if not status == OrderStatus.CANCELED.value:
-                        # self._state['sleep_until'] = self._sleep_until(get_time(), 5)
-                        self._save_state()
-                        llog("waiting purchase")
-                    else:
-                        llog("buy cancellation")
-                        self._save_history()
-                        if self._state['active'] == 1:
-                            self._reset_state()
-                            self._state['status'] = 'buy cancellation'
-                            self._save_state()
-                        else:
-                            self._delete_state()
                 return
 
             if self._state['buy_order_id'] and self._state['sell_order_id']:
@@ -198,10 +173,9 @@ class Elena:
             if iteration_benefit < 0:
                 llog("iteration margin <0!", self._state)
 
-        self._state['cycles'] = self._state['cycles'] + 1
-
     def _save_history(self):
         self._update_orders_status_values_and_profits()
+        self._state['cycles'] = self._state['cycles'] + 1
 
         history_state = dict(self._state)
         filename = f"history/{str(get_time())}_{str(history_state['buy_order_id'])}.json"
