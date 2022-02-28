@@ -1,3 +1,14 @@
+# 1.5 
+- Reinvest benefit parameter #27
+- Try to minimize time to buy 
+  - Don't estimate buy, buy at lowest bid on the order book #31
+    - New algos 8,9 and algo migration for 4->7 to 8 and 9.
+  - Buy order auto cancellation #14
+  - Decrease sleep times.
+  - Buy and sell can occur in a single iteration. Reducing time to buy causes that a buy order are executed immediately.
+- minimum_profit=1.005
+- More details for: Status in active .jsons #16
+
 # 1.4
 - Only create orders above or upper the current price #17
 - Status in active .jsons #16

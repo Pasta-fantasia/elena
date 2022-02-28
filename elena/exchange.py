@@ -82,8 +82,12 @@ class Exchange:
     def get_order(self, p_order_id, p_symbol):
         return self._api.get_order(p_order_id, p_symbol)
 
+    def get_order_book_first_bids_asks(self, symbol):
+        return self._api.get_order_book_first_bids_asks(symbol)
+
     def create_buy_order(self, max_order, symbol, buy_price):
-        bid, ask = self._api.get_order_book_first_bids_asks(symbol)
+        bid, ask = self.get_order_book_first_bids_asks(symbol)
+
         if buy_price > bid:
             llog('changing buy to bid', buy_price, bid)
             buy_price = bid
@@ -100,42 +104,39 @@ class Exchange:
         q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=quantity)
         p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=buy_price)
 
-        buy_order_id = 0
+        order = None
         try:
             order = self._api.order_limit_buy(p, q, symbol)
-            buy_order_id = order['orderId']
-        except:
-            llog("error buying", q, p, 'max_order:' + max_order, 'buy_price:' + buy_price, 'symbol:' + symbol),
+        except Exception as e:
+            llog("error buying", q, p, 'max_order:', max_order, 'buy_price:', buy_price, 'symbol:', symbol)
+            llog(e)
 
-        return buy_order_id
+        return order
 
-    def create_sell_order(self, symbol, buy_order_id, sell):
-        o = self.get_order(buy_order_id, symbol)
-        sell_client_order_id = ''
+    def cancel_order(self, symbol, order_id):
+        return self._api.cancel_order(symbol=symbol, order_id=order_id)
 
-        if o['status'] == OrderStatus.FILLED.value:
-            bid, ask = self._api.get_order_book_first_bids_asks(symbol)
-            if sell < ask:
-                llog('changing sell to ask', sell, ask)
-                sell = ask
+    def create_sell_order(self, symbol, sell_quantity, sell_price):
+        order_sell = None
+        bid, ask = self._api.get_order_book_first_bids_asks(symbol)
+        if sell_price < ask:
+            llog('changing sell to ask', sell_price, ask)
+            sell_price = ask
 
-            sell_quantity = float(o['executedQty'])
+        symbol_info = self._api.get_symbol_info(symbol=symbol)
+        free_balance = self._api.get_asset_balance(symbol_info['baseAsset'])
 
-            symbol_info = self._api.get_symbol_info(symbol=symbol)
-            free_balance = self._api.get_asset_balance(symbol_info['baseAsset'])
+        if sell_quantity > free_balance:
+            # if the order was processed as "taker" we don't have the information about the fee
+            sell_quantity = free_balance
+            llog('sell using balance')
 
-            if sell_quantity > free_balance:
-                # if the order was processed as "taker" we don't have the information about the fee
-                sell_quantity = free_balance
-                llog('sell using balance')
-
-            q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=sell_quantity)
-            p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=sell)
+        q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=sell_quantity)
+        p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=sell_price)
+        try:
             order_sell = self._api.order_limit_sell(p, q, symbol)
-            sell_client_order_id = order_sell['orderId']
-        return sell_client_order_id
+        except Exception as e:
+            llog("error selling", q, p, 'sell_quantity:', sell_quantity, 'sell_price:', sell_price, 'symbol:', symbol)
+            llog(e)
 
-    def check_order_status(self, p_symbol, p_order_id):
-        o = self.get_order(p_order_id, p_symbol)
-        order_update_time = int(o['updateTime'])
-        return o['status'], order_update_time
+        return order_sell
