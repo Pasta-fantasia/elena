@@ -54,7 +54,7 @@ class Elena:
                 status = buy_order['status']
                 order_time = int(buy_order['time'])
                 # TODO: add auto_cancel parameter
-                order_age_limit = order_time + (self._state['data_samples'] * 60 * 1000 * 5)  # expires afet 5 times its _step_
+                order_age_limit = order_time + (120 * 60 * 1000)  # expires afet 2 hours
                 now = get_time()
                 if status == OrderStatus.FILLED.value:
                     sell_quantity = float(buy_order['executedQty'])
