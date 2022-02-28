@@ -265,18 +265,18 @@ class Elena:
                 buy = buy.astype(float)
                 sell = buy * (1 + (margin / 100))
             if algo == 4:
-                buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=0)
+                buy, sell = self._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=0)
             if algo == 5:
-                buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=0)
+                buy, sell = self._buy_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=0)
             if algo == 6:
-                buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=margin)
+                buy, sell = self._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=margin)
             if algo == 7:
-                buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=margin)
+                buy, sell = self._buy_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=margin)
             if algo == 8:
                 buy, sell = self._buy_on_bid_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=margin)
             if algo == 9:
                 buy, sell = self._buy_on_bid_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=margin)
         if algo == 3:
-            buy, sell = Elena._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=0)
+            buy, sell = self._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=0)
 
         return buy, sell
