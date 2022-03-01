@@ -1,6 +1,7 @@
 # 1.5.2
 - Auto cancel parameter in .json
 - Log error connection
+- Default values on _read_state
 
 # 1.5.1
 - Type Error
