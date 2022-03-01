@@ -122,7 +122,7 @@ class Elena:
         fp.close()
         # default values
         if state.get('auto_cancel') is None:
-            state['auto_cancel'] = 60
+            state['auto_cancel'] = 120
         return state
 
     def _save_state(self, state=None, filename=None):
