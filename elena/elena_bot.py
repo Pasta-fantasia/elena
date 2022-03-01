@@ -53,8 +53,7 @@ class Elena:
                 buy_order = self._state['buy_order']
                 status = buy_order['status']
                 order_time = int(buy_order['time'])
-                # TODO: add auto_cancel parameter
-                order_age_limit = order_time + (120 * 60 * 1000)  # expires afet 2 hours
+                order_age_limit = order_time + (float(self._state['auto_cancel']) * 60 * 1000)
                 now = get_time()
                 if status == OrderStatus.FILLED.value:
                     sell_quantity = float(buy_order['executedQty'])
@@ -121,6 +120,9 @@ class Elena:
         fp = open(self._robot_filename, 'r')
         state = json.load(fp)
         fp.close()
+        # default values
+        if state.get('auto_cancel') is None:
+            state['auto_cancel'] = 60
         return state
 
     def _save_state(self, state=None, filename=None):
