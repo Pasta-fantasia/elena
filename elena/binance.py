@@ -2,7 +2,7 @@ from functools import lru_cache
 
 from binance.client import Client
 from decouple import AutoConfig
-
+from elena.logging import llog
 
 class Binance:
     def __init__(self):
@@ -15,8 +15,9 @@ class Binance:
                 api_key = self._config('api_key')
                 api_secret = self._config('api_secret')
                 self.client = Client(api_key, api_secret)
-            except:
-                print(".env file not found")
+            except Exception as e:
+                llog(".env file not found or connection error")
+                llog(e)
                 exit(-1)
         return
 
