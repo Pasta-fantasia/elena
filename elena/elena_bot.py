@@ -53,8 +53,7 @@ class Elena:
                 buy_order = self._state['buy_order']
                 status = buy_order['status']
                 order_time = int(buy_order['time'])
-                # TODO: add auto_cancel parameter
-                order_age_limit = order_time + (120 * 60 * 1000)  # expires afet 2 hours
+                order_age_limit = order_time + (float(self._state['auto_cancel']) * 60 * 1000)
                 now = get_time()
                 if status == OrderStatus.FILLED.value:
                     sell_quantity = float(buy_order['executedQty'])
@@ -121,6 +120,20 @@ class Elena:
         fp = open(self._robot_filename, 'r')
         state = json.load(fp)
         fp.close()
+
+        # default values
+        if state.get('auto_cancel') is None:
+            state['auto_cancel'] = 120
+        if state.get('reinvest') is None:
+            state['reinvest'] = 0
+        if state.get('accumulated_benefit') is None:
+            state['accumulated_benefit'] = 0
+        if state.get('accumulated_margin') is None:
+            state['accumulated_margin'] = 0
+        if state.get('sales') is None:
+            state['sales'] = 0
+        if state.get('cycles') is None:
+            state['cycles'] = 0
         return state
 
     def _save_state(self, state=None, filename=None):
@@ -147,22 +160,12 @@ class Elena:
             if self._state['sell_order_id']:
                 sell_order = self._exchange.get_order(self._state['sell_order_id'], self._state['symbol'])
                 if sell_order['status'] == OrderStatus.FILLED.value:
-                    iteration_benefit = float(sell_order['cummulativeQuoteQty']) - float(
-                        buy_order['cummulativeQuoteQty'])
+                    iteration_benefit = float(sell_order['cummulativeQuoteQty']) - float(buy_order['cummulativeQuoteQty'])
                     iteration_margin = (iteration_benefit / float(buy_order['cummulativeQuoteQty'])) * 100
                     left_on_asset = float(buy_order['executedQty']) - float(sell_order['executedQty'])
 
         self._state['buy_order'] = buy_order
         self._state['sell_order'] = sell_order
-
-        if self._state.get('accumulated_benefit') is None:
-            self._state['accumulated_benefit'] = 0
-        if self._state.get('accumulated_margin') is None:
-            self._state['accumulated_margin'] = 0
-        if self._state.get('sales') is None:
-            self._state['sales'] = 0
-        if self._state.get('cycles') is None:
-            self._state['cycles'] = 0
 
         self._state['iteration_benefit'] = iteration_benefit
         self._state['iteration_margin'] = iteration_margin
@@ -190,9 +193,8 @@ class Elena:
 
     def _reinvest(self):
         # re-invest
-        if self._state.get('reinvest') is not None:
-            if self._state['reinvest'] > 0 and self._state['iteration_benefit'] > 0:
-                self._state['max_order'] = self._state['max_order'] + (self._state['iteration_benefit'] * self._state['reinvest'] / 100)
+        if self._state['reinvest'] > 0 and self._state['iteration_benefit'] > 0:
+            self._state['max_order'] = self._state['max_order'] + (self._state['iteration_benefit'] * self._state['reinvest'] / 100)
 
         # temporary algo migration for testing
         if self._state['algo'] == 4 or self._state['algo'] == 6:

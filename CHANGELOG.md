@@ -1,3 +1,11 @@
+# 1.5.2
+- Auto cancel parameter in .json
+- Log error connection
+- Default values on _read_state
+
+# 1.5.1
+- Type Error
+
 # 1.5 
 - Reinvest benefit parameter #27
 - Try to minimize time to buy 
