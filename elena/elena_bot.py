@@ -111,7 +111,10 @@ class Elena:
                     order_sell_price = float(sell_order['price'])  # get the sell price as is in the exchange
 
                     bid, ask = self._exchange.get_order_book_first_bids_asks(self._state['symbol'])
-                    if bid > order_buy_price * self._exchange.minimum_profit:
+                    minimum_profit = 1 + ((self._exchange.minimum_profit-1)/2)
+                    minimum_price = order_buy_price * minimum_profit
+
+                    if bid >= minimum_price:
                         if self._state['sell_auto_cancel_im_feeling_lucky']:
                             buy, sell = self._estimate_buy_sel()
                             if sell > order_sell_price:
