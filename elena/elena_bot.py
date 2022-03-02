@@ -118,14 +118,17 @@ class Elena:
                                 llog("Cancel and sell at higher price", order_sell_price, sell)
                                 self._state['sell_status'] = "Cancel and sell at higher price"
                                 self._cancel_sell_order_and_create_a_new_one(sell)
+                                return
                             elif sell > 0:
                                 llog("Sell time out but do nothing. set sleep to 0.")
                                 self._state['sell_status'] = "Sell time out but do nothing. Tendence is high."
                                 self._save_state()
-                        else:
-                            llog("Cancel order and sell at bid (we get some benefit)")
-                            self._state['sell_status'] = "Cancel order and sell at bid (we get some benefit)"
-                            self._cancel_sell_order_and_create_a_new_one(bid)
+                                return
+                            else:
+                                pass  # Cancel order and sell at bid (we get some benefit)
+                        llog("Cancel order and sell at bid (we get some benefit)")
+                        self._state['sell_status'] = "Cancel order and sell at bid (we get some benefit)"
+                        self._cancel_sell_order_and_create_a_new_one(bid)
                     else:
                         llog("Locked and loosing money :(", order_buy_price, bid, ask)
                         self._state['sell_status'] = "Locked and loosing money :("
