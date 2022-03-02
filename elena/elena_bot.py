@@ -147,8 +147,7 @@ class Elena:
         if state.get('buy_auto_cancel_timeout') is None:
             state['buy_auto_cancel_timeout'] = 120
         if state.get('sell_auto_cancel_timeout') is None:
-            state['sell_auto_cancel_timeout'] = 0  # 1 for testing
-        state['sell_auto_cancel_timeout'] = state['data_samples']   # 1 for testing
+            state['sell_auto_cancel_timeout'] = 0   # state['data_samples']  for testing
         if state.get('stop_loss_percentage') is None:
             state['stop_loss_percentage'] = 0
         if state.get('reinvest') is None:
