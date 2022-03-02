@@ -130,8 +130,10 @@ class Elena:
                         self._state['sell_status'] = "Cancel order and sell at bid (we get some benefit)"
                         self._cancel_sell_order_and_create_a_new_one(bid)
                     else:
-                        llog("Locked and loosing money :(", order_buy_price, bid, ask)
-                        self._state['sell_status'] = "Locked and loosing money :("
+                        loss = (bid / order_buy_price) * 100
+                        text = f'Locked and loosing money :( order_buy_price:{order_buy_price}, bid:{bid}, ask:{ask}, loss:{loss}'
+                        llog(text)
+                        self._state['sell_status'] = text
                         self._save_state()
                 else:
                     self._state['sleep_until'] = self._sleep_until(get_time(), 5)
