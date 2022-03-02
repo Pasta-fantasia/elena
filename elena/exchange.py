@@ -57,7 +57,7 @@ class Exchange:
             multiplier = 10 ** decimals
             return int(n * multiplier) / multiplier
 
-        symbol_info = self._api.get_symbol_info(p_symbol)
+        symbol_info = self._api.get_cached_symbol_info(p_symbol)
         step_size = -1
         tick_size = -1
         for _filter in symbol_info['filters']:
@@ -84,7 +84,7 @@ class Exchange:
         return self._api.get_order(p_order_id, p_symbol)
 
     def get_order_book_first_bids_asks(self, symbol):
-        return self._api.get_order_book_first_bids_asks(symbol)
+        return self._api.get_cached_order_book_first_bids_asks(symbol)
 
     def create_buy_order(self, max_order, symbol, buy_price):
         bid, ask = self.get_order_book_first_bids_asks(symbol)
@@ -95,7 +95,7 @@ class Exchange:
 
         quantity = max_order / buy_price
 
-        symbol_info = self._api.get_symbol_info(symbol=symbol)
+        symbol_info = self._api.get_cached_symbol_info(symbol=symbol)
         free_balance = self._api.get_asset_balance(symbol_info['quoteAsset'])
         if max_order > free_balance:
             # rounds may decrease balance in the quoteAsset
@@ -119,12 +119,12 @@ class Exchange:
 
     def create_sell_order(self, symbol, sell_quantity, sell_price):
         order_sell = None
-        bid, ask = self._api.get_order_book_first_bids_asks(symbol)
+        bid, ask = self._api.get_cached_order_book_first_bids_asks(symbol)
         if sell_price < ask:
             llog('changing sell to ask', sell_price, ask)
             sell_price = ask
 
-        symbol_info = self._api.get_symbol_info(symbol=symbol)
+        symbol_info = self._api.get_cached_symbol_info(symbol=symbol)
         free_balance = self._api.get_asset_balance(symbol_info['baseAsset'])
 
         if sell_quantity > free_balance:
