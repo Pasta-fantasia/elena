@@ -113,19 +113,20 @@ class Elena:
                     buy, sell = self._estimate_buy_sel()
                     if sell > order_sell_price:
                         llog("cancel and sell at higher price")
-                        self._state['sell_status'] = "cancel and sell at higher price"
+                        self._state['sell_status'] = "Cancel and sell at higher price"
                         self._cancel_sell_order_and_create_a_new_one(sell)
                     elif sell > 0:
                         llog("Sell time out but do nothing. set sleep to 0.")
-                        self._state['sell_status'] = "Sell time out but do nothing"
+                        self._state['sell_status'] = "Sell time out but do nothing. Tendence is high."
+                        self._save_state()
                     else:
                         bid, ask = self._exchange.get_order_book_first_bids_asks(self._state['symbol'])
                         if bid > order_buy_price * self._exchange.minimum_profit:
-                            llog("cancel order and sell at bid (we get some benefit)")
+                            llog("Cancel order and sell at bid (we get some benefit)")
                             self._state['sell_status'] = "cancel order and sell at bid (we get some benefit)"
                             self._cancel_sell_order_and_create_a_new_one(bid)
                         else:
-                            llog("locked and loosing money :(")
+                            llog("Locked and loosing money :(")
                             self._state['sell_status'] = "locked and loosing money :("
                             self._save_state()
                 else:
