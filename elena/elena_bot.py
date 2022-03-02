@@ -53,7 +53,7 @@ class Elena:
                 buy_order = self._state['buy_order']
                 status = buy_order['status']
                 order_time = int(buy_order['time'])
-                order_age_limit = order_time + (float(self._state['auto_cancel']) * 60 * 1000)
+                order_age_limit = order_time + (float(self._state['buy_auto_cancel_timeout']) * 60 * 1000)
                 now = get_time()
                 if status == OrderStatus.FILLED.value:
                     sell_quantity = float(buy_order['executedQty'])
@@ -122,8 +122,8 @@ class Elena:
         fp.close()
 
         # default values
-        if state.get('auto_cancel') is None:
-            state['auto_cancel'] = 120
+        if state.get('buy_auto_cancel_timeout') is None:
+            state['buy_auto_cancel_timeout'] = 120
         if state.get('reinvest') is None:
             state['reinvest'] = 0
         if state.get('accumulated_benefit') is None:

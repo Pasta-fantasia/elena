@@ -1,3 +1,6 @@
+# 1.5.3
+- Rename Auto cancel parameter in .json
+
 # 1.5.2
 - Auto cancel parameter in .json
 - Log error connection
