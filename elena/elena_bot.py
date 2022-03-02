@@ -138,6 +138,12 @@ class Elena:
                         llog(text)
                         self._state['sell_status'] = text
                         self._save_state()
+                        if loss <= self._state['stop_loss_percentage']:
+                            text = f'Cancel order and sell at bid (losing:{loss})'
+                            llog(text)
+                            self._state['sell_status'] = text
+                            self._cancel_sell_order_and_create_a_new_one(bid)
+
                 else:
                     self._state['sleep_until'] = self._sleep_until(get_time(), 5)
                     self._save_state()
