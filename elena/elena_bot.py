@@ -115,7 +115,7 @@ class Elena:
                         if self._state['sell_auto_cancel_im_feeling_lucky']:
                             buy, sell = self._estimate_buy_sel()
                             if sell > order_sell_price:
-                                llog("Cancel and sell at higher price")
+                                llog("Cancel and sell at higher price", order_sell_price, sell)
                                 self._state['sell_status'] = "Cancel and sell at higher price"
                                 self._cancel_sell_order_and_create_a_new_one(sell)
                             elif sell > 0:
