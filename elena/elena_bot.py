@@ -117,7 +117,7 @@ class Elena:
                         self._cancel_sell_order_and_create_a_new_one(sell)
                     elif sell > 0:
                         llog("Sell time out but do nothing. set sleep to 0.")
-                        pass
+                        self._state['sell_status'] = "Sell time out but do nothing"
                     else:
                         bid, ask = self._exchange.get_order_book_first_bids_asks(self._state['symbol'])
                         if bid > order_buy_price * self._exchange.minimum_profit:
