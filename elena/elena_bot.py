@@ -130,7 +130,7 @@ class Elena:
                         self._state['sell_status'] = "Cancel order and sell at bid (we get some benefit)"
                         self._cancel_sell_order_and_create_a_new_one(bid)
                     else:
-                        loss = (bid / order_buy_price) * 100
+                        loss = (1 - bid / order_buy_price) * 100
                         text = f'Locked and loosing money :( order_buy_price:{order_buy_price}, bid:{bid}, ask:{ask}, loss:{loss}'
                         llog(text)
                         self._state['sell_status'] = text
