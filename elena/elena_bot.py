@@ -26,11 +26,12 @@ class Elena:
         self._state['iteration_margin'] = 0.0
         self._state['left_on_asset'] = 0.0
         self._state['sleep_until'] = 0
+        self._state['sell_status'] = None
 
     def iterate(self):
         if self._state['sleep_until'] < get_time():
             if not self._state['buy_order_id'] and self._state['active']:
-                buy, sell = self._estimate_buy_sel(self._state)
+                buy, sell = self._estimate_buy_sel()
                 if buy > 0:
                     llog("create a new buy order")
                     new_buy_order = self._exchange.create_buy_order(self._state['max_order'], self._state['symbol'], buy)
@@ -56,14 +57,7 @@ class Elena:
                 order_age_limit = order_time + (float(self._state['buy_auto_cancel_timeout']) * 60 * 1000)
                 now = get_time()
                 if status == OrderStatus.FILLED.value:
-                    sell_quantity = float(buy_order['executedQty'])
-                    new_sell_order = self._exchange.create_sell_order(self._state['symbol'], sell_quantity, self._state['sell'])
-                    if new_sell_order:
-                        llog("created a new sell order")
-                        self._state['sell_order_id'] = new_sell_order['orderId']
-                        self._state['sell_order'] = new_sell_order
-                        self._state['status'] = 'selling'
-                        self._save_state()
+                    self._create_sell_order(self._state['sell'])
                 elif status == OrderStatus.CANCELED.value:
                     llog("buy cancellation detected")
                     self._save_history()
@@ -87,7 +81,9 @@ class Elena:
                 self._update_orders_status_values_and_profits()
                 sell_order = self._state['sell_order']
                 status = sell_order['status']
-                order_update_time = int(sell_order['updateTime'])
+                sell_order_update_time = int(sell_order['updateTime'])
+                order_age_limit = sell_order_update_time + (float(self._state['sell_auto_cancel_timeout']) * 60 * 1000)
+                now = get_time()
 
                 if status == OrderStatus.FILLED.value:
                     llog("save history")
@@ -96,7 +92,7 @@ class Elena:
                         llog("set sleep")
                         self._reinvest()
                         self._reset_state()
-                        self._state['sleep_until'] = self._sleep_until(order_update_time, self._state['data_samples'] * 1.5)
+                        self._state['sleep_until'] = self._sleep_until(sell_order_update_time, self._state['data_samples'] * 1.5)
                         self._state['status'] = 'waiting'
                         self._save_state()
                     else:
@@ -108,10 +104,35 @@ class Elena:
                     self._save_history()
                     self._save_state()
                     self._delete_state()
+                elif status == OrderStatus.NEW.value and now > order_age_limit and float(self._state['sell_auto_cancel_timeout'])>0:
+                    self._state['sell_status'] = "sell timeout"
+                    buy_order = self._state['buy_order']
+                    order_buy_price = float(buy_order['price'])  # get the real price when bought
+                    order_sell_price = float(sell_order['price'])  # get the sell price as is in the exchange
+
+                    buy, sell = self._estimate_buy_sel()
+                    if sell > order_sell_price:
+                        llog("cancel and sell at higher price")
+                        self._state['sell_status'] = "cancel and sell at higher price"
+                        self._cancel_sell_order_and_create_a_new_one(sell)
+                    elif sell > 0:
+                        # => do nothing. set sleep to 0.
+                        pass
+                    else:
+                        bid, ask = self._exchange.get_order_book_first_bids_asks(self._state['symbol'])
+                        if bid > order_buy_price * self._exchange.minimum_profit:
+                            llog("cancel order and sell at bid (we get some benefit)")
+                            self._state['sell_status'] = "cancel order and sell at bid (we get some benefit)"
+                            self._cancel_sell_order_and_create_a_new_one(bid)
+                        else:
+                            llog("locked and loosing money :(")
+                            self._state['sell_status'] = "locked and loosing money :("
+                            self._save_state()
                 else:
                     self._state['sleep_until'] = self._sleep_until(get_time(), 5)
                     self._save_state()
                     llog("waiting sell")
+
                 # return --- maybe the order is executed immediately
         else:
             llog("sleeping")
@@ -124,6 +145,10 @@ class Elena:
         # default values
         if state.get('buy_auto_cancel_timeout') is None:
             state['buy_auto_cancel_timeout'] = 120
+        if state.get('sell_auto_cancel_timeout') is None:
+            state['sell_auto_cancel_timeout'] = 1  # 1 for testing
+        if state.get('stop_loss_percentage') is None:
+            state['stop_loss_percentage'] = 0
         if state.get('reinvest') is None:
             state['reinvest'] = 0
         if state.get('accumulated_benefit') is None:
@@ -202,16 +227,34 @@ class Elena:
         if self._state['algo'] == 5 or self._state['algo'] == 7:
             self._state['algo'] = 9
 
-    def _estimate_buy_sel(self, state):
-        candles_df = self._exchange.get_candles(p_symbol=state['symbol'], p_limit=state['data_samples'])
-        return self._buy_sell(candles_df, state['algo'], state['margin'], state['tendence_tolerance'])
+    def _create_sell_order(self, sell):
+        buy_order = self._state['buy_order']
+        sell_quantity = float(buy_order['executedQty'])
+        new_sell_order = self._exchange.create_sell_order(self._state['symbol'], sell_quantity, sell)
+        if new_sell_order:
+            llog("created a new sell order", new_sell_order)
+            self._state['sell_order_id'] = new_sell_order['orderId']
+            self._state['sell_order'] = new_sell_order
+            self._state['status'] = 'selling'
+            self._save_state()
+
+    def _cancel_sell_order_and_create_a_new_one(self, sell):
+        cancellation = self._exchange.cancel_order(self._state['symbol'], self._state['sell_order_id'])
+        llog(cancellation)
+        self._state['sell_order_id'] = 0
+        self._save_state()  # TODO: review if it's necessary... if the order was canceled but the new one can't be executed in the next iteration this would be understood as a human cancelation.
+        self._create_sell_order(sell)
+
+    def _estimate_buy_sel(self):
+        candles_df = self._exchange.get_candles(p_symbol=self._state['symbol'], p_limit=self._state['data_samples'])
+        return self._buy_sell(candles_df, self._state['algo'], self._state['margin'], self._state['tendence_tolerance'])
 
     @staticmethod
     def _sleep_until(sell_execution_time, minutes):
         return sell_execution_time + minutes * 60 * 1000  # 45' after the sale
 
     @staticmethod
-    def _ensure_sell_is_higher_than_buy_by(next_sell, next_buy, minimum_profit=1.005):
+    def _ensure_sell_is_higher_than_buy_by(next_sell, next_buy, minimum_profit):
         # ensure sell is higher than buy at least by 5 per thousand to pay fees
         if next_sell / next_buy > minimum_profit:
             buy = next_buy
@@ -233,7 +276,7 @@ class Elena:
 
         next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
 
-        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low)
+        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange.minimum_profit)
         return buy, sell
 
     def _buy_on_bid_sell_based_on_linear_regression(self, candles_df_buy_sell, sell_field, margin=0):
@@ -241,7 +284,7 @@ class Elena:
 
         next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
 
-        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low)
+        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange.minimum_profit)
         return buy, sell
 
     def _buy_sell(self, candles_df_buy_sell, algo, margin, tendence_tolerance):

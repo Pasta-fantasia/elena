@@ -25,6 +25,7 @@ class OrderStatus(Enum):
 class Exchange:
     def __init__(self, api: Binance):
         self._api = api
+        self.minimum_profit = api.minimum_profit
         self._rec = utils.TestDataRecorder('Exchange', '../../test_data')
 
     def start_recorder(self):

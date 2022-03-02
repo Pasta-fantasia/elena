@@ -4,10 +4,12 @@ from binance.client import Client
 from decouple import AutoConfig
 from elena.logging import llog
 
+
 class Binance:
     def __init__(self):
         self._config = AutoConfig()
         self.client = None
+        self.minimum_profit = 1.005
 
     def _connect(self):
         if not self.client:
