@@ -345,6 +345,13 @@ class Elena:
         buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange.minimum_profit)
         return buy, sell
 
+    def _buy_on_bid_sell_based_on_fixed_margin(self, margin):
+        buy, ask = self._exchange.get_order_book_first_bids_asks(self._state['symbol'])
+
+        sell = buy * (1 + (margin / 100))
+
+        return buy, sell
+
     def _buy_sell(self, candles_df_buy_sell, algo, margin, tendence_tolerance):
         sell = 0
         buy = 0
@@ -379,6 +386,8 @@ class Elena:
                 buy, sell = self._buy_on_bid_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=margin)
             if algo == 9:
                 buy, sell = self._buy_on_bid_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=margin)
+            if algo == 10:
+                buy, sell = self._buy_on_bid_sell_based_on_fixed_margin(margin)
         if algo == 3:
             buy, sell = self._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=0)
 
