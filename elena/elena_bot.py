@@ -177,10 +177,12 @@ class Elena:
             state['buy_auto_cancel_count'] = 0
         if state.get('sell_auto_cancel_timeout') is None:
             state['sell_auto_cancel_timeout'] = 0   # state['data_samples']  for testing
-        if state.get('sell_auto_cancel_im_feeling_lucky_data_samples') is None:
-            state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 0
         if state.get('sell_auto_cancel_count') is None:
             state['sell_auto_cancel_count'] = 0   # state['data_samples']  for testing
+        if state.get('sell_auto_cancel_im_feeling_lucky_data_samples') is None:
+            state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 0
+        if state.get('sell_auto_cancel_lucky_count') is None:
+            state['sell_auto_cancel_lucky_count'] = 0   # state['data_samples']  for testing
         if state.get('stop_loss_percentage') is None:
             state['stop_loss_percentage'] = 0
         if state.get('reinvest') is None:
@@ -221,6 +223,9 @@ class Elena:
 
     def _add_sell_auto_cancel_count(self):
         self._state['sell_auto_cancel_count'] = self._state['sell_auto_cancel_count'] + 1
+
+    def _add_sell_auto_cancel_lucky_count(self):
+        self._state['sell_auto_cancel_lucky_count'] = self._state['sell_auto_cancel_lucky_count'] + 1
 
     def _update_orders_status_values_and_profits(self):
         buy_order = ''
@@ -288,7 +293,10 @@ class Elena:
     def _cancel_sell_order_and_create_a_new_one(self, sell, force_sell_price=False):
         cancellation = self._exchange.cancel_order(self._state['symbol'], self._state['sell_order_id'])
         llog(cancellation)
-        self._add_sell_auto_cancel_count()
+        if sell < self._state['sell']:
+            self._add_sell_auto_cancel_count()
+        else:
+            self._add_sell_auto_cancel_lucky_count()
         self._state['sell_order_id'] = 0
         self._save_state()  # TODO: review if it's necessary... if the order was canceled but the new one can't be executed in the next iteration this would be understood as a human cancelation.
         self._create_sell_order(sell,force_sell_price)
