@@ -96,7 +96,7 @@ class Elena:
                         llog("set sleep")
                         self._reinvest()
                         self._reset_state()
-                        self._state['sleep_until'] = self._sleep_until(sell_order_update_time, self._state['data_samples'] * 1.5)
+                        self._state['sleep_until'] = self._sleep_until(sell_order_update_time, self._state['data_samples'] * self._state['sleep_until_factor'])
                         self._state['status'] = 'waiting'
                         self._save_state()
                     else:
@@ -159,42 +159,34 @@ class Elena:
         else:
             llog("sleeping")
 
+    @staticmethod
+    def _verify_key_set_default(state, key, default_value):
+        if state.get(key) is None:
+            state[key] = default_value
+
     def _read_state(self):
         fp = open(self._robot_filename, 'r')
         state = json.load(fp)
         fp.close()
 
         # default values
-        if state.get('buy_order_id') is None:
-            state['buy_order_id'] = 0
-        if state.get('sell_order_id') is None:
-            state['sell_order_id'] = 0
-        if state.get('sleep_until') is None:
-            state['sleep_until'] = 0
-        if state.get('buy_auto_cancel_timeout') is None:
-            state['buy_auto_cancel_timeout'] = 120
-        if state.get('buy_auto_cancel_count') is None:
-            state['buy_auto_cancel_count'] = 0
-        if state.get('sell_auto_cancel_timeout') is None:
-            state['sell_auto_cancel_timeout'] = 0   # state['data_samples']  for testing
-        if state.get('sell_auto_cancel_count') is None:
-            state['sell_auto_cancel_count'] = 0   # state['data_samples']  for testing
-        if state.get('sell_auto_cancel_im_feeling_lucky_data_samples') is None:
-            state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 0
-        if state.get('sell_auto_cancel_lucky_count') is None:
-            state['sell_auto_cancel_lucky_count'] = 0   # state['data_samples']  for testing
-        if state.get('stop_loss_percentage') is None:
-            state['stop_loss_percentage'] = 0
-        if state.get('reinvest') is None:
-            state['reinvest'] = 0
-        if state.get('accumulated_benefit') is None:
-            state['accumulated_benefit'] = 0
-        if state.get('accumulated_margin') is None:
-            state['accumulated_margin'] = 0
-        if state.get('sales') is None:
-            state['sales'] = 0
-        if state.get('cycles') is None:
-            state['cycles'] = 0
+        self._verify_key_set_default(state, 'buy_order_id', 0)
+        self._verify_key_set_default(state, 'sell_order_id', 0)
+        self._verify_key_set_default(state, 'sleep_until', 0)
+        self._verify_key_set_default(state, 'sleep_until_factor', 1.5)
+        self._verify_key_set_default(state, 'buy_auto_cancel_timeout', 120)
+        self._verify_key_set_default(state, 'buy_auto_cancel_count', 0)
+        self._verify_key_set_default(state, 'sell_auto_cancel_timeout', 0)
+        self._verify_key_set_default(state, 'sell_auto_cancel_count', 0)
+        self._verify_key_set_default(state, 'sell_auto_cancel_im_feeling_lucky_data_samples', 0)
+        self._verify_key_set_default(state, 'sell_auto_cancel_lucky_count', 0)
+        self._verify_key_set_default(state, 'stop_loss_percentage', 0)
+        self._verify_key_set_default(state, 'reinvest', 0)
+        self._verify_key_set_default(state, 'accumulated_benefit', 0)
+        self._verify_key_set_default(state, 'accumulated_margin', 0)
+        self._verify_key_set_default(state, 'sales', 0)
+        self._verify_key_set_default(state, 'cycles', 0)
+
         if state['sales'] > state['cycles']:  # bug correction
             state['sales'] = state['cycles']
         return state
