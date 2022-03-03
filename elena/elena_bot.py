@@ -115,8 +115,8 @@ class Elena:
                     minimum_price = order_buy_price * minimum_profit
 
                     if bid >= minimum_price:
-                        if self._state['sell_auto_cancel_im_feeling_lucky']:
-                            buy, sell = self._estimate_buy_sel()
+                        if self._state['sell_auto_cancel_im_feeling_lucky_data_samples'] > 0:
+                            buy, sell = self._estimate_buy_sel(data_samples=self._state['sell_auto_cancel_im_feeling_lucky_data_samples'])
                             if sell > order_sell_price:
                                 llog("Cancel and sell at higher price", order_sell_price, sell)
                                 self._state['sell_status'] = "Cancel and sell at higher price"
@@ -143,7 +143,6 @@ class Elena:
                             llog(text)
                             self._state['sell_status'] = text
                             self._cancel_sell_order_and_create_a_new_one(bid, force_sell_price=True)
-
                 else:
                     self._state['sleep_until'] = self._sleep_until(get_time(), 5)
                     self._save_state()
@@ -159,12 +158,18 @@ class Elena:
         fp.close()
 
         # default values
+        if state.get('buy_order_id') is None:
+            state['buy_order_id'] = 0
+        if state.get('sell_order_id') is None:
+            state['sell_order_id'] = 0
+        if state.get('sleep_until') is None:
+            state['sleep_until'] = 0
         if state.get('buy_auto_cancel_timeout') is None:
             state['buy_auto_cancel_timeout'] = 120
         if state.get('sell_auto_cancel_timeout') is None:
             state['sell_auto_cancel_timeout'] = 0   # state['data_samples']  for testing
-        if state.get('sell_auto_cancel_im_feeling_lucky') is None:
-            state['sell_auto_cancel_im_feeling_lucky'] = 0   # 1 for testing
+        if state.get('sell_auto_cancel_im_feeling_lucky_data_samples') is None:
+            state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 0   # 1 for testing
         if state.get('stop_loss_percentage') is None:
             state['stop_loss_percentage'] = 0
         if state.get('reinvest') is None:
@@ -263,8 +268,10 @@ class Elena:
         self._save_state()  # TODO: review if it's necessary... if the order was canceled but the new one can't be executed in the next iteration this would be understood as a human cancelation.
         self._create_sell_order(sell,force_sell_price)
 
-    def _estimate_buy_sel(self):
-        candles_df = self._exchange.get_candles(p_symbol=self._state['symbol'], p_limit=self._state['data_samples'])
+    def _estimate_buy_sel(self, data_samples=None):
+        if data_samples is None:
+            data_samples = self._state['data_samples']
+        candles_df = self._exchange.get_candles(p_symbol=self._state['symbol'], p_limit=data_samples)
         return self._buy_sell(candles_df, self._state['algo'], self._state['margin'], self._state['tendence_tolerance'])
 
     @staticmethod
