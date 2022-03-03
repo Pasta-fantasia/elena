@@ -117,10 +117,10 @@ class Exchange:
     def cancel_order(self, symbol, order_id):
         return self._api.cancel_order(symbol=symbol, order_id=order_id)
 
-    def create_sell_order(self, symbol, sell_quantity, sell_price):
+    def create_sell_order(self, symbol, sell_quantity, sell_price, force_sell_price=False):
         order_sell = None
         bid, ask = self._api.get_cached_order_book_first_bids_asks(symbol)
-        if sell_price < ask:
+        if sell_price < ask and not force_sell_price:
             llog('changing sell to ask', sell_price, ask)
             sell_price = ask
 

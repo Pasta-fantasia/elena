@@ -142,7 +142,7 @@ class Elena:
                             text = f'Cancel order and sell at bid (losing:{loss})'
                             llog(text)
                             self._state['sell_status'] = text
-                            self._cancel_sell_order_and_create_a_new_one(bid)
+                            self._cancel_sell_order_and_create_a_new_one(bid, force_sell_price=True)
 
                 else:
                     self._state['sleep_until'] = self._sleep_until(get_time(), 5)
@@ -245,10 +245,10 @@ class Elena:
         if self._state['algo'] == 5 or self._state['algo'] == 7:
             self._state['algo'] = 9
 
-    def _create_sell_order(self, sell):
+    def _create_sell_order(self, sell, force_sell_price=False):
         buy_order = self._state['buy_order']
         sell_quantity = float(buy_order['executedQty'])
-        new_sell_order = self._exchange.create_sell_order(self._state['symbol'], sell_quantity, sell)
+        new_sell_order = self._exchange.create_sell_order(self._state['symbol'], sell_quantity, sell, force_sell_price)
         if new_sell_order:
             llog("created a new sell order", new_sell_order)
             self._state['sell_order_id'] = new_sell_order['orderId']
@@ -256,12 +256,12 @@ class Elena:
             self._state['status'] = 'selling'
             self._save_state()
 
-    def _cancel_sell_order_and_create_a_new_one(self, sell):
+    def _cancel_sell_order_and_create_a_new_one(self, sell, force_sell_price=False):
         cancellation = self._exchange.cancel_order(self._state['symbol'], self._state['sell_order_id'])
         llog(cancellation)
         self._state['sell_order_id'] = 0
         self._save_state()  # TODO: review if it's necessary... if the order was canceled but the new one can't be executed in the next iteration this would be understood as a human cancelation.
-        self._create_sell_order(sell)
+        self._create_sell_order(sell,force_sell_price)
 
     def _estimate_buy_sel(self):
         candles_df = self._exchange.get_candles(p_symbol=self._state['symbol'], p_limit=self._state['data_samples'])
