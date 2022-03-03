@@ -171,9 +171,6 @@ class Elena:
             state['sell_auto_cancel_timeout'] = 0   # state['data_samples']  for testing
         if state.get('sell_auto_cancel_im_feeling_lucky_data_samples') is None:
             state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 0
-            if not state.get('sell_auto_cancel_im_feeling_lucky') is None:
-                state['sell_auto_cancel_im_feeling_lucky_data_samples'] = state['sell_auto_cancel_im_feeling_lucky']
-        del state['sell_auto_cancel_im_feeling_lucky']
         if state.get('stop_loss_percentage') is None:
             state['stop_loss_percentage'] = 0
         if state.get('reinvest') is None:
