@@ -60,6 +60,7 @@ class Elena:
                     self._create_sell_order(self._state['sell'])
                 elif status == OrderStatus.CANCELED.value:
                     llog("buy cancellation detected")
+                    self._add_cycles()
                     self._save_history()
                     if self._state['active'] == 1:
                         self._reset_state()
@@ -71,6 +72,9 @@ class Elena:
                     llog("auto buy cancellation")
                     cancellation = self._exchange.cancel_order(self._state['symbol'], self._state['buy_order_id'])
                     llog(cancellation)
+                    self._state['status'] = 'auto buy cancellation'
+                    self._add_buy_auto_cancel_count()
+                    self._save_state()
                 else:
                     self._state['sleep_until'] = self._sleep_until(get_time(), 2)
                     self._save_state()
@@ -86,6 +90,7 @@ class Elena:
                 now = get_time()
                 if status == OrderStatus.FILLED.value:
                     llog("save history")
+                    self._add_sales()
                     self._save_history()
                     if self._state['active'] == 1:
                         llog("set sleep")
@@ -99,7 +104,8 @@ class Elena:
                         self._delete_state()
                 elif status == OrderStatus.CANCELED.value:
                     llog("sell cancellation, save history")
-                    self._state['status'] = 'sell cancellation'
+                    self._state['status'] = 'manual sell cancellation'
+                    self._add_cycles()
                     self._save_history()
                     self._save_state()
                     self._delete_state()
@@ -167,10 +173,14 @@ class Elena:
             state['sleep_until'] = 0
         if state.get('buy_auto_cancel_timeout') is None:
             state['buy_auto_cancel_timeout'] = 120
+        if state.get('buy_auto_cancel_count') is None:
+            state['buy_auto_cancel_count'] = 0
         if state.get('sell_auto_cancel_timeout') is None:
             state['sell_auto_cancel_timeout'] = 0   # state['data_samples']  for testing
         if state.get('sell_auto_cancel_im_feeling_lucky_data_samples') is None:
             state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 0
+        if state.get('sell_auto_cancel_count') is None:
+            state['sell_auto_cancel_count'] = 0   # state['data_samples']  for testing
         if state.get('stop_loss_percentage') is None:
             state['stop_loss_percentage'] = 0
         if state.get('reinvest') is None:
@@ -183,6 +193,8 @@ class Elena:
             state['sales'] = 0
         if state.get('cycles') is None:
             state['cycles'] = 0
+        if state['sales'] > state['cycles']:  # bug correction
+            state['sales'] = state['cycles']
         return state
 
     def _save_state(self, state=None, filename=None):
@@ -196,6 +208,19 @@ class Elena:
 
     def _delete_state(self):
         os.rename(self._robot_filename, self._robot_filename + '.inactive')
+
+    def _add_cycles(self):
+        self._state['cycles'] = self._state['cycles'] + 1
+
+    def _add_sales(self):
+        self._add_cycles()
+        self._state['sales'] = self._state['sales'] + 1
+
+    def _add_buy_auto_cancel_count(self):
+        self._state['buy_auto_cancel_count'] = self._state['buy_auto_cancel_count'] + 1
+
+    def _add_sell_auto_cancel_count(self):
+        self._state['sell_auto_cancel_count'] = self._state['sell_auto_cancel_count'] + 1
 
     def _update_orders_status_values_and_profits(self):
         buy_order = ''
@@ -223,13 +248,11 @@ class Elena:
         if iteration_benefit != 0:
             self._state['accumulated_benefit'] = self._state['accumulated_benefit'] + iteration_benefit
             self._state['accumulated_margin'] = self._state['accumulated_margin'] + iteration_margin
-            self._state['sales'] = self._state['sales'] + 1
             if iteration_benefit < 0:
                 llog("iteration margin <0!", self._state)
 
     def _save_history(self):
         self._update_orders_status_values_and_profits()
-        self._state['cycles'] = self._state['cycles'] + 1
 
         history_state = dict(self._state)
         filename = f"history/{str(get_time())}_{str(history_state['buy_order_id'])}.json"
@@ -265,6 +288,7 @@ class Elena:
     def _cancel_sell_order_and_create_a_new_one(self, sell, force_sell_price=False):
         cancellation = self._exchange.cancel_order(self._state['symbol'], self._state['sell_order_id'])
         llog(cancellation)
+        self._add_sell_auto_cancel_count()
         self._state['sell_order_id'] = 0
         self._save_state()  # TODO: review if it's necessary... if the order was canceled but the new one can't be executed in the next iteration this would be understood as a human cancelation.
         self._create_sell_order(sell,force_sell_price)
