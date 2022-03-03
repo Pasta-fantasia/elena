@@ -84,7 +84,6 @@ class Elena:
                 sell_order_update_time = int(sell_order['updateTime'])
                 order_age_limit = sell_order_update_time + (float(self._state['sell_auto_cancel_timeout']) * 60 * 1000)
                 now = get_time()
-
                 if status == OrderStatus.FILLED.value:
                     llog("save history")
                     self._save_history()
@@ -118,8 +117,10 @@ class Elena:
                         if self._state['sell_auto_cancel_im_feeling_lucky_data_samples'] > 0:
                             buy, sell = self._estimate_buy_sel(data_samples=self._state['sell_auto_cancel_im_feeling_lucky_data_samples'])
                             if sell > order_sell_price:
-                                llog("Cancel and sell at higher price", order_sell_price, sell)
-                                self._state['sell_status'] = "Cancel and sell at higher price"
+                                text = f'Cancel and sell at higher price, order_buy_price:{order_buy_price}, ' \
+                                       f'order_sell_price:{order_sell_price}, new_sell_price:{sell}'
+                                llog(text)
+                                self._state['sell_status'] = text
                                 self._cancel_sell_order_and_create_a_new_one(sell)
                                 return
                             elif sell > 0:
@@ -169,7 +170,10 @@ class Elena:
         if state.get('sell_auto_cancel_timeout') is None:
             state['sell_auto_cancel_timeout'] = 0   # state['data_samples']  for testing
         if state.get('sell_auto_cancel_im_feeling_lucky_data_samples') is None:
-            state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 0   # 1 for testing
+            state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 0
+            if not state.get('sell_auto_cancel_im_feeling_lucky') is None:
+                state['sell_auto_cancel_im_feeling_lucky_data_samples'] = state['sell_auto_cancel_im_feeling_lucky']
+                state['sell_auto_cancel_im_feeling_lucky'] = None
         if state.get('stop_loss_percentage') is None:
             state['stop_loss_percentage'] = 0
         if state.get('reinvest') is None:
