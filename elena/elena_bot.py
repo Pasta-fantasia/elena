@@ -140,13 +140,23 @@ class Elena:
                         self._state['sell_status'] = "Cancel order and sell at bid (we get some benefit)"
                         self._cancel_sell_order_and_create_a_new_one(bid)
                     else:
-                        loss = (1 - bid / order_buy_price) * 100
-                        text = f'loss:{loss}, order_buy_price:{order_buy_price}, bid:{bid}, ask:{ask}'
+                        percentage_loss = (1 - bid / order_buy_price) * 100
+                        absolute_loss = (order_buy_price - bid) * float(sell_order['origQty'])
+                        text = f'loss%:{percentage_loss}, order_buy_price:{order_buy_price}, bid:{bid}, loss$:{absolute_loss}'
                         llog(text)
                         self._state['sell_status'] = text
                         self._save_state()
-                        if self._state['stop_loss_percentage_absolute'] > 0 and loss <= self._state['stop_loss_percentage_absolute']:
-                            text = f'Cancel order and sell at bid (losing:{loss})'
+
+                        stop_loss_percentage_absolute = (
+                                self._state['stop_loss_percentage_absolute'] > 0 and
+                                percentage_loss <= self._state['stop_loss_percentage_absolute'])
+
+                        stop_loss_percentage_relative_to_accumulated_benefits = (
+                                self._state['stop_loss_percentage_relative_to_accumulated_benefits'] > 0 and
+                                absolute_loss <= (self._state['accumulated_benefit'] * (self._state['stop_loss_percentage_relative_to_accumulated_benefits'] / 100)))
+
+                        if stop_loss_percentage_absolute or stop_loss_percentage_relative_to_accumulated_benefits:
+                            text = f'Cancel order and sell at bid (losing:{percentage_loss}%,{absolute_loss}$)'
                             llog(text)
                             self._state['sell_status'] = text
                             self._cancel_sell_order_and_create_a_new_one(bid, force_sell_price=True)
@@ -179,22 +189,26 @@ class Elena:
         self._verify_key_set_default(state, 'sell_order_id', 0)
         self._verify_key_set_default(state, 'sleep_until', 0)
         self._verify_key_set_default(state, 'sleep_until_factor', 1.5)
-        self._verify_key_set_default(state, 'buy_auto_cancel_timeout', 120)
+        self._verify_key_set_default(state, 'buy_auto_cancel_timeout', 0)
         self._verify_key_set_default(state, 'buy_auto_cancel_count', 0)
         self._verify_key_set_default(state, 'sell_auto_cancel_timeout', 0)
         self._verify_key_set_default(state, 'sell_auto_cancel_count', 0)
         self._verify_key_set_default(state, 'sell_auto_cancel_im_feeling_lucky_data_samples', 0)
         self._verify_key_set_default(state, 'sell_auto_cancel_lucky_count', 0)
-        self._del_key(state, 'stop_loss_percentage', 0)
         self._verify_key_set_default(state, 'stop_loss_percentage_absolute', 0)
-        # TODO: self._verify_key_set_default(state, 'stop_loss_percentage_relative_to_accumulated_benefits', 0)
+        self._verify_key_set_default(state, 'stop_loss_percentage_relative_to_accumulated_benefits', 0)
         self._verify_key_set_default(state, 'reinvest', 0)
         self._verify_key_set_default(state, 'accumulated_benefit', 0)
         self._verify_key_set_default(state, 'accumulated_margin', 0)
         self._verify_key_set_default(state, 'sales', 0)
         self._verify_key_set_default(state, 'cycles', 0)
 
-        if state['sales'] > state['cycles']:  # bug correction
+        # migration
+        self._del_key(state, 'stop_loss_percentage')
+        if state['buy_auto_cancel_timeout'] == 120:
+            state['buy_auto_cancel_timeout'] = state['data_samples']
+        # bug correction
+        if state['sales'] > state['cycles']:
             state['sales'] = state['cycles']
         return state
 
