@@ -203,6 +203,17 @@ class Elena:
         self._verify_key_set_default(state, 'sales', 0)
         self._verify_key_set_default(state, 'cycles', 0)
 
+        # migration
+        if state['active'] == 1:
+            if state['buy_auto_cancel_timeout'] == state['data_samples']:
+                state['buy_auto_cancel_timeout'] = 5
+
+            if state['sell_auto_cancel_timeout'] == state['data_samples']:
+                if state['algo'] == 8 or state['algo'] == 9:
+                    state['sell_auto_cancel_timeout'] = int(state['margin'] * 0.75) + 1
+                    if state['sell_auto_cancel_im_feeling_lucky_data_samples'] > 0:
+                        state['sell_auto_cancel_im_feeling_lucky_data_samples'] = int(state['margin']) if int(state['margin']) >= 5 else 5
+
         # bug correction
         if state['sales'] > state['cycles']:
             state['sales'] = state['cycles']
