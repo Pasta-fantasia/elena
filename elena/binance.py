@@ -4,10 +4,12 @@ from binance.client import Client
 from decouple import AutoConfig
 from elena.logging import llog
 
+
 class Binance:
     def __init__(self):
         self._config = AutoConfig()
         self.client = None
+        self.minimum_profit = 1.005
 
     def _connect(self):
         if not self.client:
@@ -25,8 +27,8 @@ class Binance:
         self._connect()
         return self.client.get_klines(symbol=p_symbol, interval=p_interval, limit=p_limit)
 
-    @lru_cache(maxsize=128)
-    def get_symbol_info(self, symbol):
+    @lru_cache()
+    def get_cached_symbol_info(self, symbol):
         self._connect()
         return self.client.get_symbol_info(symbol)
 
@@ -50,7 +52,8 @@ class Binance:
         self._connect()
         return self.client.get_order(symbol=p_symbol, orderId=p_order_id)
 
-    def get_order_book_first_bids_asks(self, p_symbol):
+    @lru_cache()
+    def get_cached_order_book_first_bids_asks(self, p_symbol):
         self._connect()
         book = self.client.get_order_book(symbol=p_symbol)
         return float(book['bids'][0][0]), float(book['asks'][0][0])

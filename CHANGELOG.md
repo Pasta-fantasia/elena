@@ -1,3 +1,8 @@
+# 1.6.0
+- Sell recalculates after a timeout. Sell at higher price or stop loss #36
+- Algo 10 - buy on bid sell at fixed margin #37
+- sleep_until_factor parameter 
+
 # 1.5.3
 - Rename Auto cancel parameter in .json
 
