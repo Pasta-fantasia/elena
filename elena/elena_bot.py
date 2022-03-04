@@ -145,7 +145,7 @@ class Elena:
                         llog(text)
                         self._state['sell_status'] = text
                         self._save_state()
-                        if self._state['stop_loss_percentage'] > 0 and loss <= self._state['stop_loss_percentage']:
+                        if self._state['stop_loss_percentage_absolute'] > 0 and loss <= self._state['stop_loss_percentage_absolute']:
                             text = f'Cancel order and sell at bid (losing:{loss})'
                             llog(text)
                             self._state['sell_status'] = text
@@ -164,7 +164,12 @@ class Elena:
         if state.get(key) is None:
             state[key] = default_value
 
-    def _read_state(self):
+    @staticmethod
+    def _del_key(state, key):
+        if not state.get(key) is None:
+            del state[key]
+
+    def _read_state(self):  # TODO: if it uses self._robot_filename why is not using self._state?
         fp = open(self._robot_filename, 'r')
         state = json.load(fp)
         fp.close()
@@ -180,7 +185,9 @@ class Elena:
         self._verify_key_set_default(state, 'sell_auto_cancel_count', 0)
         self._verify_key_set_default(state, 'sell_auto_cancel_im_feeling_lucky_data_samples', 0)
         self._verify_key_set_default(state, 'sell_auto_cancel_lucky_count', 0)
-        self._verify_key_set_default(state, 'stop_loss_percentage', 0)
+        self._del_key(state, 'stop_loss_percentage', 0)
+        self._verify_key_set_default(state, 'stop_loss_percentage_absolute', 0)
+        # TODO: self._verify_key_set_default(state, 'stop_loss_percentage_relative_to_accumulated_benefits', 0)
         self._verify_key_set_default(state, 'reinvest', 0)
         self._verify_key_set_default(state, 'accumulated_benefit', 0)
         self._verify_key_set_default(state, 'accumulated_margin', 0)
