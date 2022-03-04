@@ -94,7 +94,7 @@ class Elena:
                     self._save_history()
                     if self._state['active'] == 1:
                         llog("set sleep")
-                        self._reinvest()
+                        self._calculate_reinvest_or_losses()
                         self._reset_state()
                         self._state['sleep_until'] = self._sleep_until(sell_order_update_time, self._state['data_samples'] * self._state['sleep_until_factor'])
                         self._state['status'] = 'waiting'
@@ -267,10 +267,14 @@ class Elena:
         json.dump(history_state, fp)
         fp.close()
 
-    def _reinvest(self):
+    def _calculate_reinvest_or_losses(self):
         # re-invest
         if self._state['reinvest'] > 0 and self._state['iteration_benefit'] > 0:
             self._state['max_order'] = self._state['max_order'] + (self._state['iteration_benefit'] * self._state['reinvest'] / 100)
+
+        # losses
+        if self._state['iteration_benefit'] < 0:
+            self._state['max_order'] = self._state['max_order'] + self._state['iteration_benefit']
 
         # temporary algo migration for testing
         if self._state['algo'] == 4 or self._state['algo'] == 6:
