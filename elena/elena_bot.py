@@ -203,10 +203,6 @@ class Elena:
         self._verify_key_set_default(state, 'sales', 0)
         self._verify_key_set_default(state, 'cycles', 0)
 
-        # migration
-        self._del_key(state, 'stop_loss_percentage')
-        if state['buy_auto_cancel_timeout'] == 120:
-            state['buy_auto_cancel_timeout'] = state['data_samples']
         # bug correction
         if state['sales'] > state['cycles']:
             state['sales'] = state['cycles']
