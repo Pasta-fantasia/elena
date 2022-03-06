@@ -123,7 +123,10 @@ class Elena:
                         if self._state['sell_auto_cancel_im_feeling_lucky_data_samples'] > 0:
                             buy, sell = self._estimate_buy_sel(data_samples=self._state['sell_auto_cancel_im_feeling_lucky_data_samples'])
                             if sell > order_sell_price:
-                                text = f'Cancel and sell at higher price, order_buy_price:{order_buy_price}, ' \
+                                buy_order_id = self._state['buy_order_id']
+                                text = f'Cancel and sell at higher price, ' \
+                                       f'order_id:{buy_order_id}, ' \
+                                       f'order_buy_price:{order_buy_price}, ' \
                                        f'order_sell_price:{order_sell_price}, new_sell_price:{sell}'
                                 llog(text)
                                 self._state['sell_status'] = text
