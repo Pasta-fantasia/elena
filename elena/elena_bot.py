@@ -299,7 +299,7 @@ class Elena:
                     order_buy_price = float(buy_order['price'])  # get the real price when bought
                     self._state['iteration_current_margin'] = (bid / order_buy_price) * 100 - 100
 
-                    self._state['iteration_current_value'] = (order_buy_price - bid) * float(sell_order['origQty'])
+                    self._state['iteration_current_value'] = bid * float(sell_order['origQty'])
                     if self._state['symbol'].endswith('BUSD'):
                         self._state['iteration_current_value_BUSD'] = self._state['iteration_current_value']
                     else:
