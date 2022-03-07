@@ -83,7 +83,7 @@ class Elena:
                     self._add_buy_auto_cancel_count()
                     self._save_state()
                 else:
-                    self._state['sleep_until'] = self._sleep_until(get_time(), 2)
+                    # self._state['sleep_until'] = self._sleep_until(get_time(), 2)
                     self._save_state()
                     llog("waiting purchase")
                 # return --- maybe the order is executed immediately
