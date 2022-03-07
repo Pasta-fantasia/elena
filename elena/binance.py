@@ -64,3 +64,12 @@ class Binance:
         self._connect()
         book = self.client.get_order_book(symbol=p_symbol)
         return float(book['bids'][0][0]), float(book['asks'][0][0])
+
+    def convert_to_usd(self, symbol, quantity):
+        if symbol.endswith('BUSD'):
+            return quantity
+        else:
+            symbol_info = self.get_cached_symbol_info(symbol)
+            asset_busd = symbol_info['quoteAsset'] + 'BUSD'
+            # TODO: use try
+            return quantity * self.get_cached_avg_price(asset_busd)

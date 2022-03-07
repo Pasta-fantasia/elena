@@ -27,7 +27,7 @@ class Elena:
         self._state['iteration_current_bid'] = 0
         self._state['iteration_current_ask'] = 0
         self._state['iteration_current_value'] = 0
-        self._state['iteration_current_value_BUSD'] = 0
+        self._state['iteration_current_value_USD'] = 0
         self._state['iteration_current_margin'] = 0
         self._state['iteration_current_total_benefit'] = 0
         self._state['left_on_asset'] = 0.0
@@ -204,7 +204,7 @@ class Elena:
         self._verify_key_set_default(state, 'iteration_current_bid', 0)
         self._verify_key_set_default(state, 'iteration_current_ask', 0)
         self._verify_key_set_default(state, 'iteration_current_value', 0)
-        self._verify_key_set_default(state, 'iteration_current_value_BUSD', 0)
+        self._verify_key_set_default(state, 'iteration_current_value_USD', 0)
         self._verify_key_set_default(state, 'iteration_current_margin', 0)
         self._verify_key_set_default(state, 'iteration_current_total_benefit', 0)
         self._verify_key_set_default(state, 'sell_auto_cancel_timeout', 0)
@@ -215,13 +215,14 @@ class Elena:
         self._verify_key_set_default(state, 'stop_loss_percentage_relative_to_accumulated_benefits', 0)
         self._verify_key_set_default(state, 'reinvest', 0)
         self._verify_key_set_default(state, 'accumulated_benefit', 0)
-        self._verify_key_set_default(state, 'accumulated_benefit_BUSD', 0)
+        self._verify_key_set_default(state, 'accumulated_benefit_USD', 0)
         self._verify_key_set_default(state, 'accumulated_margin', 0)
-
         self._verify_key_set_default(state, 'sales', 0)
         self._verify_key_set_default(state, 'cycles', 0)
 
         # migration
+        self._del_key('iteration_current_value_BUSD')
+        self._del_key('iteration_current_value_BUSD')
         if state['active'] == 1:
             if state['buy_auto_cancel_timeout'] == state['data_samples']:
                 state['buy_auto_cancel_timeout'] = 5
@@ -302,10 +303,7 @@ class Elena:
                     self._state['iteration_current_margin'] = (bid / order_buy_price) * 100 - 100
 
                     self._state['iteration_current_value'] = bid * float(buy_order['origQty'])
-                    if self._state['symbol'].endswith('BUSD'):
-                        self._state['iteration_current_value_BUSD'] = self._state['iteration_current_value']
-                    else:
-                        self._state['iteration_current_value_BUSD'] = self._exchange.convert_to_busd(self._state['symbol'], self._state['iteration_current_value'])
+                    self._state['iteration_current_value_USD'] = self._exchange.convert_to_usd(self._state['symbol'], self._state['iteration_current_value'])
                     self._state['iteration_current_total_benefit'] = self._state['accumulated_benefit'] + self._state['iteration_current_value'] - self._state['max_order']
 
         self._state['iteration_benefit'] = iteration_benefit
@@ -314,10 +312,7 @@ class Elena:
 
         if iteration_benefit != 0:
             self._state['accumulated_benefit'] = self._state['accumulated_benefit'] + iteration_benefit
-            if self._state['symbol'].endswith('BUSD'):
-                self._state['accumulated_benefit_BUSD'] = self._state['accumulated_benefit']
-            else:
-                self._state['accumulated_benefit_BUSD'] = self._exchange.convert_to_busd(self._state['symbol'], self._state['accumulated_benefit_BUSD'])
+            self._state['accumulated_benefit_USD'] = self._exchange.convert_to_usd(self._state['symbol'], self._state['accumulated_benefit_USD'])
             self._state['accumulated_margin'] = self._state['accumulated_margin'] + iteration_margin
             if iteration_benefit < 0:
                 llog("iteration margin <0!", self._state)

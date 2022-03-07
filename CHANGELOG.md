@@ -1,5 +1,6 @@
 # 1.6.1
 - Force buy price for _Don't estimate buy, buy at lowest bid on the order book_ #31
+- Convert to BUSD: Status in active .jsons #16
 
 # 1.6.0
 - Sell recalculates after a timeout. Sell at higher price or stop loss #36
