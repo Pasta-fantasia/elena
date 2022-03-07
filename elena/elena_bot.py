@@ -221,8 +221,8 @@ class Elena:
         self._verify_key_set_default(state, 'cycles', 0)
 
         # migration
-        self._del_key('iteration_current_value_BUSD')
-        self._del_key('iteration_current_value_BUSD')
+        self._del_key(state, 'iteration_current_value_BUSD')
+        self._del_key(state, 'iteration_current_value_BUSD')
         if state['active'] == 1:
             if state['buy_auto_cancel_timeout'] == state['data_samples']:
                 state['buy_auto_cancel_timeout'] = 5
