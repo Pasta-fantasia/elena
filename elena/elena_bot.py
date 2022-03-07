@@ -232,6 +232,8 @@ class Elena:
                     if state['sell_auto_cancel_im_feeling_lucky_data_samples'] > 0:
                         state['sell_auto_cancel_im_feeling_lucky_data_samples'] = int(state['margin']) if int(state['margin']) >= 5 else 5
 
+            state['stop_loss_percentage_relative_to_accumulated_benefits'] = 0
+
         # bug correction
         if state['sales'] > state['cycles']:
             state['sales'] = state['cycles']
