@@ -89,6 +89,15 @@ class Exchange:
     def get_cached_avg_price(self, symbol):
         return self._api.get_cached_avg_price(symbol)
 
+    def get_cached_symbol_info(self, symbol):
+        return self._api.get_cached_symbol_info(symbol=symbol)
+
+    def convert_to_busd(self,symbol, quantity):
+        symbol_info = self._api.get_cached_symbol_info(symbol)
+        asset_busd = symbol_info['quoteAsset'] + 'BUSD'
+        # TODO: use try
+        return quantity * self._api.get_cached_avg_price(asset_busd)
+
     def create_buy_order(self, max_order, symbol, buy_price, force_buy_price=False):
         bid, ask = self.get_cached_order_book_first_bids_asks(symbol)
 

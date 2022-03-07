@@ -301,14 +301,12 @@ class Elena:
                     order_buy_price = float(buy_order['price'])  # get the real price when bought
                     self._state['iteration_current_margin'] = (bid / order_buy_price) * 100 - 100
 
-                    self._state['iteration_current_value'] = bid * float(sell_order['origQty'])
+                    self._state['iteration_current_value'] = bid * float(buy_order['origQty'])
                     if self._state['symbol'].endswith('BUSD'):
                         self._state['iteration_current_value_BUSD'] = self._state['iteration_current_value']
                     else:
-                        self._state['iteration_current_value_BUSD'] = self._state['iteration_current_value'] * self._exchange.get_cached_avg_price(self._state['symbol'])
+                        self._state['iteration_current_value_BUSD'] = self._exchange.convert_to_busd(self._state['symbol'], self._state['iteration_current_value'])
                     self._state['iteration_current_total_benefit'] = self._state['accumulated_benefit'] + self._state['iteration_current_value'] - self._state['max_order']
-
-
 
         self._state['iteration_benefit'] = iteration_benefit
         self._state['iteration_margin'] = iteration_margin
@@ -319,7 +317,7 @@ class Elena:
             if self._state['symbol'].endswith('BUSD'):
                 self._state['accumulated_benefit_BUSD'] = self._state['accumulated_benefit']
             else:
-                self._state['accumulated_benefit_BUSD'] = self._state['accumulated_benefit'] * self._exchange.get_cached_avg_price(self._state['symbol'])
+                self._state['accumulated_benefit_BUSD'] = self._exchange.convert_to_busd(self._state['symbol'], self._state['accumulated_benefit_BUSD'])
             self._state['accumulated_margin'] = self._state['accumulated_margin'] + iteration_margin
             if iteration_benefit < 0:
                 llog("iteration margin <0!", self._state)
