@@ -87,7 +87,7 @@ class Exchange:
         return self._api.get_cached_order_book_first_bids_asks(symbol)
 
     def get_cached_avg_price(self, symbol):
-        return self._api.get_cached_avg_price(symbol=symbol)
+        return self._api.get_cached_avg_price(symbol)
 
     def create_buy_order(self, max_order, symbol, buy_price, force_buy_price=False):
         bid, ask = self.get_cached_order_book_first_bids_asks(symbol)

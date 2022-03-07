@@ -35,7 +35,7 @@ class Binance:
     @lru_cache()
     def get_cached_avg_price(self, symbol):
         self._connect()
-        avg_price = self.client.get_avg_price(symbol)
+        avg_price = self.client.get_avg_price(symbol=symbol)
         asset_fact = float(avg_price['price'])
         return asset_fact
 
