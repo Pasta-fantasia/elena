@@ -34,7 +34,8 @@ class Elena:
                 buy, sell = self._estimate_buy_sel()
                 if buy > 0:
                     llog("create a new buy order")
-                    new_buy_order = self._exchange.create_buy_order(self._state['max_order'], self._state['symbol'], buy)
+                    force_buy_price = self._state['algo'] > 7
+                    new_buy_order = self._exchange.create_buy_order(self._state['max_order'], self._state['symbol'], buy, force_buy_price)
                     self._reset_state()
                     self._state['buy_order_id'] = new_buy_order['orderId']
                     self._state['buy_order'] = new_buy_order
