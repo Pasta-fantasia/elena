@@ -32,6 +32,13 @@ class Binance:
         self._connect()
         return self.client.get_symbol_info(symbol)
 
+    @lru_cache()
+    def get_cached_avg_price(self, symbol):
+        self._connect()
+        avg_price = self.client.get_avg_price(symbol)
+        asset_fact = float(avg_price['price'])
+        return asset_fact
+
     def get_asset_balance(self, asset):
         self._connect()
         return float(self.client.get_asset_balance(asset=asset)['free'])

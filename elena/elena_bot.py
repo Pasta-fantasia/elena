@@ -24,6 +24,12 @@ class Elena:
         self._state['status'] = ''
         self._state['iteration_benefit'] = 0.0
         self._state['iteration_margin'] = 0.0
+        self._state['iteration_current_bid'] = 0
+        self._state['iteration_current_ask'] = 0
+        self._state['iteration_current_value'] = 0
+        self._state['iteration_current_value_BUSD'] = 0
+        self._state['iteration_current_margin'] = 0
+        self._state['iteration_current_total_benefit'] = 0
         self._state['left_on_asset'] = 0.0
         self._state['sleep_until'] = 0
         self._state['sell_status'] = None
@@ -116,11 +122,11 @@ class Elena:
                     order_buy_price = float(buy_order['price'])  # get the real price when bought
                     order_sell_price = float(sell_order['price'])  # get the sell price as is in the exchange
 
-                    bid, ask = self._exchange.get_order_book_first_bids_asks(self._state['symbol'])
+                    bid = self._state['iteration_current_bid']
                     minimum_profit = 1 + ((self._exchange.minimum_profit-1)/2)
                     minimum_price = order_buy_price * minimum_profit
 
-                    if bid >= minimum_price:
+                    if bid >= minimum_price:  # earning
                         if self._state['sell_auto_cancel_im_feeling_lucky_data_samples'] > 0:
                             buy, sell = self._estimate_buy_sel(data_samples=self._state['sell_auto_cancel_im_feeling_lucky_data_samples'])
                             if sell > order_sell_price:
@@ -142,9 +148,9 @@ class Elena:
                                 pass  # Cancel order and sell at bid (we get some benefit)
                         llog("Cancel order and sell at bid (we get some benefit)")
                         self._state['sell_status'] = "Cancel order and sell at bid (we get some benefit)"
-                        self._cancel_sell_order_and_create_a_new_one(bid)
-                    else:
-                        percentage_loss = (1 - bid / order_buy_price) * 100
+                        self._cancel_sell_order_and_create_a_new_one(bid, force_sell_price=True)
+                    else:  # loosing
+                        percentage_loss = self._state['iteration_current_margin'] * -1
                         absolute_loss = (order_buy_price - bid) * float(sell_order['origQty'])
                         text = f'loss%:{percentage_loss}, order_buy_price:{order_buy_price}, bid:{bid}, loss$:{absolute_loss}'
                         llog(text)
@@ -195,6 +201,12 @@ class Elena:
         self._verify_key_set_default(state, 'sleep_until_factor', 1.5)
         self._verify_key_set_default(state, 'buy_auto_cancel_timeout', 0)
         self._verify_key_set_default(state, 'buy_auto_cancel_count', 0)
+        self._verify_key_set_default(state, 'iteration_current_bid', 0)
+        self._verify_key_set_default(state, 'iteration_current_ask', 0)
+        self._verify_key_set_default(state, 'iteration_current_value', 0)
+        self._verify_key_set_default(state, 'iteration_current_value_BUSD', 0)
+        self._verify_key_set_default(state, 'iteration_current_margin', 0)
+        self._verify_key_set_default(state, 'iteration_current_total_benefit', 0)
         self._verify_key_set_default(state, 'sell_auto_cancel_timeout', 0)
         self._verify_key_set_default(state, 'sell_auto_cancel_count', 0)
         self._verify_key_set_default(state, 'sell_auto_cancel_im_feeling_lucky_data_samples', 0)
@@ -203,7 +215,9 @@ class Elena:
         self._verify_key_set_default(state, 'stop_loss_percentage_relative_to_accumulated_benefits', 0)
         self._verify_key_set_default(state, 'reinvest', 0)
         self._verify_key_set_default(state, 'accumulated_benefit', 0)
+        self._verify_key_set_default(state, 'accumulated_benefit_BUSD', 0)
         self._verify_key_set_default(state, 'accumulated_margin', 0)
+
         self._verify_key_set_default(state, 'sales', 0)
         self._verify_key_set_default(state, 'cycles', 0)
 
@@ -259,16 +273,37 @@ class Elena:
         left_on_asset = 0
 
         if self._state['buy_order_id']:
-            buy_order = self._exchange.get_order(self._state['buy_order_id'], self._state['symbol'])
+            check_order = True
+            if self._state['buy_order']:
+                buy_order = self._state['buy_order']
+                status = buy_order['status']
+                check_order = not (status == OrderStatus.FILLED.value)
+            if check_order:
+                buy_order = self._exchange.get_order(self._state['buy_order_id'], self._state['symbol'])
+                self._state['buy_order'] = buy_order
+
             if self._state['sell_order_id']:
                 sell_order = self._exchange.get_order(self._state['sell_order_id'], self._state['symbol'])
+                self._state['sell_order'] = sell_order
                 if sell_order['status'] == OrderStatus.FILLED.value:
                     iteration_benefit = float(sell_order['cummulativeQuoteQty']) - float(buy_order['cummulativeQuoteQty'])
                     iteration_margin = (iteration_benefit / float(buy_order['cummulativeQuoteQty'])) * 100
                     left_on_asset = float(buy_order['executedQty']) - float(sell_order['executedQty'])
 
-        self._state['buy_order'] = buy_order
-        self._state['sell_order'] = sell_order
+                if sell_order['status'] == OrderStatus.NEW.value:
+                    bid, ask = self._exchange.get_cached_order_book_first_bids_asks(self._state['symbol'])
+                    self._state['iteration_current_bid'] = bid
+                    self._state['iteration_current_ask'] = ask
+                    self._state['iteration_current_value'] = bid
+                    if self._state['symbol'].endswith('BUSD'):
+                        self._state['iteration_current_value_BUSD'] = bid
+                    else:
+                        self._state['iteration_current_value_BUSD'] = bid * self._exchange.get_cached_avg_price(self._state['symbol'])
+                    self._state['iteration_current_total_benefit'] = self._state['accumulated_benefit'] + self._state['iteration_current_value'] - self._state['max_order']
+
+                    buy_order = self._state['buy_order']
+                    order_buy_price = float(buy_order['price'])  # get the real price when bought
+                    self._state['iteration_current_margin'] = (bid / order_buy_price) * 100 - 100
 
         self._state['iteration_benefit'] = iteration_benefit
         self._state['iteration_margin'] = iteration_margin
@@ -276,6 +311,10 @@ class Elena:
 
         if iteration_benefit != 0:
             self._state['accumulated_benefit'] = self._state['accumulated_benefit'] + iteration_benefit
+            if self._state['symbol'].endswith('BUSD'):
+                self._state['accumulated_benefit_BUSD'] = self._state['accumulated_benefit']
+            else:
+                self._state['accumulated_benefit_BUSD'] = self._state['accumulated_benefit'] * self._exchange.get_cached_avg_price(self._state['symbol'])
             self._state['accumulated_margin'] = self._state['accumulated_margin'] + iteration_margin
             if iteration_benefit < 0:
                 llog("iteration margin <0!", self._state)
@@ -327,7 +366,7 @@ class Elena:
             self._add_sell_auto_cancel_lucky_count()
         self._state['sell_order_id'] = 0
         self._save_state()  # TODO: review if it's necessary... if the order was canceled but the new one can't be executed in the next iteration this would be understood as a human cancelation.
-        self._create_sell_order(sell,force_sell_price)
+        self._create_sell_order(sell, force_sell_price)
 
     def _estimate_buy_sel(self, data_samples=None):
         if data_samples is None:
@@ -366,7 +405,7 @@ class Elena:
         return buy, sell
 
     def _buy_on_bid_sell_based_on_linear_regression(self, candles_df_buy_sell, sell_field, margin=0):
-        next_low, ask = self._exchange.get_order_book_first_bids_asks(self._state['symbol'])
+        next_low, ask = self._exchange.get_cached_order_book_first_bids_asks(self._state['symbol'])
 
         next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
 
@@ -374,7 +413,7 @@ class Elena:
         return buy, sell
 
     def _buy_on_bid_sell_based_on_fixed_margin(self, margin):
-        buy, ask = self._exchange.get_order_book_first_bids_asks(self._state['symbol'])
+        buy, ask = self._exchange.get_cached_order_book_first_bids_asks(self._state['symbol'])
 
         sell = buy * (1 + (margin / 100))
 
