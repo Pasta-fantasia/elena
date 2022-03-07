@@ -153,7 +153,7 @@ class Elena:
                         percentage_loss = self._state['iteration_current_margin'] * -1
                         absolute_loss = (order_buy_price - bid) * float(sell_order['origQty'])
                         text = f'loss%:{percentage_loss}, order_buy_price:{order_buy_price}, bid:{bid}, loss$:{absolute_loss}'
-                        llog(text)
+                        # llog(text)
                         self._state['sell_status'] = text
                         self._save_state()
 
