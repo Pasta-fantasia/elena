@@ -48,6 +48,7 @@ class Elena:
                     self._state['buy'] = buy
                     self._state['sell'] = sell
                     self._state['status'] = 'buying'
+                    self._update_orders_status_values_and_profits(force_update_buy_order=True)
                     self._save_state()
                 else:
                     self._state['sleep_until'] = self._sleep_until(get_time(), 5)
@@ -57,7 +58,7 @@ class Elena:
                 # return --- maybe the order is executed immediately
 
             if self._state['buy_order_id'] and not self._state['sell_order_id']:
-                self._update_orders_status_values_and_profits()
+                self._update_orders_status_values_and_profits(force_update_buy_order=True)
                 buy_order = self._state['buy_order']
                 status = buy_order['status']
                 order_time = int(buy_order['time'])
@@ -268,7 +269,7 @@ class Elena:
     def _add_sell_auto_cancel_lucky_count(self):
         self._state['sell_auto_cancel_lucky_count'] = self._state['sell_auto_cancel_lucky_count'] + 1
 
-    def _update_orders_status_values_and_profits(self):
+    def _update_orders_status_values_and_profits(self, force_update_buy_order=False):
         buy_order = ''
         sell_order = ''
         iteration_benefit = 0
@@ -280,7 +281,7 @@ class Elena:
             if self._state['buy_order']:
                 buy_order = self._state['buy_order']
                 status = buy_order['status']
-                check_order = not (status == OrderStatus.FILLED.value)
+                check_order = not (status == OrderStatus.FILLED.value) or force_update_buy_order
             if check_order:
                 buy_order = self._exchange.get_order(self._state['buy_order_id'], self._state['symbol'])
                 self._state['buy_order'] = buy_order
