@@ -37,6 +37,7 @@ class Elena:
     def iterate(self):
         if self._state['sleep_until'] < get_time():
             if not self._state['buy_order_id'] and self._state['active']:
+                self._algo_migration()
                 buy, sell = self._estimate_buy_sel()
                 if buy > 0:
                     llog("create a new buy order")
@@ -330,6 +331,14 @@ class Elena:
         json.dump(history_state, fp)
         fp.close()
 
+    def _algo_migration(self):
+        if self._state['algo'] == 4 or self._state['algo'] == 6 or self._state['algo'] == 8:
+            self._state['algo'] = 11
+        if self._state['algo'] == 5 or self._state['algo'] == 7 or self._state['algo'] == 9:
+            self._state['algo'] = 12
+        if self._state['algo'] == 10:
+            self._state['algo'] = 13
+
     def _calculate_reinvest_or_losses(self):
         # re-invest
         if self._state['reinvest'] > 0 and self._state['iteration_benefit'] > 0:
@@ -338,12 +347,6 @@ class Elena:
         # losses
         if self._state['iteration_benefit'] < 0:
             self._state['max_order'] = self._state['max_order'] + self._state['iteration_benefit']
-
-        # temporary algo migration for testing
-        if self._state['algo'] == 4 or self._state['algo'] == 6:
-            self._state['algo'] = 8
-        if self._state['algo'] == 5 or self._state['algo'] == 7:
-            self._state['algo'] = 9
 
     def _create_sell_order(self, sell, force_sell_price=False):
         buy_order = self._state['buy_order']
@@ -418,6 +421,21 @@ class Elena:
 
         return buy, sell
 
+    def _buy_on_ask_sell_based_on_linear_regression(self, candles_df_buy_sell, sell_field, margin=0):
+        bid, next_low = self._exchange.get_cached_order_book_first_bids_asks(self._state['symbol'])
+
+        next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
+
+        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange.minimum_profit)
+        return buy, sell
+
+    def _buy_on_ask_sell_based_on_fixed_margin(self, margin):
+        bid, buy = self._exchange.get_cached_order_book_first_bids_asks(self._state['symbol'])
+
+        sell = buy * (1 + (margin / 100))
+
+        return buy, sell
+
     def _buy_sell(self, candles_df_buy_sell, algo, margin, tendence_tolerance):
         sell = 0
         buy = 0
@@ -453,6 +471,12 @@ class Elena:
             if algo == 9:
                 buy, sell = self._buy_on_bid_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=margin)
             if algo == 10:
+                buy, sell = self._buy_on_ask_sell_based_on_fixed_margin(margin)
+            if algo == 11:
+                buy, sell = self._buy_on_ask_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=margin)
+            if algo == 12:
+                buy, sell = self._buy_on_ask_sell_based_on_linear_regression(candles_df_buy_sell, "High", margin=margin)
+            if algo == 13:
                 buy, sell = self._buy_on_bid_sell_based_on_fixed_margin(margin)
         if algo == 3:
             buy, sell = self._buy_sell_based_on_linear_regression(candles_df_buy_sell, "Close", margin=0)
