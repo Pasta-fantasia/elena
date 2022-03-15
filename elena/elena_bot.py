@@ -326,6 +326,7 @@ class Elena:
             self._state['algo'] = 13
 
         self._state['buy_auto_cancel_timeout'] = 5
+        self._state['sell_auto_cancel_timeout'] = 5
         self._state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 10
 
     def _calculate_reinvest_or_losses(self):
