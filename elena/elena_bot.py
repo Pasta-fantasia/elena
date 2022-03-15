@@ -37,7 +37,7 @@ class Elena:
     def iterate(self):
         if self._state['sleep_until'] < get_time():
             if not self._state['buy_order_id'] and self._state['active']:
-                self._algo_migration()
+                self._parameters_migration()
                 buy, sell = self._estimate_buy_sel()
                 if buy > 0:
                     llog("create a new buy order")
@@ -225,21 +225,7 @@ class Elena:
         # migration
         self._del_key(state, 'iteration_current_value_BUSD')
         self._del_key(state, 'iteration_current_value_BUSD')
-        if state['active'] == 1:
-            if state['buy_auto_cancel_timeout'] == state['data_samples']:
-                state['buy_auto_cancel_timeout'] = 5
 
-            if state['sell_auto_cancel_timeout'] == state['data_samples']:
-                if state['algo'] == 8 or state['algo'] == 9:
-                    state['sell_auto_cancel_timeout'] = int(state['margin'] * 0.75) + 1
-                    if state['sell_auto_cancel_im_feeling_lucky_data_samples'] > 0:
-                        state['sell_auto_cancel_im_feeling_lucky_data_samples'] = int(state['margin']) if int(state['margin']) >= 5 else 5
-
-            state['stop_loss_percentage_relative_to_accumulated_benefits'] = 0
-
-        # bug correction
-        if state['sales'] > state['cycles']:
-            state['sales'] = state['cycles']
         return state
 
     def _save_state(self, state=None, filename=None):
@@ -331,13 +317,16 @@ class Elena:
         json.dump(history_state, fp)
         fp.close()
 
-    def _algo_migration(self):
+    def _parameters_migration(self):
         if self._state['algo'] == 4 or self._state['algo'] == 6 or self._state['algo'] == 8:
             self._state['algo'] = 11
         if self._state['algo'] == 5 or self._state['algo'] == 7 or self._state['algo'] == 9:
             self._state['algo'] = 12
         if self._state['algo'] == 10:
             self._state['algo'] = 13
+
+        self._state['buy_auto_cancel_timeout'] = 5
+        self._state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 10
 
     def _calculate_reinvest_or_losses(self):
         # re-invest
