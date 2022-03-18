@@ -32,6 +32,13 @@ class Binance:
         self._connect()
         return self.client.get_symbol_info(symbol)
 
+    @lru_cache()
+    def get_cached_avg_price(self, symbol):
+        self._connect()
+        avg_price = self.client.get_avg_price(symbol=symbol)
+        asset_fact = float(avg_price['price'])
+        return asset_fact
+
     def get_asset_balance(self, asset):
         self._connect()
         return float(self.client.get_asset_balance(asset=asset)['free'])
@@ -57,3 +64,12 @@ class Binance:
         self._connect()
         book = self.client.get_order_book(symbol=p_symbol)
         return float(book['bids'][0][0]), float(book['asks'][0][0])
+
+    def convert_to_usd(self, symbol, quantity):
+        if symbol.endswith('BUSD'):
+            return quantity
+        else:
+            symbol_info = self.get_cached_symbol_info(symbol)
+            asset_busd = symbol_info['quoteAsset'] + 'BUSD'
+            # TODO: use try
+            return quantity * self.get_cached_avg_price(asset_busd)

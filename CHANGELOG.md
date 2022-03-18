@@ -1,3 +1,9 @@
+# 1.6.1
+- Force buy price for _Don't estimate buy, buy at lowest bid on the order book_ #31
+- Convert to BUSD: Status in active .jsons #16
+- Migrate any bot to new algos and default buy_auto_cancel_timeout, sell_auto_cancel_timeout and sell_auto_cancel_im_feeling_lucky_data_samples
+- Verify only one instance of elena.sh
+
 # 1.6.0
 - Sell recalculates after a timeout. Sell at higher price or stop loss #36
 - Algo 10 - buy on bid sell at fixed margin #37

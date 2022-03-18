@@ -83,13 +83,22 @@ class Exchange:
     def get_order(self, p_order_id, p_symbol):
         return self._api.get_order(p_order_id, p_symbol)
 
-    def get_order_book_first_bids_asks(self, symbol):
+    def get_cached_order_book_first_bids_asks(self, symbol):
         return self._api.get_cached_order_book_first_bids_asks(symbol)
 
-    def create_buy_order(self, max_order, symbol, buy_price):
-        bid, ask = self.get_order_book_first_bids_asks(symbol)
+    def get_cached_avg_price(self, symbol):
+        return self._api.get_cached_avg_price(symbol)
 
-        if buy_price > bid:
+    def get_cached_symbol_info(self, symbol):
+        return self._api.get_cached_symbol_info(symbol=symbol)
+
+    def convert_to_usd(self, symbol, quantity):
+        return self._api.convert_to_usd(symbol, quantity)
+
+    def create_buy_order(self, max_order, symbol, buy_price, force_buy_price=False):
+        bid, ask = self.get_cached_order_book_first_bids_asks(symbol)
+
+        if buy_price > bid and not force_buy_price:
             llog('changing buy to bid', buy_price, bid)
             buy_price = bid
 
