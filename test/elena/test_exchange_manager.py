@@ -4,8 +4,9 @@ from pathlib import Path
 from binance import Client
 from mockito import when, mock
 
-from elena.binance import Binance
+from elena.adapters.binance import Binance
 from elena.exchange_manager import ExchangeManager
+from elena.ports import exchange
 from elena.record import Record
 
 test_data_dir = Path.joinpath(Path(__file__).parent.parent, 'test_data')
@@ -20,7 +21,7 @@ def load_test_data(filename: str) -> dict:
 
 # Record test data for method get_candles
 # Remove the '_' to run on tests
-def _test_record_get_candles():
+def _test_record_get_candles_for_binance():
     exchange = Binance()
     sut = ExchangeManager(exchange)
     Record.enable()
@@ -32,7 +33,7 @@ def test_get_candles():
     Record.disable()
 
     get_klines_data = load_test_data('1645107155828-1645107156451-get_klines.json')
-    exchange_mock = mock(spec=Binance)
+    exchange_mock = mock(spec=exchange.Exchange)
     when(exchange_mock).get_klines(
         get_klines_data['input']['p_interval'],
         get_klines_data['input']['p_limit'],
