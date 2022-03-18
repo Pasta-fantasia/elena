@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 
-from elena.exchange import Exchange, OrderStatus
+from elena.exchange_manager import Exchange, OrderStatus
 from elena.logging import llog
 from elena.utils import get_time
 

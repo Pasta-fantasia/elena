@@ -5,7 +5,7 @@ from binance import Client
 from mockito import when, mock
 
 from elena.binance import Binance
-from elena.exchange import Exchange
+from elena.exchange_manager import Exchange
 from elena.record import Record
 
 test_data_dir = Path.joinpath(Path(__file__).parent.parent, 'test_data')

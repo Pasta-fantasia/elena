@@ -3,7 +3,7 @@ import os
 import sys
 
 from elena.elena_bot import Elena
-from elena.exchange import Exchange
+from elena.exchange_manager import Exchange
 from elena.binance import Binance
 from elena.logging import llog
 from elena.record import Record
