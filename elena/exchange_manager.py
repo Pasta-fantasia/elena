@@ -10,7 +10,7 @@ from elena.logging import llog
 from elena.record import Record
 
 
-# Exchange
+# ExchangeManager
 
 
 class OrderStatus(Enum):
@@ -23,7 +23,7 @@ class OrderStatus(Enum):
     EXPIRED = 'EXPIRED'
 
 
-class Exchange:
+class ExchangeManager:
     def __init__(self, api: Binance):
         self._api = api
         self.minimum_profit = api.minimum_profit

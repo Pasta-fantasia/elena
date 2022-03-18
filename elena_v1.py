@@ -3,13 +3,13 @@ import os
 import sys
 
 from elena.elena_bot import Elena
-from elena.exchange_manager import Exchange
+from elena.exchange_manager import ExchangeManager
 from elena.binance import Binance
 from elena.logging import llog
 from elena.record import Record
 from elena.utils import get_time
 
-binance = Exchange(Binance())
+binance = ExchangeManager(Binance())
 logging.basicConfig(filename='elena.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
 if len(sys.argv) > 1:

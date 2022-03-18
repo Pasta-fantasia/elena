@@ -3,13 +3,13 @@ import os
 
 import numpy as np
 
-from elena.exchange_manager import Exchange, OrderStatus
+from elena.exchange_manager import ExchangeManager, OrderStatus
 from elena.logging import llog
 from elena.utils import get_time
 
 
 class Elena:
-    def __init__(self, robot_filename: str, exchange: Exchange):
+    def __init__(self, robot_filename: str, exchange: ExchangeManager):
         self._robot_filename = robot_filename
         self._exchange = exchange
         self._state = self._read_state()
