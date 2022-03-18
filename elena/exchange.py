@@ -31,9 +31,7 @@ class Exchange:
     def start_recorder(self):
         self._rec.start()
 
-    def stop_recorder(self):
-        self._rec.stop()
-
+    @Record()
     def get_candles(self, p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=1000):
         self._rec.func_in('get_candles', p_symbol=p_symbol, p_interval=p_interval, p_limit=p_limit)
 

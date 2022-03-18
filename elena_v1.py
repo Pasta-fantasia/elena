@@ -6,8 +6,8 @@ from elena.elena_bot import Elena
 from elena.exchange import Exchange
 from elena.binance import Binance
 from elena.logging import llog
+from elena.test_data_recording import Record
 from elena.utils import get_time
-
 
 binance = Exchange(Binance())
 logging.basicConfig(filename='elena.log', level=logging.INFO, format='%(asctime)s %(message)s')
@@ -26,4 +26,5 @@ llog('time', get_time())
 for robot_filename in robots:
     llog(robot_filename)
     elena = Elena(robot_filename, binance)
+    Record.enable()
     elena.iterate()
