@@ -3,7 +3,8 @@ from enum import Enum
 import pandas as pd
 from binance.client import Client
 
-from elena.binance import Binance
+from elena.ports import exchange
+
 from elena.logging import llog
 # Duplicated from Binance. Done from decouple from Binance module
 # TODO: don't use Enum this is not Pascal :)
@@ -24,9 +25,9 @@ class OrderStatus(Enum):
 
 
 class ExchangeManager:
-    def __init__(self, exchange: Binance):
+    def __init__(self, exchange: exchange.Exchange):
         self._exchange = exchange
-        self.minimum_profit = exchange.minimum_profit
+        self._minimum_profit = exchange.get_minimum_profit()  # TODO Where is used? If is not necessary, remove Exchange.get_minimum_profit() methos as well
 
     def get_candles(self, p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=1000):
         candles = self._exchange.get_klines(p_interval, p_limit, p_symbol)

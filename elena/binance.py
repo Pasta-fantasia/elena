@@ -2,16 +2,17 @@ from functools import lru_cache
 
 from binance.client import Client
 from decouple import AutoConfig
-from elena.logging import llog
 
+from elena.logging import llog
+from elena.ports import exchange
 from elena.record import Record
 
 
-class Binance:
+class Binance(exchange.Exchange):
     def __init__(self):
-        self._config = AutoConfig()
+        self._config = AutoConfig()  # TODO inject ConfigManager as dependency
         self.client = None
-        self.minimum_profit = 1.005
+        self._minimum_profit = 1.005  # TODO move to configuration?
 
     def _connect(self):
         if not self.client:
@@ -24,6 +25,9 @@ class Binance:
                 llog(e)
                 exit(-1)
         return
+
+    def get_minimum_profit(self) -> float:
+        return self._minimum_profit
 
     @Record()
     def get_klines(self, p_interval, p_limit, p_symbol):
