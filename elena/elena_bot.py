@@ -192,16 +192,13 @@ class Elena:
             del state[key]
 
     def _parameters_migration(self):
+        # should be done only before a new cycle starts
         if self._state['algo'] == 4 or self._state['algo'] == 6 or self._state['algo'] == 8:
             self._state['algo'] = 11
         if self._state['algo'] == 5 or self._state['algo'] == 7 or self._state['algo'] == 9:
             self._state['algo'] = 12
         if self._state['algo'] == 10:
             self._state['algo'] = 13
-
-        self._state['buy_auto_cancel_timeout'] = 5
-        self._state['sell_auto_cancel_timeout'] = 5
-        self._state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 10
 
     def _read_state(self):  # TODO: if it uses self._robot_filename why is not using self._state?
         fp = open(self._robot_filename, 'r')
@@ -213,7 +210,8 @@ class Elena:
         self._verify_key_set_default(state, 'sell_order_id', 0)
         self._verify_key_set_default(state, 'sleep_until', 0)
         self._verify_key_set_default(state, 'sleep_until_factor', 1.5)
-        self._verify_key_set_default(state, 'buy_auto_cancel_timeout', 0)
+
+        self._verify_key_set_default(state, 'buy_auto_cancel_timeout', 5)
         self._verify_key_set_default(state, 'buy_auto_cancel_count', 0)
         self._verify_key_set_default(state, 'iteration_current_bid', 0)
         self._verify_key_set_default(state, 'iteration_current_ask', 0)
@@ -221,9 +219,10 @@ class Elena:
         self._verify_key_set_default(state, 'iteration_current_value_USD', 0)
         self._verify_key_set_default(state, 'iteration_current_margin', 0)
         self._verify_key_set_default(state, 'iteration_current_total_benefit', 0)
-        self._verify_key_set_default(state, 'sell_auto_cancel_timeout', 0)
+
+        self._verify_key_set_default(state, 'sell_auto_cancel_timeout', 5)
         self._verify_key_set_default(state, 'sell_auto_cancel_count', 0)
-        self._verify_key_set_default(state, 'sell_auto_cancel_im_feeling_lucky_data_samples', 0)
+        self._verify_key_set_default(state, 'sell_auto_cancel_im_feeling_lucky_data_samples', 10)
         self._verify_key_set_default(state, 'sell_auto_cancel_lucky_count', 0)
         self._verify_key_set_default(state, 'stop_loss_percentage_absolute', 0)
         self._verify_key_set_default(state, 'stop_loss_percentage_relative_to_accumulated_benefits', 0)
