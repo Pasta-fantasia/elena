@@ -7,7 +7,7 @@ from elena.binance import Binance
 from elena.logging import llog
 # Duplicated from Binance. Done from decouple from Binance module
 # TODO: don't use Enum this is not Pascal :)
-from elena.test_data_recording import Record
+from elena.record import Record
 
 
 # Exchange
@@ -28,7 +28,6 @@ class Exchange:
         self._api = api
         self.minimum_profit = api.minimum_profit
 
-    @Record()
     def get_candles(self, p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=1000):
         candles = self._api.get_klines(p_interval, p_limit, p_symbol)
 

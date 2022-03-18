@@ -4,7 +4,7 @@ from binance.client import Client
 from decouple import AutoConfig
 from elena.logging import llog
 
-from elena.test_data_recording import Record
+from elena.record import Record
 
 
 class Binance:
