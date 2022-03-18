@@ -3,15 +3,16 @@ from enum import Enum
 import pandas as pd
 from binance.client import Client
 
-from elena import utils
 from elena.binance import Binance
 from elena.logging import llog
+# Duplicated from Binance. Done from decouple from Binance module
+# TODO: don't use Enum this is not Pascal :)
+from elena.test_data_recording import Record
 
 
 # Exchange
 
-# Duplicated from Binance. Done from decouple from Binance module
-# TODO: don't use Enum this is not Pascal :)
+
 class OrderStatus(Enum):
     NEW = 'NEW'
     PARTIALLY_FILLED = 'PARTIALLY_FILLED'
@@ -26,18 +27,10 @@ class Exchange:
     def __init__(self, api: Binance):
         self._api = api
         self.minimum_profit = api.minimum_profit
-        self._rec = utils.TestDataRecorder('Exchange', '../../test_data')
-
-    def start_recorder(self):
-        self._rec.start()
 
     @Record()
     def get_candles(self, p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=1000):
-        self._rec.func_in('get_candles', p_symbol=p_symbol, p_interval=p_interval, p_limit=p_limit)
-
-        self._rec.call_in('get_candles', '_api.get_klines', p_interval=p_interval, p_limit=p_limit, p_symbol=p_symbol)
         candles = self._api.get_klines(p_interval, p_limit, p_symbol)
-        self._rec.call_out('get_candles', '_api.get_klines', candles=candles)
 
         candles_df = pd.DataFrame(candles)
         candles_df.columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close time', 'Quote asset volume',
@@ -47,7 +40,6 @@ class Exchange:
         candles_df["Low"] = pd.to_numeric(candles_df["Low"], downcast="float")
         candles_df["Close"] = pd.to_numeric(candles_df["Close"], downcast="float")
 
-        self._rec.func_out('get_candles', candles_df=candles_df.to_json())
         return candles_df
 
     def _round_buy_sell_for_filters(self, p_symbol='ETHBUSD', buy_coin=True, amount=0.0):
