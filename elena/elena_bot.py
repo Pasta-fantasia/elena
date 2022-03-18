@@ -191,6 +191,18 @@ class Elena:
         if not state.get(key) is None:
             del state[key]
 
+    def _parameters_migration(self):
+        if self._state['algo'] == 4 or self._state['algo'] == 6 or self._state['algo'] == 8:
+            self._state['algo'] = 11
+        if self._state['algo'] == 5 or self._state['algo'] == 7 or self._state['algo'] == 9:
+            self._state['algo'] = 12
+        if self._state['algo'] == 10:
+            self._state['algo'] = 13
+
+        self._state['buy_auto_cancel_timeout'] = 5
+        self._state['sell_auto_cancel_timeout'] = 5
+        self._state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 10
+
     def _read_state(self):  # TODO: if it uses self._robot_filename why is not using self._state?
         fp = open(self._robot_filename, 'r')
         state = json.load(fp)
@@ -222,9 +234,7 @@ class Elena:
         self._verify_key_set_default(state, 'sales', 0)
         self._verify_key_set_default(state, 'cycles', 0)
 
-        # migration
-        self._del_key(state, 'iteration_current_value_BUSD')
-        self._del_key(state, 'iteration_current_value_BUSD')
+        # migrations
 
         return state
 
@@ -317,17 +327,7 @@ class Elena:
         json.dump(history_state, fp)
         fp.close()
 
-    def _parameters_migration(self):
-        if self._state['algo'] == 4 or self._state['algo'] == 6 or self._state['algo'] == 8:
-            self._state['algo'] = 11
-        if self._state['algo'] == 5 or self._state['algo'] == 7 or self._state['algo'] == 9:
-            self._state['algo'] = 12
-        if self._state['algo'] == 10:
-            self._state['algo'] = 13
 
-        self._state['buy_auto_cancel_timeout'] = 5
-        self._state['sell_auto_cancel_timeout'] = 5
-        self._state['sell_auto_cancel_im_feeling_lucky_data_samples'] = 10
 
     def _calculate_reinvest_or_losses(self):
         # re-invest
