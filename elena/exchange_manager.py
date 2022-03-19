@@ -3,16 +3,18 @@ from enum import Enum
 import pandas as pd
 from binance.client import Client
 
-from elena import utils
-from elena.binance import Binance
+from elena.ports import exchange
+
 from elena.logging import llog
+from elena.record import Record
 
 
-# Exchange
+# ExchangeManager
 
-# Duplicated from Binance. Done from decouple from Binance module
-# TODO: don't use Enum this is not Pascal :)
+
 class OrderStatus(Enum):
+    # Duplicated from Binance. Done from decouple from Binance module
+    # TODO: don't use Enum this is not Pascal :)
     NEW = 'NEW'
     PARTIALLY_FILLED = 'PARTIALLY_FILLED'
     FILLED = 'FILLED'
@@ -22,22 +24,13 @@ class OrderStatus(Enum):
     EXPIRED = 'EXPIRED'
 
 
-class Exchange:
-    def __init__(self, api: Binance):
-        self._api = api
-        self.minimum_profit = api.minimum_profit
-        self._rec = utils.TestDataRecorder('Exchange', '../../test_data')
+class ExchangeManager:
+    def __init__(self, exchange: exchange.Exchange):
+        self._exchange = exchange
+        self._minimum_profit = exchange.get_minimum_profit()  # TODO Where is used? If is not necessary, remove Exchange.get_minimum_profit() methos as well
 
-    def start_recorder(self):
-        self._rec.start()
-
-    @Record()
     def get_candles(self, p_symbol='ETHBUSD', p_interval=Client.KLINE_INTERVAL_1MINUTE, p_limit=1000):
-        self._rec.func_in('get_candles', p_symbol=p_symbol, p_interval=p_interval, p_limit=p_limit)
-
-        self._rec.call_in('get_candles', '_api.get_klines', p_interval=p_interval, p_limit=p_limit, p_symbol=p_symbol)
-        candles = self._api.get_klines(p_interval, p_limit, p_symbol)
-        self._rec.call_out('get_candles', '_api.get_klines', candles=candles)
+        candles = self._exchange.get_klines(p_interval, p_limit, p_symbol)
 
         candles_df = pd.DataFrame(candles)
         candles_df.columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close time', 'Quote asset volume',
@@ -47,7 +40,6 @@ class Exchange:
         candles_df["Low"] = pd.to_numeric(candles_df["Low"], downcast="float")
         candles_df["Close"] = pd.to_numeric(candles_df["Close"], downcast="float")
 
-        self._rec.func_out('get_candles', candles_df=candles_df.to_json())
         return candles_df
 
     def _round_buy_sell_for_filters(self, p_symbol='ETHBUSD', buy_coin=True, amount=0.0):
@@ -55,7 +47,7 @@ class Exchange:
             multiplier = 10 ** decimals
             return int(n * multiplier) / multiplier
 
-        symbol_info = self._api.get_cached_symbol_info(p_symbol)
+        symbol_info = self._exchange.get_cached_symbol_info(p_symbol)
         step_size = -1
         tick_size = -1
         for _filter in symbol_info['filters']:
@@ -79,19 +71,19 @@ class Exchange:
         return amt_str
 
     def get_order(self, p_order_id, p_symbol):
-        return self._api.get_order(p_order_id, p_symbol)
+        return self._exchange.get_order(p_order_id, p_symbol)
 
     def get_cached_order_book_first_bids_asks(self, symbol):
-        return self._api.get_cached_order_book_first_bids_asks(symbol)
+        return self._exchange.get_cached_order_book_first_bids_asks(symbol)
 
     def get_cached_avg_price(self, symbol):
-        return self._api.get_cached_avg_price(symbol)
+        return self._exchange.get_cached_avg_price(symbol)
 
     def get_cached_symbol_info(self, symbol):
-        return self._api.get_cached_symbol_info(symbol=symbol)
+        return self._exchange.get_cached_symbol_info(symbol=symbol)
 
     def convert_to_usd(self, symbol, quantity):
-        return self._api.convert_to_usd(symbol, quantity)
+        return self._exchange.convert_to_usd(symbol, quantity)
 
     def create_buy_order(self, max_order, symbol, buy_price, force_buy_price=False):
         bid, ask = self.get_cached_order_book_first_bids_asks(symbol)
@@ -102,8 +94,8 @@ class Exchange:
 
         quantity = max_order / buy_price
 
-        symbol_info = self._api.get_cached_symbol_info(symbol=symbol)
-        free_balance = self._api.get_asset_balance(symbol_info['quoteAsset'])
+        symbol_info = self._exchange.get_cached_symbol_info(symbol=symbol)
+        free_balance = self._exchange.get_asset_balance(symbol_info['quoteAsset'])
         if max_order > free_balance:
             # rounds may decrease balance in the quoteAsset
             quantity = free_balance / buy_price
@@ -114,7 +106,7 @@ class Exchange:
 
         order = None
         try:
-            order = self._api.order_limit_buy(p, q, symbol)
+            order = self._exchange.order_limit_buy(p, q, symbol)
         except Exception as e:
             llog("error buying", q, p, 'max_order:', max_order, 'buy_price:', buy_price, 'symbol:', symbol)
             llog(e)
@@ -122,17 +114,17 @@ class Exchange:
         return order
 
     def cancel_order(self, symbol, order_id):
-        return self._api.cancel_order(symbol=symbol, order_id=order_id)
+        return self._exchange.cancel_order(symbol=symbol, order_id=order_id)
 
     def create_sell_order(self, symbol, sell_quantity, sell_price, force_sell_price=False):
         order_sell = None
-        bid, ask = self._api.get_cached_order_book_first_bids_asks(symbol)
+        bid, ask = self._exchange.get_cached_order_book_first_bids_asks(symbol)
         if sell_price < ask and not force_sell_price:
             llog('changing sell to ask', sell_price, ask)
             sell_price = ask
 
-        symbol_info = self._api.get_cached_symbol_info(symbol=symbol)
-        free_balance = self._api.get_asset_balance(symbol_info['baseAsset'])
+        symbol_info = self._exchange.get_cached_symbol_info(symbol=symbol)
+        free_balance = self._exchange.get_asset_balance(symbol_info['baseAsset'])
 
         if sell_quantity > free_balance:
             # if the order was processed as "taker" we don't have the information about the fee
@@ -142,7 +134,7 @@ class Exchange:
         q = self._round_buy_sell_for_filters(symbol, buy_coin=True, amount=sell_quantity)
         p = self._round_buy_sell_for_filters(symbol, buy_coin=False, amount=sell_price)
         try:
-            order_sell = self._api.order_limit_sell(p, q, symbol)
+            order_sell = self._exchange.order_limit_sell(p, q, symbol)
         except Exception as e:
             llog("error selling", q, p, 'sell_quantity:', sell_quantity, 'sell_price:', sell_price, 'symbol:', symbol)
             llog(e)

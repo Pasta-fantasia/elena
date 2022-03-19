@@ -3,13 +3,13 @@ import os
 
 import numpy as np
 
-from elena.exchange import Exchange, OrderStatus
+from elena.exchange_manager import ExchangeManager, OrderStatus
 from elena.logging import llog
 from elena.utils import get_time
 
 
 class Elena:
-    def __init__(self, robot_filename: str, exchange: Exchange):
+    def __init__(self, robot_filename: str, exchange: ExchangeManager):
         self._robot_filename = robot_filename
         self._exchange = exchange
         self._state = self._read_state()
@@ -125,7 +125,7 @@ class Elena:
                     order_sell_price = float(sell_order['price'])  # get the sell price as is in the exchange
 
                     bid = self._state['iteration_current_bid']
-                    minimum_profit = 1 + ((self._exchange.minimum_profit-1)/2)
+                    minimum_profit = 1 + ((self._exchange._minimum_profit - 1) / 2)
                     minimum_price = order_buy_price * minimum_profit
 
                     if bid >= minimum_price:  # earning
@@ -392,7 +392,7 @@ class Elena:
 
         next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
 
-        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange.minimum_profit)
+        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange._minimum_profit)
         return buy, sell
 
     def _buy_on_bid_sell_based_on_linear_regression(self, candles_df_buy_sell, sell_field, margin=0):
@@ -400,7 +400,7 @@ class Elena:
 
         next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
 
-        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange.minimum_profit)
+        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange._minimum_profit)
         return buy, sell
 
     def _buy_on_bid_sell_based_on_fixed_margin(self, margin):
@@ -415,7 +415,7 @@ class Elena:
 
         next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
 
-        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange.minimum_profit)
+        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange._minimum_profit)
         return buy, sell
 
     def _buy_on_ask_sell_based_on_fixed_margin(self, margin):

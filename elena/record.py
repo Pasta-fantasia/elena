@@ -11,6 +11,10 @@ class Record:
     def enable():
         Record.prefix = get_time()
 
+    @staticmethod
+    def disable():
+        Record.prefix = 0
+
     def __call__(self, func):
         def wrapper(*args, **kwargs):
             _output = func(*args, **kwargs)
