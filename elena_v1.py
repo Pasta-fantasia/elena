@@ -29,5 +29,5 @@ llog('time', get_time())
 for robot_filename in robots:
     llog(robot_filename)
     elena = Elena(robot_filename, exchange_manager)
-    Record.enable()
+    Record.disable()
     elena.iterate()
