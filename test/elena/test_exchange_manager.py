@@ -4,7 +4,7 @@ from pathlib import Path
 from binance import Client
 from mockito import when, mock
 
-from elena.adapters.binance import Binance
+from elena.adapters.exchanges.binance import Binance
 from elena.exchange_manager import ExchangeManager
 from elena.ports import exchange
 from elena.record import Record

@@ -4,7 +4,7 @@ import sys
 
 from elena.elena_bot import Elena
 from elena.exchange_manager import ExchangeManager
-from elena.adapters.binance import Binance
+from elena.adapters.exchanges.binance import Binance
 from elena.logging import llog
 from elena.record import Record
 from elena.utils import get_time
