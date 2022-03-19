@@ -6,8 +6,6 @@ from binance.client import Client
 from elena.ports import exchange
 
 from elena.logging import llog
-# Duplicated from Binance. Done from decouple from Binance module
-# TODO: don't use Enum this is not Pascal :)
 from elena.record import Record
 
 
@@ -15,6 +13,8 @@ from elena.record import Record
 
 
 class OrderStatus(Enum):
+    # Duplicated from Binance. Done from decouple from Binance module
+    # TODO: don't use Enum this is not Pascal :)
     NEW = 'NEW'
     PARTIALLY_FILLED = 'PARTIALLY_FILLED'
     FILLED = 'FILLED'
