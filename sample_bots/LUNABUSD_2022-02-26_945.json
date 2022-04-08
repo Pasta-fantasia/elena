@@ -1,0 +1,17 @@
+{
+  "symbol": "LUNABUSD",
+  "max_order": 50,
+  "reinvest": 0,
+  "algo": 9,
+  "margin": 1.0,
+  "data_samples": 120,
+  "tendence_tolerance": 0.0,
+  "active": 1,
+  "buy_order_id": "",
+  "sell_order_id": "",
+  "sleep_until": 0,
+  "buy": 0.0,
+  "sell": 0.0,
+  "buy_order": null,
+  "sell_order": null
+}
