@@ -111,9 +111,9 @@ class Elena:
                     else:
                         self._save_state()
                         self._delete_state()
-                elif status == OrderStatus.CANCELED.value:
+                elif status == OrderStatus.CANCELED.value or status == OrderStatus.EXPIRED.value:
                     llog("sell cancellation, save history")
-                    self._state['status'] = 'manual sell cancellation'
+                    self._state['status'] = 'external (manual/system) sell cancellation'
                     self._add_cycles()
                     self._save_history()
                     self._save_state()
