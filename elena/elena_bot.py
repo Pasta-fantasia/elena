@@ -200,6 +200,11 @@ class Elena:
         if self._state['algo'] == 10:
             self._state['algo'] = 13
 
+        if self._state['accumulated_margin'] > 75:
+            self._state['reinvest'] = 50
+        elif self._state['accumulated_margin'] > 50:
+            self._state['reinvest'] = 25
+
     def _read_state(self):  # TODO: if it uses self._robot_filename why is not using self._state?
         fp = open(self._robot_filename, 'r')
         state = json.load(fp)
