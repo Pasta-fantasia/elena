@@ -6,9 +6,9 @@ another_instance() {
     exit 1
 }
 
-if [ "$(pgrep elena.sh)" != $$ ]; then
-     another_instance
-fi
+#if [ "$(pgrep elena.sh)" != $$ ]; then
+#     another_instance
+#fi
 
 source $HOME/venv/bin/activate
 
