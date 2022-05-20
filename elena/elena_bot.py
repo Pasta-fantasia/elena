@@ -320,8 +320,6 @@ class Elena:
                 llog("iteration margin <0!", self._state)
 
     def _save_history(self):
-        self._update_orders_status_values_and_profits()
-
         history_state = dict(self._state)
         filename = f"history/{str(get_time())}_{str(history_state['buy_order_id'])}.json"
 
