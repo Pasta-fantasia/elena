@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.3
+- Fix double _self._update_orders_status_values_and_profits()_
+- Add _status == OrderStatus.EXPIRED.value_ as cancellation reason. #lunagate
+
 ## 1.6.2
 - Fix runtime error due to lack of test data recorder notation import
 - Fix test_get_candles()
