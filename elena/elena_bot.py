@@ -3,13 +3,13 @@ import os
 
 import numpy as np
 
-from elena.exchange import Exchange, OrderStatus
+from elena.exchange_manager import ExchangeManager, OrderStatus
 from elena.logging import llog
 from elena.utils import get_time
 
 
 class Elena:
-    def __init__(self, robot_filename: str, exchange: Exchange):
+    def __init__(self, robot_filename: str, exchange: ExchangeManager):
         self._robot_filename = robot_filename
         self._exchange = exchange
         self._state = self._read_state()
@@ -111,9 +111,9 @@ class Elena:
                     else:
                         self._save_state()
                         self._delete_state()
-                elif status == OrderStatus.CANCELED.value:
+                elif status == OrderStatus.CANCELED.value or status == OrderStatus.EXPIRED.value:
                     llog("sell cancellation, save history")
-                    self._state['status'] = 'manual sell cancellation'
+                    self._state['status'] = 'external (manual/system) sell cancellation'
                     self._add_cycles()
                     self._save_history()
                     self._save_state()
@@ -125,7 +125,7 @@ class Elena:
                     order_sell_price = float(sell_order['price'])  # get the sell price as is in the exchange
 
                     bid = self._state['iteration_current_bid']
-                    minimum_profit = 1 + ((self._exchange.minimum_profit-1)/2)
+                    minimum_profit = 1 + ((self._exchange._minimum_profit - 1) / 2)
                     minimum_price = order_buy_price * minimum_profit
 
                     if bid >= minimum_price:  # earning
@@ -315,8 +315,6 @@ class Elena:
                 llog("iteration margin <0!", self._state)
 
     def _save_history(self):
-        self._update_orders_status_values_and_profits()
-
         history_state = dict(self._state)
         filename = f"history/{str(get_time())}_{str(history_state['buy_order_id'])}.json"
 
@@ -392,7 +390,7 @@ class Elena:
 
         next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
 
-        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange.minimum_profit)
+        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange._minimum_profit)
         return buy, sell
 
     def _buy_on_bid_sell_based_on_linear_regression(self, candles_df_buy_sell, sell_field, margin=0):
@@ -400,7 +398,7 @@ class Elena:
 
         next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
 
-        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange.minimum_profit)
+        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange._minimum_profit)
         return buy, sell
 
     def _buy_on_bid_sell_based_on_fixed_margin(self, margin):
@@ -415,7 +413,7 @@ class Elena:
 
         next_close = self._sell_based_on_linear_regression(candles_df_buy_sell, sell_field, margin=margin)
 
-        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange.minimum_profit)
+        buy, sell = Elena._ensure_sell_is_higher_than_buy_by(next_close, next_low, self._exchange._minimum_profit)
         return buy, sell
 
     def _buy_on_ask_sell_based_on_fixed_margin(self, margin):
