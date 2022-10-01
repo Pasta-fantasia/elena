@@ -1,0 +1,11 @@
+Common:
+  profile: dev
+SummaryWriter:
+  path: work/summary
+StatusWriter:
+  path: work/status
+Market:
+  exchanges:
+    -
+      name: KuCoin
+      API-KEY: ***REMOVED***

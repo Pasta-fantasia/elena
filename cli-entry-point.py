@@ -1,6 +1,6 @@
 import click
 
-from elena.cfg import dependency_injection
+from cfg import dependency_injection
 from elena.constants import VERSION
 
 

@@ -3,6 +3,7 @@ import pathlib
 import sys
 from os import path
 
+from elena.adapters.config.local_config import LocalConfig
 from elena.domain.services import elena
 
 
@@ -25,23 +26,26 @@ def get_service(profile: str) -> elena.Elena:
 
 def _dev() -> elena.Elena:
     _init_logging(logging.DEBUG)
+    _config = LocalConfig('dev')
 
     logging.info("Completed Elena dependency injection with development profile")
-    _elena = elena.Elena()
+    _elena = elena.Elena(_config)
     return _elena
 
 
 def _test() -> elena.Elena:
     _init_logging(logging.DEBUG)
+    _config = LocalConfig('dev')
 
     logging.info("Completed Elena dependency injection with test profile")
-    _elena = elena.Elena()
+    _elena = elena.Elena(_config)
     return _elena
 
 
 def _prod() -> elena.Elena:
     _init_logging(logging.INFO)
+    _config = LocalConfig('dev')
 
     logging.info("Completed Elena dependency injection with production profile")
-    _elena = elena.Elena()
+    _elena = elena.Elena(_config)
     return _elena
