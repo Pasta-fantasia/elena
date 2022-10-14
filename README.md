@@ -34,20 +34,6 @@ pip install -r requirements.txt
 deactivate
 ```
 
-
-## Run
-
-Run automatically every minute
-
-- Edit cron with: `crontab -e`
-
-Example with a VE on `$HOME/VEs/timenet` and elena downloaded at `$HOME/VEs/timenet`:
-
-```shell
-# Run Elena every minute
-* * * * * $HOME/VEs/elena/bin/python $HOME/elena/cli-entry-point.py prod
-```
-
 ## Configure
 
 Create a user configuration YAML file at `cfg/` directory for every running profile (dev, test, prod). The values configured there will override the values on default YAML files.

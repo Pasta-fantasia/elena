@@ -4,6 +4,8 @@ import sys
 from os import path
 
 from elena.adapters.config.local_config import LocalConfig
+from elena.adapters.emit_flesti.asap_emit_flesti import AsapEmitFlesti
+from elena.adapters.emit_flesti.real_time_emit_flesti import RealTimeEmitFlesti
 from elena.domain.services import elena
 
 
@@ -27,25 +29,28 @@ def get_service(profile: str) -> elena.Elena:
 def _dev() -> elena.Elena:
     _init_logging(logging.DEBUG)
     _config = LocalConfig('dev')
+    _emit_flesti = AsapEmitFlesti(_config)
 
     logging.info("Completed Elena dependency injection with development profile")
-    _elena = elena.Elena(_config)
+    _elena = elena.Elena(_config, _emit_flesti)
     return _elena
 
 
 def _test() -> elena.Elena:
     _init_logging(logging.DEBUG)
-    _config = LocalConfig('dev')
+    _config = LocalConfig('test')
+    _emit_flesti = AsapEmitFlesti(_config, _config.get('EmitFlesti', 'start_iso_datetime'))
 
     logging.info("Completed Elena dependency injection with test profile")
-    _elena = elena.Elena(_config)
+    _elena = elena.Elena(_config, _emit_flesti)
     return _elena
 
 
 def _prod() -> elena.Elena:
-    _init_logging(logging.INFO)
-    _config = LocalConfig('dev')
+    _init_logging(logging.DEBUG)
+    _config = LocalConfig('prod')
+    _emit_flesti = RealTimeEmitFlesti(_config)
 
     logging.info("Completed Elena dependency injection with production profile")
-    _elena = elena.Elena(_config)
+    _elena = elena.Elena(_config, _emit_flesti)
     return _elena

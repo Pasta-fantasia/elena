@@ -1,5 +1,7 @@
 Common:
   profile: prod
+EmitFlesti:
+  period: 1
 SummaryWriter:
   path: work/summary
 StatusWriter:
