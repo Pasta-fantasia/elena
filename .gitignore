@@ -134,6 +134,7 @@ dmypy.json
 # Joe's backups
 *~
 
-# Elena's bots
-*.json
-*.json.inactive
+# User config files
+/cfg/dev-user.yaml
+/cfg/prod-user.yaml
+/cfg/test-user.yaml

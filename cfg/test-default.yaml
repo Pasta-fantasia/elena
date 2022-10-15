@@ -1,0 +1,14 @@
+Common:
+  profile: test
+EmitFlesti:
+  period_minutes: 1
+  start_iso_datetime: '2022-10-14T22:35:59.000+01:00'
+SummaryWriter:
+  path: work/summary
+StatusWriter:
+  path: work/status
+Market:
+  exchanges:
+    -
+      name: KuCoin
+      API-KEY: ***REMOVED***
