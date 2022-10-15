@@ -11,11 +11,12 @@ class EmitFlesti(Protocol):
 
     @staticmethod
     def _load_period(config: Config):
+        _period = config.get('EmitFlesti', 'period_minutes')
         try:
-            return TimePeriod(config.get('EmitFlesti', 'period'))
+            return TimePeriod(_period)
         except ValueError:
             raise RuntimeError(
-                f"Wrong configuration value 'EmitFlesti.period': {config.get('EmitFlesti', 'period')} is not a valid TimePeriod")
+                f"Wrong configuration value 'EmitFlesti.period': {_period} is not a valid TimePeriod")
 
     def now(self) -> float:
         pass
