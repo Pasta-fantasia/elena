@@ -39,7 +39,7 @@ def _dev() -> elena.Elena:
 def _test() -> elena.Elena:
     _init_logging(logging.DEBUG)
     _config = LocalConfig('test')
-    _emit_flesti = AsapEmitFlesti(_config, _config.get('EmitFlesti', 'start_iso_datetime'))
+    _emit_flesti = AsapEmitFlesti(_config)
 
     logging.info("Completed Elena dependency injection with test profile")
     _elena = elena.Elena(_config, _emit_flesti)

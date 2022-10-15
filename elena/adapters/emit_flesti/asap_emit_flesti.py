@@ -8,21 +8,23 @@ from elena.domain.ports.emit_flesti import EmitFlesti
 
 class AsapEmitFlesti(EmitFlesti):
 
-    def __init__(self, config: Config, start_iso_datetime: str = None):
+    def __init__(self, config: Config):
         super().__init__(config)
         self._period = self._load_period(config)
-        self._start = self._load_start(start_iso_datetime)
+        self._start = self._load_start(config)
         self._disabled = True
 
-    def _load_start(self, start_iso_datetime):
-        if start_iso_datetime:
-            try:
-                return datetime.fromisoformat(start_iso_datetime).timestamp()
-            except ValueError:
-                raise RuntimeError(
-                    f"Wrong configuration value 'EmitFlesti.start_iso_datetime': {start_iso_datetime} is not a valid ISO datetime")
-        else:
-            self._start = None
+    @staticmethod
+    def _load_start(config: Config) -> float:
+        _start_iso_datetime = config.get('EmitFlesti', 'start_iso_datetime')
+        if not _start_iso_datetime:
+            return None
+        try:
+            _start = datetime.fromisoformat(_start_iso_datetime).timestamp()
+        except ValueError:
+            raise RuntimeError(
+                f"Wrong configuration value 'EmitFlesti.start_iso_datetime': {_start_iso_datetime} is not a valid ISO datetime")
+        return _start
 
     def now(self) -> float:
         return self._start

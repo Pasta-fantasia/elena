@@ -35,7 +35,10 @@ class LocalConfig(Config):
         return self._config[section_name]
 
     def get(self, section_name: str, key: str, default_value=None):
-        _value = self._config[section_name][key]
+        try:
+            _value = self._config[section_name][key]
+        except KeyError:
+            return default_value
         if _value:
             return _value
         else:
