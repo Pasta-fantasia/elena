@@ -1,10 +1,13 @@
 import logging
 import pathlib
 from os import path
-from typing import Dict
+from typing import Dict, List
 
 import yaml
 
+from elena.domain.model.bot_config import BotConfig
+from elena.domain.model.strategy_config import StrategyConfig
+from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.config import Config
 
 
@@ -31,9 +34,6 @@ class LocalConfig(Config):
         logging.info(f'Loaded configuration from {_file}')
         return _yaml
 
-    def get_section(self, section_name: str) -> Dict:
-        return self._config[section_name]
-
     def get(self, section_name: str, key: str, default_value=None):
         try:
             _value = self._config[section_name][key]
@@ -43,3 +43,30 @@ class LocalConfig(Config):
             return _value
         else:
             return default_value
+
+    def get_strategies(self) -> List[StrategyConfig]:
+        _results = []
+        for _dict in self._config['Strategies']:
+            _strategy = StrategyConfig(
+                strategy_id=_dict['strategy_id'],
+                name=_dict['name'],
+                enabled=_dict['enabled'],
+                bots=self._get_bots(_dict['bots'], _dict['strategy_id'])
+            )
+            _results.append(_strategy)
+        return _results
+
+    @staticmethod
+    def _get_bots(bots: List[Dict], strategy_id: str) -> List[BotConfig]:
+        _results = []
+        for _dict in bots:
+            _bot = BotConfig(
+                bot_id=_dict['bot_id'],
+                name=_dict['name'],
+                strategy_id=strategy_id,
+                enabled=_dict['enabled'],
+                pair=TradingPair.build(_dict['pair']),
+                config=_dict['config'],
+            )
+            _results.append(_bot)
+        return _results

@@ -1,3 +1,47 @@
+Strategies:
+  -
+    strategy_id: DEV-1
+    name: Dev strategy 1
+    enabled: true
+    bots:
+      -
+        bot_id: DEV-1.1
+        name: Dev strategy 1 bot 1
+        enabled: true
+        pair: ETH/USDT
+        config:
+          key1: value1
+          key2: value2
+      -
+        bot_id: DEV-1.2
+        name: Dev strategy 1 bot 2
+        enabled: true
+        pair: BTC/USDC
+        config:
+          key1: value1
+          key2: value2
+
+  -
+    strategy_id: DEV-2
+    name: Dev strategy 2
+    enabled: true
+    bots:
+      -
+        bot_id: DEV-2.1
+        name: Dev strategy 2 bot 1
+        enabled: true
+        pair: DOT/ETH
+        config:
+          key1: value1
+          key2: value2
+      -
+        bot_id: DEV-2.2
+        name: Dev strategy 2 bot 2
+        enabled: true
+        pair: DOT/USDC
+        config:
+          key1: value1
+          key2: value2
 Common:
   profile: dev
 EmitFlesti:
