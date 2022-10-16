@@ -22,6 +22,6 @@ class LocalBotStatusManager(BotStatusManager):
         pass
 
     def write(self, status: BotStatus) -> Error:
-        logging.info('Writing %s bot status to disk', status)
+        logging.info('Writing %s bot status to disk', status.bot_id)
         # TODO Implement me!!
         return Error.none()

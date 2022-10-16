@@ -52,7 +52,6 @@ class LocalConfig(Config):
                 enabled=_dict['enabled'],
                 bots=self._get_bots(_dict['bots'], _dict['strategy_id'])
             )
-            logging.debug('OBJ: %s', _strategy)
             _results.append(_strategy)
         return _results
 

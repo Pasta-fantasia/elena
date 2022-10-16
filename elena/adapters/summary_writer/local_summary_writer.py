@@ -8,6 +8,6 @@ from elena.domain.ports.summary_writer import SummaryWriter
 class LocalSummaryWriter(SummaryWriter):
 
     def write(self, summary: Summary) -> Error:
-        logging.info('Writing %s summary to disk', summary)
+        logging.info('Writing %s bot summary to disk', summary.bot_id)
         # TODO Implement me!!
         return Error.none()
