@@ -1,9 +1,11 @@
-from typing import Protocol, Dict
+from typing import Protocol, List
+
+from elena.domain.model.strategy_config import StrategyConfig
 
 
 class Config(Protocol):
-    def get_section(self, section_name: str) -> Dict:
+    def get(self, section_name: str, key: str, default_value=None):
         pass
 
-    def get(self, section_name: str, key: str, default_value=None):
+    def get_strategies(self) -> List[StrategyConfig]:
         pass
