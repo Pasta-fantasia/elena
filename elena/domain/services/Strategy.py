@@ -3,6 +3,7 @@ from typing import Tuple, List
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.model.summary import Summary
+from elena.domain.model.time_period import TimePeriod
 from elena.domain.ports.bot_status_manager import BotStatusManager
 from elena.domain.ports.emit_flesti import EmitFlesti
 from elena.domain.ports.market_reader import MarketReader
@@ -38,7 +39,7 @@ class Strategy:
         return _results
 
     def _run_bot(self, bot_config) -> Tuple[BotStatus, Summary]:
-        self._market_reader.read()
+        self._market_reader.read(bot_config.pair, TimePeriod.min_1)
         _status = BotStatus(
             bot_id=bot_config.bot_id,
             timestamp=self._emit_flesti.now(),

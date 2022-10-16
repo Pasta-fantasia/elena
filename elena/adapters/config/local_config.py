@@ -7,6 +7,7 @@ import yaml
 
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.strategy_config import StrategyConfig
+from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.config import Config
 
 
@@ -64,6 +65,7 @@ class LocalConfig(Config):
                 name=_dict['name'],
                 strategy_id=strategy_id,
                 enabled=_dict['enabled'],
+                pair=TradingPair.build(_dict['pair']),
                 config=_dict['config'],
             )
             _results.append(_bot)
