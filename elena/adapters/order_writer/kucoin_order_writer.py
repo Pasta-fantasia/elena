@@ -16,4 +16,9 @@ class KuCoinOrderWriter(OrderWriter):
     def write(self, order: Order) -> Tuple[Summary, Error]:
         logging.info('Writing order %s to KuCoin', order)
         # TODO Implement me!!
-        return Error.none()
+        _summary = Summary(
+            bot_id=order.bot_id,
+            strategy_id=order.strategy_id,
+            summary={}
+        )
+        return _summary, Error.none()

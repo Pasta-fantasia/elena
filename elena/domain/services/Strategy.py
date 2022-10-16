@@ -1,6 +1,8 @@
+import logging
 from typing import Tuple, List
 
 from elena.domain.model.bot_status import BotStatus
+from elena.domain.model.order import Order
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.model.summary import Summary
 from elena.domain.model.time_period import TimePeriod
@@ -40,14 +42,24 @@ class Strategy:
 
     def _run_bot(self, bot_config) -> Tuple[BotStatus, Summary]:
         self._market_reader.read(bot_config.pair, TimePeriod.min_1)
+        _fake_order = Order(
+            bot_id=bot_config.bot_id,
+            strategy_id=self._config.strategy_id,
+            order={},
+        )
+        _summary, _error = self._order_writer.write(_fake_order)
+        if _error.is_present():
+            logging.error('Error writing order: %s', _error.message)
+            _status = BotStatus(
+                bot_id=bot_config.bot_id,
+                timestamp=self._emit_flesti.now(),
+                status={'error': _error.message},
+            )
+            return _status, _summary
+
         _status = BotStatus(
             bot_id=bot_config.bot_id,
             timestamp=self._emit_flesti.now(),
             status={},
-        )
-        _summary = Summary(
-            bot_id=bot_config.bot_id,
-            strategy_id=self._config.strategy_id,
-            summary={}
         )
         return _status, _summary
