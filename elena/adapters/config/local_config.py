@@ -27,7 +27,7 @@ class LocalConfig(Config):
 
     @staticmethod
     def _load_yaml(filename: str) -> Dict:
-        _dir = path.join(pathlib.Path(__file__).parent.parent.parent.parent.absolute(), 'cfg')
+        _dir = path.join(pathlib.Path(__file__).parent.parent.parent.absolute(), 'cfg')
         _file = path.join(_dir, filename)
         with open(_file, 'r') as f:
             _yaml = yaml.safe_load(f)

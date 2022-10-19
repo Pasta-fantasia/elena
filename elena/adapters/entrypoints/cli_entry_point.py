@@ -1,8 +1,7 @@
 import click
 
-from cfg import dependency_injection
+from elena.cfg import dependency_injection
 from elena.constants import VERSION
-
 
 @click.command()
 @click.argument('profile', default='prod', type=click.Choice(['dev', 'test', 'prod']))
