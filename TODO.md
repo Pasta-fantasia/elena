@@ -3,11 +3,10 @@
 
 ## [Pere] Move configuration to home and clean up
 
-- remove EmitFlesti, run single cycle
 - remove SummaryWriter
 - BotStatusManager -> BotSpawner
 - Iterate Strategies and bots
-
+- log on home directory
 
 ## [Pere] dependency injection library
 

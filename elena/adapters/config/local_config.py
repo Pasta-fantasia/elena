@@ -22,14 +22,14 @@ class LocalConfig(Config):
     @staticmethod
     def _get_home(home: str) -> str:
         if home:
-            logging.info('Loading config from parameter path `%s`', home)
+            logging.info('Loading config from `home` parameter `%s`', home)
             return home
         home = os.environ.get('ELENA_HOME')
         if home:
-            logging.info('Loading config from ELENA_HOME path `%s`', home)
+            logging.info('Loading config from ELENA_HOME `%s`', home)
         else:
             home = os.getcwd()
-            logging.info('Loading config from current directory path `%s`', home)
+            logging.info('Loading config from current directory `%s`', home)
         return home
 
     def _load_default_config(self) -> Dict:

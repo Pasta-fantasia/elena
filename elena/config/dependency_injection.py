@@ -5,8 +5,6 @@ from os import path
 
 from elena.adapters.bot_status_manager.local_bot_status_manager import LocalBotStatusManager
 from elena.adapters.config.local_config import LocalConfig
-from elena.adapters.emit_flesti.asap_emit_flesti import AsapEmitFlesti
-from elena.adapters.emit_flesti.real_time_emit_flesti import RealTimeEmitFlesti
 from elena.adapters.market_reader.kucoin_market_reader import KuCoinMarketReader
 from elena.adapters.order_writer.kucoin_order_writer import KuCoinOrderWriter
 from elena.adapters.summary_writer.local_summary_writer import LocalSummaryWriter
@@ -33,26 +31,24 @@ def get_service(profile: str, home: str) -> elena.Elena:
 def _local(home: str) -> elena.Elena:
     _init_logging(logging.DEBUG)
     _config = LocalConfig(home)
-    _emit_flesti = AsapEmitFlesti(_config)
-    _bot_status_manager = LocalBotStatusManager(_emit_flesti)
+    _bot_status_manager = LocalBotStatusManager()
     _summary_writer = LocalSummaryWriter()
-    _market_reader = KuCoinMarketReader(_emit_flesti)
-    _order_writer = KuCoinOrderWriter(_emit_flesti)
+    _market_reader = KuCoinMarketReader()
+    _order_writer = KuCoinOrderWriter()
 
     logging.info("Completed Elena dependency injection with test profile")
-    _elena = elena.Elena(_config, _emit_flesti, _bot_status_manager, _summary_writer, _market_reader, _order_writer)
+    _elena = elena.Elena(_config, _bot_status_manager, _summary_writer, _market_reader, _order_writer)
     return _elena
 
 
 def _prod(home: str) -> elena.Elena:
     _init_logging(logging.INFO)
     _config = LocalConfig(home)
-    _emit_flesti = RealTimeEmitFlesti(_config)
-    _bot_status_manager = LocalBotStatusManager(_emit_flesti)
+    _bot_status_manager = LocalBotStatusManager()
     _summary_writer = LocalSummaryWriter()
-    _market_reader = KuCoinMarketReader(_emit_flesti)
-    _order_writer = KuCoinOrderWriter(_emit_flesti)
+    _market_reader = KuCoinMarketReader()
+    _order_writer = KuCoinOrderWriter()
 
     logging.info("Completed Elena dependency injection with production profile")
-    _elena = elena.Elena(_config, _emit_flesti, _bot_status_manager, _summary_writer, _market_reader, _order_writer)
+    _elena = elena.Elena(_config, _bot_status_manager, _summary_writer, _market_reader, _order_writer)
     return _elena
