@@ -6,7 +6,7 @@ from elena.domain.model.order import Order
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.model.summary import Summary
 from elena.domain.model.time_period import TimePeriod
-from elena.domain.ports.bot_status_manager import BotStatusManager
+from elena.domain.ports.bot_status_manager import BotSpawner
 from elena.domain.ports.market_reader import MarketReader
 from elena.domain.ports.order_writer import OrderWriter
 
@@ -15,18 +15,18 @@ class Strategy:
 
     def __init__(self,
                  strategy_config: StrategyConfig,
-                 bot_status_manager: BotStatusManager,
+                 bot_spawner: BotSpawner,
                  market_reader: MarketReader,
                  order_writer: OrderWriter):
         self._config = strategy_config
-        self._bot_status_manager = bot_status_manager
+        self._bot_spawner = bot_spawner
         self._market_reader = market_reader
         self._order_writer = order_writer
 
     def run(self) -> List[Tuple[BotStatus, Summary]]:
         """
         Runs all strategy bots. A Bot is an instance of a strategy with a certain configuration
-          1. retrieves the bot status of the previous execution with BotStatusManager
+          1. retrieves the bot status of the previous execution with BotSpawner
           2. read info from market to define orders with MarketReader
           3. write orders to an Exchange with OrderWriter
         :return: the list of all bot status of this execution, and the summary of every execution

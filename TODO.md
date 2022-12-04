@@ -3,7 +3,6 @@
 
 ## [Pere] Move configuration to home and clean up
 
-- BotStatusManager -> BotSpawner
 - Iterate Strategies and bots
 - log on home directory
 

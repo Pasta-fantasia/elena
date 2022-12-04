@@ -2,16 +2,16 @@ import logging
 
 from elena.domain.model.Error import Error
 from elena.domain.model.bot_status import BotStatus
-from elena.domain.ports.bot_status_manager import BotStatusManager
+from elena.domain.ports.bot_status_manager import BotSpawner
 
 
-class LocalBotStatusManager(BotStatusManager):
+class LocalBotSpawner(BotSpawner):
 
     def __init__(self):
         pass
 
     def load(self, bot_id: str) -> BotStatus:
-        logging.info('Loaded %s bot status from disk', bot_id)
+        logging.info('Spawned %s bot', bot_id)
         # TODO Implement me!!
         return BotStatus(
             bot_id=bot_id,
