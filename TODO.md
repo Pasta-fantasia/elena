@@ -1,18 +1,9 @@
 # TODO
 
 
-## [Pere] Move configuration to home and clean up
-
-- Log to home directory
-
 ## [Pere] dependency injection library
 
 - dependency injection library
-
-
-## [Pere] Poetry
-
-- Poetry
 
 
 ## [Pere] Serialize and deserialize strategy
