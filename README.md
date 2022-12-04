@@ -5,8 +5,47 @@
 (pending to adapt from v1)
 
 
-## Install
+## Local home directory
 
+Elena needs a local home directory to run with the `LocalConfig` adapter with the configuration defined at `config.yaml` file.
+1. If Elena runs with `home` parameter, takes this directory as home directory
+2. If no parameters were provided, then checks the system variable `ELENA_HOME`
+3. If not defined, the home directory is the current directory
+
+A typical config.yaml file content:
+
+```yaml
+Strategies:
+  -
+    strategy_id: SAMPLE-1
+    name: Sample strategy 1
+    enabled: false
+    bots:
+      -
+        bot_id: SAM-1.1
+        name: Sample strategy 1 bot 1
+        enabled: true
+        pair: ETH/USDT
+        config:
+          key1: value1
+          key2: value2
+      -
+        bot_id: SAM-1.2
+        name: Sample strategy 1 bot 2
+        enabled: false
+        pair: BTC/USDC
+        config:
+          key1: value1
+          key2: value2
+Market:
+  exchanges:
+    -
+      name: KuCoin
+      API-KEY: ***REMOVED***
+      enabled: false
+```
+
+## Install
 
 Create a virtual environment, for example at `$HOME/VEs`:
 

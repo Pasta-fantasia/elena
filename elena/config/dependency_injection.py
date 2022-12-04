@@ -25,28 +25,14 @@ def _init_logging(level):
     )
 
 
-def get_service(profile: str) -> elena.Elena:
-    func_mapper = {"dev": _dev, "test": _test, "prod": _prod}
-    return func_mapper[profile]()
+def get_service(profile: str, home: str) -> elena.Elena:
+    func_mapper = {"local": _local, "prod": _prod}
+    return func_mapper[profile](home)
 
 
-def _dev() -> elena.Elena:
+def _local(home: str) -> elena.Elena:
     _init_logging(logging.DEBUG)
-    _config = LocalConfig('dev')
-    _emit_flesti = AsapEmitFlesti(_config)
-    _bot_status_manager = LocalBotStatusManager(_emit_flesti)
-    _summary_writer = LocalSummaryWriter()
-    _market_reader = KuCoinMarketReader(_emit_flesti)
-    _order_writer = KuCoinOrderWriter(_emit_flesti)
-
-    logging.info("Completed Elena dependency injection with development profile")
-    _elena = elena.Elena(_config, _emit_flesti, _bot_status_manager, _summary_writer, _market_reader, _order_writer)
-    return _elena
-
-
-def _test() -> elena.Elena:
-    _init_logging(logging.DEBUG)
-    _config = LocalConfig('test')
+    _config = LocalConfig(home)
     _emit_flesti = AsapEmitFlesti(_config)
     _bot_status_manager = LocalBotStatusManager(_emit_flesti)
     _summary_writer = LocalSummaryWriter()
@@ -58,9 +44,9 @@ def _test() -> elena.Elena:
     return _elena
 
 
-def _prod() -> elena.Elena:
-    _init_logging(logging.DEBUG)
-    _config = LocalConfig('prod')
+def _prod(home: str) -> elena.Elena:
+    _init_logging(logging.INFO)
+    _config = LocalConfig(home)
     _emit_flesti = RealTimeEmitFlesti(_config)
     _bot_status_manager = LocalBotStatusManager(_emit_flesti)
     _summary_writer = LocalSummaryWriter()

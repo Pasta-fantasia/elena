@@ -1,19 +1,22 @@
 import click
 
-from elena.cfg import dependency_injection
+from elena.config import dependency_injection
 from elena.constants import VERSION
 
+
 @click.command()
-@click.argument('profile', default='prod', type=click.Choice(['dev', 'test', 'prod']))
-def cli(profile):
+@click.argument('profile', default='prod', type=click.Choice(['local', 'prod']))
+@click.argument('home', required=False, default=None, type=str)
+def cli(profile, home):
     """
     Elena command line interface runner
 
     Arguments:
-            profile: dev, test, prod
+            profile: local, prod
+            home: Elena home directory
     """
     print(f"Running Elena v{VERSION} from CLI with {profile} profile")
-    service = dependency_injection.get_service(profile)
+    service = dependency_injection.get_service(profile=profile, home=home)
     service.run()
 
 

@@ -1,18 +1,22 @@
 # TODO
 
-## [Pere] Clean up
 
-- remove local environment
-- dependency injection
-- remove EmitFlesti
+## [Pere] Move configuration to home and clean up
+
+- remove EmitFlesti, run single cycle
 - remove SummaryWriter
 - BotStatusManager -> BotSpawner
-
-
-## [Pere] Load configuration
-
-- Read configuration from $ELENA_HOME
 - Iterate Strategies and bots
+
+
+## [Pere] dependency injection library
+
+- dependency injection library
+
+
+## [Pere] Poetry
+
+- Poetry
 
 
 ## [Pere] Serialize and deserialize strategy
