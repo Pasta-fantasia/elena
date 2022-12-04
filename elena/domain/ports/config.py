@@ -9,3 +9,6 @@ class Config(Protocol):
 
     def get_strategies(self) -> List[StrategyConfig]:
         pass
+
+    def home(self) -> str:
+        pass

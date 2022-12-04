@@ -1,3 +1,5 @@
+Logger:
+  level: INFO
 SummaryWriter:
   path: work/summary  # relative path under home directory
 StatusWriter:

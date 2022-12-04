@@ -15,7 +15,7 @@ def cli(profile, home):
             profile: local, prod
             home: Elena home directory
     """
-    print(f"Running Elena v{VERSION} from CLI with {profile} profile")
+    print(f"Running Elena v{VERSION} from CLI with {str.upper(profile)} profile")
     service = dependency_injection.get_service(profile=profile, home=home)
     service.run()
 

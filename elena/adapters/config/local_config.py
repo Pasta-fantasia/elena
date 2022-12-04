@@ -1,4 +1,3 @@
-import logging
 import os
 import pathlib
 from os import path
@@ -15,21 +14,26 @@ from elena.domain.ports.config import Config
 class LocalConfig(Config):
 
     def __init__(self, home: str):
+        self._home = self._get_home(home)
         default_config = self._load_default_config()
-        user_config = self._load_user_config(self._get_home(home))
+        user_config = self._load_user_config()
         self._config = {**default_config, **user_config}
+
+    @property
+    def home(self) -> str:
+        return self._home
 
     @staticmethod
     def _get_home(home: str) -> str:
         if home:
-            logging.info('Loading config from `home` parameter `%s`', home)
+            print(f'Loading config from `home` parameter `{home}`')
             return home
         home = os.environ.get('ELENA_HOME')
         if home:
-            logging.info('Loading config from ELENA_HOME `%s`', home)
+            print(f'Loading config from ELENA_HOME `{home}`')
         else:
             home = os.getcwd()
-            logging.info('Loading config from current directory `%s`', home)
+            print(f'Loading config from current directory `{home}`')
         return home
 
     def _load_default_config(self) -> Dict:
@@ -37,8 +41,8 @@ class LocalConfig(Config):
         _file = path.join(_dir, 'default_config.yaml')
         return self._load_yaml(_file)
 
-    def _load_user_config(self, home_directory: str) -> Dict:
-        _file = path.join(home_directory, 'config.yaml')
+    def _load_user_config(self) -> Dict:
+        _file = path.join(self._home, 'config.yaml')
         return self._load_yaml(_file)
 
     @staticmethod

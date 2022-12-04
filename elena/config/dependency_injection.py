@@ -1,25 +1,9 @@
-import logging
-import pathlib
-import sys
-from os import path
-
 from elena.adapters.bot_status_manager.local_bot_status_manager import LocalBotSpawner
 from elena.adapters.config.local_config import LocalConfig
+from elena.adapters.logger.local_logger import LocalLogger
 from elena.adapters.market_reader.kucoin_market_reader import KuCoinMarketReader
 from elena.adapters.order_writer.kucoin_order_writer import KuCoinOrderWriter
 from elena.domain.services import elena
-
-
-def _init_logging(level):
-    _file = path.join(pathlib.Path(__file__).parent.parent.parent.parent.absolute(), 'elena.log')
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        handlers=[
-            logging.FileHandler(_file),
-            logging.StreamHandler(sys.stdout)
-        ]
-    )
 
 
 def get_service(profile: str, home: str) -> elena.Elena:
@@ -28,24 +12,24 @@ def get_service(profile: str, home: str) -> elena.Elena:
 
 
 def _local(home: str) -> elena.Elena:
-    _init_logging(logging.DEBUG)
     _config = LocalConfig(home)
-    _bot_spawner = LocalBotSpawner()
-    _market_reader = KuCoinMarketReader()
-    _order_writer = KuCoinOrderWriter()
+    _logger = LocalLogger(_config)
+    _bot_spawner = LocalBotSpawner(_config, _logger)
+    _market_reader = KuCoinMarketReader(_config, _logger)
+    _order_writer = KuCoinOrderWriter(_config, _logger)
 
-    logging.info("Completed Elena dependency injection with test profile")
-    _elena = elena.Elena(_config, _bot_spawner, _market_reader, _order_writer)
+    _logger.info("Completed Elena dependency injection with test profile")
+    _elena = elena.Elena(_config, _logger, _bot_spawner, _market_reader, _order_writer)
     return _elena
 
 
 def _prod(home: str) -> elena.Elena:
-    _init_logging(logging.INFO)
     _config = LocalConfig(home)
-    _bot_spawner = LocalBotSpawner()
-    _market_reader = KuCoinMarketReader()
-    _order_writer = KuCoinOrderWriter()
+    _logger = LocalLogger(_config)
+    _bot_spawner = LocalBotSpawner(_config, _logger)
+    _market_reader = KuCoinMarketReader(_config, _logger)
+    _order_writer = KuCoinOrderWriter(_config, _logger)
 
-    logging.info("Completed Elena dependency injection with production profile")
-    _elena = elena.Elena(_config, _bot_spawner, _market_reader, _order_writer)
+    _logger.info("Completed Elena dependency injection with production profile")
+    _elena = elena.Elena(_config, _logger, _bot_spawner, _market_reader, _order_writer)
     return _elena

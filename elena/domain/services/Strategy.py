@@ -1,4 +1,3 @@
-import logging
 from typing import Tuple, List
 
 from elena.domain.model.bot_status import BotStatus
@@ -7,6 +6,7 @@ from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.model.summary import Summary
 from elena.domain.model.time_period import TimePeriod
 from elena.domain.ports.bot_status_manager import BotSpawner
+from elena.domain.ports.logger import Logger
 from elena.domain.ports.market_reader import MarketReader
 from elena.domain.ports.order_writer import OrderWriter
 
@@ -15,10 +15,12 @@ class Strategy:
 
     def __init__(self,
                  strategy_config: StrategyConfig,
+                 logger: Logger,
                  bot_spawner: BotSpawner,
                  market_reader: MarketReader,
                  order_writer: OrderWriter):
         self._config = strategy_config
+        self._logger = logger
         self._bot_spawner = bot_spawner
         self._market_reader = market_reader
         self._order_writer = order_writer
@@ -46,7 +48,7 @@ class Strategy:
         )
         _summary, _error = self._order_writer.write(_fake_order)
         if _error.is_present():
-            logging.error('Error writing order: %s', _error.message)
+            self._logger.error('Error writing order: %s', _error.message)
             _status = BotStatus(
                 bot_id=bot_config.bot_id,
                 status={'error': _error.message},

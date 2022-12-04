@@ -3,8 +3,7 @@
 
 ## [Pere] Move configuration to home and clean up
 
-- Iterate Strategies and bots
-- log on home directory
+- Log to home directory
 
 ## [Pere] dependency injection library
 
