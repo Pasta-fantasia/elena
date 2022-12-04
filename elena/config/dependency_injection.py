@@ -7,7 +7,6 @@ from elena.adapters.bot_status_manager.local_bot_status_manager import LocalBotS
 from elena.adapters.config.local_config import LocalConfig
 from elena.adapters.market_reader.kucoin_market_reader import KuCoinMarketReader
 from elena.adapters.order_writer.kucoin_order_writer import KuCoinOrderWriter
-from elena.adapters.summary_writer.local_summary_writer import LocalSummaryWriter
 from elena.domain.services import elena
 
 
@@ -32,12 +31,11 @@ def _local(home: str) -> elena.Elena:
     _init_logging(logging.DEBUG)
     _config = LocalConfig(home)
     _bot_status_manager = LocalBotStatusManager()
-    _summary_writer = LocalSummaryWriter()
     _market_reader = KuCoinMarketReader()
     _order_writer = KuCoinOrderWriter()
 
     logging.info("Completed Elena dependency injection with test profile")
-    _elena = elena.Elena(_config, _bot_status_manager, _summary_writer, _market_reader, _order_writer)
+    _elena = elena.Elena(_config, _bot_status_manager, _market_reader, _order_writer)
     return _elena
 
 
@@ -45,10 +43,9 @@ def _prod(home: str) -> elena.Elena:
     _init_logging(logging.INFO)
     _config = LocalConfig(home)
     _bot_status_manager = LocalBotStatusManager()
-    _summary_writer = LocalSummaryWriter()
     _market_reader = KuCoinMarketReader()
     _order_writer = KuCoinOrderWriter()
 
     logging.info("Completed Elena dependency injection with production profile")
-    _elena = elena.Elena(_config, _bot_status_manager, _summary_writer, _market_reader, _order_writer)
+    _elena = elena.Elena(_config, _bot_status_manager, _market_reader, _order_writer)
     return _elena
