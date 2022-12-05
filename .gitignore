@@ -138,3 +138,5 @@ dmypy.json
 /cfg/dev-user.yaml
 /cfg/prod-user.yaml
 /cfg/test-user.yaml
+
+/.github/

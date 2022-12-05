@@ -1,4 +1,4 @@
-import logging
+import os
 import pathlib
 from os import path
 from typing import Dict, List
@@ -13,25 +13,42 @@ from elena.domain.ports.config import Config
 
 class LocalConfig(Config):
 
-    def __init__(self, profile: str):
-        default_cfg = self._load_default_cfg(profile)
-        user_cfg = self._load_user_cfg(profile)
-        self._config = {**default_cfg, **user_cfg}
-        logging.info(f'Loaded {profile} configuration')
+    def __init__(self, home: str):
+        self._home = self._get_home(home)
+        default_config = self._load_default_config()
+        user_config = self._load_user_config()
+        self._config = {**default_config, **user_config}
 
-    def _load_default_cfg(self, profile: str) -> Dict:
-        return self._load_yaml(f'{profile}-default.yaml')
-
-    def _load_user_cfg(self, profile: str) -> Dict:
-        return self._load_yaml(f'{profile}-user.yaml')
+    @property
+    def home(self) -> str:
+        return self._home
 
     @staticmethod
-    def _load_yaml(filename: str) -> Dict:
-        _dir = path.join(pathlib.Path(__file__).parent.parent.parent.absolute(), 'cfg')
-        _file = path.join(_dir, filename)
-        with open(_file, 'r') as f:
+    def _get_home(home: str) -> str:
+        if home:
+            print(f'Loading config from `home` parameter `{home}`')
+            return home
+        home = os.environ.get('ELENA_HOME')
+        if home:
+            print(f'Loading config from ELENA_HOME `{home}`')
+        else:
+            home = os.getcwd()
+            print(f'Loading config from current directory `{home}`')
+        return home
+
+    def _load_default_config(self) -> Dict:
+        _dir = path.join(pathlib.Path(__file__).parent.parent.parent.absolute(), 'config')
+        _file = path.join(_dir, 'default_config.yaml')
+        return self._load_yaml(_file)
+
+    def _load_user_config(self) -> Dict:
+        _file = path.join(self._home, 'config.yaml')
+        return self._load_yaml(_file)
+
+    @staticmethod
+    def _load_yaml(file: str) -> Dict:
+        with open(file, 'r') as f:
             _yaml = yaml.safe_load(f)
-        logging.info(f'Loaded configuration from {_file}')
         return _yaml
 
     def get(self, section_name: str, key: str, default_value=None):
