@@ -13,8 +13,8 @@ from elena.domain.ports.config import Config
 
 class LocalConfig(Config):
 
-    def __init__(self, home: str):
-        self._home = self._get_home(home)
+    def __init__(self):
+        self._home = self._get_home()
         default_config = self._load_default_config()
         user_config = self._load_user_config()
         self._config = {**default_config, **user_config}
@@ -24,10 +24,7 @@ class LocalConfig(Config):
         return self._home
 
     @staticmethod
-    def _get_home(home: str) -> str:
-        if home:
-            print(f'Loading config from `home` parameter `{home}`')
-            return home
+    def _get_home() -> str:
         home = os.environ.get('ELENA_HOME')
         if home:
             print(f'Loading config from ELENA_HOME `{home}`')

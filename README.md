@@ -8,8 +8,7 @@
 ## Local home directory
 
 Elena needs a local home directory to run with the `LocalConfig` adapter with the configuration defined at `config.yaml` file.
-1. If Elena runs with `home` parameter, takes this directory as home directory
-2. If no parameters were provided, then checks the system variable `ELENA_HOME`
+1. First, Elena checks the system variable `ELENA_HOME` will be home directory
 3. If not defined, the home directory is the current directory
 
 A typical config.yaml file content:

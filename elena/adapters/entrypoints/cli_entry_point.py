@@ -1,24 +1,17 @@
-import click
+from dependency_injector.wiring import Provide, inject
 
-from elena.config import dependency_injection
+from elena.config.dependency_injection import Container
 from elena.constants import VERSION
+from elena.domain.services.elena import Elena
 
 
-@click.command()
-@click.argument('profile', default='prod', type=click.Choice(['local', 'prod']))
-@click.argument('home', required=False, default=None, type=str)
-def cli(profile, home):
-    """
-    Elena command line interface runner
-
-    Arguments:
-            profile: local, prod
-            home: Elena home directory
-    """
-    print(f"Starting Elena v{VERSION} from CLI with {str.upper(profile)} profile")
-    service = dependency_injection.get_service(profile=profile, home=home)
-    service.run()
+@inject
+def main(elena: Elena = Provide[Container.elena]) -> None:
+    print(f"Starting Elena v{VERSION} from CLI")
+    elena.run()
 
 
 if __name__ == "__main__":
-    cli()
+    container = Container()
+    container.wire(modules=[__name__])
+    main()
