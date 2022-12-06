@@ -1,16 +1,20 @@
+import pathlib
+from pathlib import Path
+from typing import Dict
 
 from elena.domain.model.Error import Error
 from elena.domain.model.bot_status import BotStatus
-from elena.domain.ports.bot_status_manager import BotSpawner
-from elena.domain.ports.config import Config
+from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.logger import Logger
 
 
-class LocalBotSpawner(BotSpawner):
+class LocalBotManager(BotManager):
 
-    def __init__(self, config: Config, logger: Logger):
-        self._config = config
+    def __init__(self, config: Dict, logger: Logger):
+        self._path = pathlib.Path(config['LocalBotManager']['path'])
         self._logger = logger
+        Path(self._path).mkdir(parents=True, exist_ok=True)
+        print(f"LocalBotManager working at {self._path}")
 
     def load(self, bot_id: str) -> BotStatus:
         self._logger.info('Spawned %s bot', bot_id)

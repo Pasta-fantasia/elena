@@ -1,16 +1,15 @@
-from typing import Tuple
+from typing import Tuple, Dict
 
 from elena.domain.model.Error import Error
 from elena.domain.model.order import Order
 from elena.domain.model.summary import Summary
-from elena.domain.ports.config import Config
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.order_writer import OrderWriter
 
 
 class KuCoinOrderWriter(OrderWriter):
 
-    def __init__(self, config: Config, logger: Logger):
+    def __init__(self, config: Dict, logger: Logger):
         self._config = config
         self._logger = logger
 

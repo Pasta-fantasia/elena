@@ -4,7 +4,7 @@ from elena.domain.model.Error import Error
 from elena.domain.model.bot_status import BotStatus
 
 
-class BotSpawner(Protocol):
+class BotManager(Protocol):
 
     def load(self, bot_id: str) -> BotStatus:
         pass

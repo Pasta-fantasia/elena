@@ -5,13 +5,15 @@
 (pending to adapt from v1)
 
 
-## Local home directory
+## Configuration
 
-Elena needs a local home directory to run with the `LocalConfig` adapter with the configuration defined at `config.yaml` file.
+Elena can run on a local machine and we're planning to run it on AWS lambdas. The way the external configuration is loaded is prepared for both running methods, loading a configuration dictionary loaded from a YAML configuration file (local) or stored at a AWS S3 file.
+
+For external local configuration, Elena needs a local home directory with the configuration defined at `external_config.yaml` file.
 1. First, Elena checks the system variable `ELENA_HOME` will be home directory
 3. If not defined, the home directory is the current directory
 
-A typical config.yaml file content:
+A typical `external_config.yaml` file content:
 
 ```yaml
 Strategies:
@@ -44,6 +46,8 @@ Market:
       enabled: false
 ```
 
+The default configuration id defined at `elena/config/default_config.yaml` and you can override any default configuration value defining the same key in at `external_config.yaml`.
+
 ## Install
 
 Create a virtual environment, for example at `$HOME/VEs`:
@@ -53,15 +57,6 @@ python3 -m venv elena
 source elena/bin/activate
 pip install git+ssh://git@github.com/Ciskam-Lab/elena.git@main#egg=elena
 ```
-
-
-## Configure
-
-(pending to adapt from v2.0.0)
-
-Create a user configuration YAML file at `cfg/` directory for every running profile (dev, test, prod). The values configured there will override the values on default YAML files.
-
-So to configure some personal values for `dev` profile por example, create `dev-user.yaml` file and override the user values already defined in `dev-default.yaml`.
 
 
 ## General flow
