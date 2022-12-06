@@ -30,7 +30,7 @@ class LocalConfigLoader:
         return home
 
     def _load_default_config(self) -> Dict:
-        _dir = path.join(pathlib.Path(__file__).parent.parent.parent.parent.absolute(), 'config')
+        _dir = path.join(pathlib.Path(__file__).parent.parent.parent.absolute(), 'config')
         _file = path.join(_dir, 'default_config.yaml')
         return self._load_yaml(_file)
 

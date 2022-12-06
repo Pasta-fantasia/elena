@@ -2,7 +2,7 @@ from typing import Dict
 
 from dependency_injector import containers, providers
 
-from elena.adapters.bot_status_manager.local_bot_manager import LocalBotManager
+from elena.adapters.bot_manager.local_bot_manager import LocalBotManager
 from elena.adapters.logger.local_logger import LocalLogger
 from elena.adapters.market_reader.cctx_market_reader import CctxMarketReader
 from elena.adapters.order_writer.cctx_order_writer import CctxOrderWriter

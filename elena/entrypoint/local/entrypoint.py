@@ -1,6 +1,6 @@
-from elena.adapters.entrypoint.local import config_loader
 from elena.config import dependency_injection
 from elena.constants import VERSION
+from elena.entrypoint.local import config_loader
 
 
 def main():
