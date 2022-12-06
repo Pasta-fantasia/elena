@@ -1,11 +1,6 @@
 # TODO
 
 
-## [Pere] dependency injection library
-
-- dependency injection library
-
-
 ## [Pere] Serialize and deserialize strategy
 
 - Alternative to Pickle

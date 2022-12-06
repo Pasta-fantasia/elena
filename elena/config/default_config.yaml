@@ -1,6 +1,5 @@
-Logger:
+LocalLogger:
   level: INFO
-SummaryWriter:
-  path: work/summary  # relative path under home directory
-StatusWriter:
-  path: work/status  # relative path under home directory
+  path: logs  # relative path under home directory
+LocalBotManager:
+  path: bots # relative path under home directory

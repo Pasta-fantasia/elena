@@ -5,14 +5,15 @@
 (pending to adapt from v1)
 
 
-## Local home directory
+## Configuration
 
-Elena needs a local home directory to run with the `LocalConfig` adapter with the configuration defined at `config.yaml` file.
-1. If Elena runs with `home` parameter, takes this directory as home directory
-2. If no parameters were provided, then checks the system variable `ELENA_HOME`
+Elena can run on a local machine and we're planning to run it on AWS lambdas. The way the external configuration is loaded is prepared for both running methods, loading a configuration dictionary loaded from a YAML configuration file (local) or stored at a AWS S3 file.
+
+For external local configuration, Elena needs a local home directory with the configuration defined at `external_config.yaml` file.
+1. First, Elena checks the system variable `ELENA_HOME` will be home directory
 3. If not defined, the home directory is the current directory
 
-A typical config.yaml file content:
+A typical `external_config.yaml` file content:
 
 ```yaml
 Strategies:
@@ -29,6 +30,10 @@ Strategies:
         config:
           key1: value1
           key2: value2
+        exchange: kucoin
+        tags:
+           - ranging
+           - bear
       -
         bot_id: SAM-1.2
         name: Sample strategy 1 bot 2
@@ -37,13 +42,32 @@ Strategies:
         config:
           key1: value1
           key2: value2
-Market:
+        exchange: bitget
+        tags:
+           - bull
+CCTX:
   exchanges:
     -
-      name: KuCoin
+      id: bitget
+      enabled: true
       API-KEY: ***REMOVED***
+    -
+      id: kucoin
       enabled: false
+      API-KEY: ***REMOVED***
+Tags:
+  -
+    id: bear
+    enabled: true
+  -
+    id: bull
+    enabled: false
+  -
+    id: ranging
+    enabled: true
 ```
+
+The default configuration id defined at `elena/config/default_config.yaml` and you can override any default configuration value defining the same key in at `external_config.yaml`.
 
 ## Install
 
@@ -56,25 +80,14 @@ pip install git+ssh://git@github.com/Ciskam-Lab/elena.git@main#egg=elena
 ```
 
 
-## Configure
+## Cycle flow
 
-(pending to adapt from v2.0.0)
-
-Create a user configuration YAML file at `cfg/` directory for every running profile (dev, test, prod). The values configured there will override the values on default YAML files.
-
-So to configure some personal values for `dev` profile por example, create `dev-user.yaml` file and override the user values already defined in `dev-default.yaml`.
-
-
-## General flow
-
-1. Cargamos los estados de los tags de la persistencia
-2. Cargamos la configuración
-3. Por cada Strategy definidfa en la config
-4. Por cada bot de la strategy
-   1. Verificamos que el tag esté activo
-   2. Recuperar la estructura de Strategy y la instanciamos
-   3. MarketReader:
-      1. El estado de las órdenes del bot
-      1. Si es necesario, leemos la serie de datos
-   4. Ejecutar el método `next()` de la Strategy
-   5. Persistir la estructura de la instancia de Strategy
+1. Load config
+2. For every enabled Strategy
+3. For every enabled bot with at least one enabled tag
+4. Retrieve the bot from disk and instantiate it
+5. MarketReader:
+   1. Read the bot orders status
+   2. The market data if required
+6. Run `next()` method
+7. Persist the bot to disk
