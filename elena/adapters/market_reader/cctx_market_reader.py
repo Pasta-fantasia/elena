@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 import ccxt
 import pandas as pd
@@ -17,10 +17,10 @@ class CctxMarketReader(MarketReader):
     }
 
     def __init__(self, config: Dict, logger: Logger):
-        self._config = config
+        self._config = config['CctxMarketReader']
         self._logger = logger
 
-    def read(self, exchange: Exchange, pair: TradingPair, time_frame: TimeFrame) -> pd.DataFrame:
+    def read_candles(self, exchange: Exchange, pair: TradingPair, time_frame: TimeFrame) -> pd.DataFrame:
         self._logger.debug('Reading market from %s with CCTX for pair %s ...', exchange.id, pair)
 
         connection = self._connect(exchange)
@@ -36,8 +36,8 @@ class CctxMarketReader(MarketReader):
         })
 
     def _fetch(self, connection, pair: TradingPair, time_frame: TimeFrame) -> pd.DataFrame:
-        candles = self._fetch_with_retry(connection, pair, time_frame)
-        candles_df = pd.DataFrame(candles)
+        candles_list = self._fetch_with_retry(connection, pair, time_frame)
+        candles_df = pd.DataFrame(candles_list)
         candles_df.columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume']
         candles_df["Open time"] = pd.to_numeric(candles_df["Open time"], downcast="integer")
         candles_df["Open"] = pd.to_numeric(candles_df["Open"], downcast="float")
@@ -46,19 +46,17 @@ class CctxMarketReader(MarketReader):
         candles_df["Close"] = pd.to_numeric(candles_df["Close"], downcast="float")
         candles_df["Volume"] = pd.to_numeric(candles_df["Volume"], downcast="float")
         candles_df.set_index('Open time')
-
         return candles_df
 
-    def _fetch_with_retry(self, connection, pair: TradingPair, time_frame: TimeFrame) -> pd.DataFrame:
+    def _fetch_with_retry(self, connection, pair: TradingPair, time_frame: TimeFrame) -> List[List]:
         # https://github.com/ccxt/ccxt/issues/10273
         # from https://github.com/ccxt/ccxt/blob/master/examples/py/kucoin-rate-limit.py
-        limit = 120  # TODO magic numbers to config
         i = 0
         retry = True
         candles = pd.DataFrame()
         while retry:
             try:
-                candles = connection.fetch_ohlcv(str(pair), time_frame.value, limit=limit)
+                candles = connection.fetch_ohlcv(str(pair), time_frame.value, limit=self._config['limit'])
                 self._logger.debug('Fetched %d %s %d candles from %s to %s',
                                    len(candles),
                                    str(pair),
@@ -68,12 +66,9 @@ class CctxMarketReader(MarketReader):
                                    )
                 retry = False
             except ccxt.RateLimitExceeded as e:
-                now = connection.milliseconds()
-                datetime = connection.iso8601(now)
-                print(datetime, i, type(e).__name__, str(e))
-                connection.sleep(10000)  # TODO magic numbers to config
+                self._logger.info('Retrying connection to exchange, %s: %s', type(e).__name__, e)
+                connection.sleep(self._config['retry_every_milliseconds'])
             except Exception as err:
                 raise err
             i += 1
-
         return candles

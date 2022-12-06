@@ -3,3 +3,6 @@ LocalLogger:
   path: logs  # relative path under home directory
 LocalBotManager:
   path: bots # relative path under home directory
+CctxMarketReader:
+  limit: 100
+  retry_every_milliseconds: 1000

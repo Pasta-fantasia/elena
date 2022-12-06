@@ -48,6 +48,8 @@ Exchanges:
    - id: bitget
      enabled: true
      api_key: ***REMOVED***
+     password: ***REMOVED***
+     secret: ***REMOVED***
    - id: kucoin
      enabled: false
      api_key: ***REMOVED***

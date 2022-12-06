@@ -45,7 +45,7 @@ class StrategyManager:
 
     def _run_bot(self, bot_config) -> Tuple[BotStatus, Summary]:
         _exchange = self._get_exchange(bot_config.exchange_id)
-        self._market_reader.read(_exchange, bot_config.pair, TimeFrame.min_1)
+        self._market_reader.read_candles(_exchange, bot_config.pair, TimeFrame.min_1)
         _fake_order = Order(
             _exchange=_exchange,
             bot_id=bot_config.id,
@@ -55,10 +55,10 @@ class StrategyManager:
         try:
             _summary = self._order_writer.write(_fake_order)
         except Exception as _error:
-            self._logger.error('Error writing order: %s', _error.message)
+            self._logger.error('Error writing order: %s', _error)
             _status = BotStatus(
                 bot_id=bot_config.bot_id,
-                status={'error': _error.message},
+                status={'error': _error},
             )
             return _status, _summary
 
