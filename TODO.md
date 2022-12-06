@@ -1,19 +1,26 @@
 # TODO
 
+## [Pere] CTTX market reader
 
-## [Pere] Serialize and deserialize strategy
+- Read market data
+- Read order status
 
-- Alternative to Pickle
+
+## [Pere] CTTX order writer
+- Write orders
 
 
-## [Pere] MarketReader
+## [Pere] Create fake Strategy class
 
-- Market data
-- Order status
+- Create class with the same methods that Strategy with empty methods (log a message on every method)
+
+
+## [Pere] Local bot manager
+
+- Implement LocalBotManager with [Pickle](https://docs.python.org/3.4/library/pickle.html?highlight=pickle#pickle)
 
 
 ## [Fran] Implement fake Strategy class
 
 - Check plot (ya tu sabe)
-- Implement clas with the same methods that Strategy
-- With empty methods (log a message on every method)
+- Implement methods
