@@ -11,7 +11,7 @@ from elena.domain.ports.market_reader import MarketReader
 from elena.domain.ports.order_writer import OrderWriter
 
 
-class Strategy:
+class StrategyManager:
 
     def __init__(self,
                  strategy_config: StrategyConfig,
@@ -42,8 +42,8 @@ class Strategy:
     def _run_bot(self, bot_config) -> Tuple[BotStatus, Summary]:
         self._market_reader.read(bot_config.pair, TimePeriod.min_1)
         _fake_order = Order(
-            bot_id=bot_config.bot_id,
-            strategy_id=self._config.strategy_id,
+            bot_id=bot_config.id,
+            strategy_id=self._config.id,
             order={},
         )
         _summary, _error = self._order_writer.write(_fake_order)
@@ -56,7 +56,7 @@ class Strategy:
             return _status, _summary
 
         _status = BotStatus(
-            bot_id=bot_config.bot_id,
+            bot_id=bot_config.id,
             status={},
         )
         return _status, _summary
