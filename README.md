@@ -46,14 +46,14 @@ Strategies:
           key1: value1
           key2: value2
 Exchanges:
- -
-   id: bitget
-   enabled: true
-   api_key: ***REMOVED***
- -
-   id: kucoin
-   enabled: false
-   api_key: ***REMOVED***
+  -
+    id: bitget
+    enabled: true
+    api_key: ***REMOVED***
+  -
+    id: kucoin
+    enabled: false
+    api_key: ***REMOVED***
 Tags:
   -
     id: bear

@@ -1,10 +1,5 @@
 # TODO
 
-## [Pere] Tag management
-
-- Load tags from config
-- Check bots with enabled tags
-
 ## [Pere] CTTX market reader
 
 - Read market data
