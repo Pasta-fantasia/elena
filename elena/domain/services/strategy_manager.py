@@ -1,10 +1,11 @@
 from typing import Tuple, List
 
 from elena.domain.model.bot_status import BotStatus
+from elena.domain.model.exchange import Exchange
 from elena.domain.model.order import Order
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.model.summary import Summary
-from elena.domain.model.time_period import TimePeriod
+from elena.domain.model.time_frame import TimeFrame
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.market_reader import MarketReader
@@ -18,12 +19,15 @@ class StrategyManager:
                  logger: Logger,
                  bot_manager: BotManager,
                  market_reader: MarketReader,
-                 order_writer: OrderWriter):
+                 order_writer: OrderWriter,
+                 exchanges: List[Exchange],
+                 ):
         self._config = strategy_config
         self._logger = logger
         self._bot_manager = bot_manager
         self._market_reader = market_reader
         self._order_writer = order_writer
+        self._exchanges = exchanges
 
     def run(self) -> List[Tuple[BotStatus, Summary]]:
         """
@@ -40,14 +44,17 @@ class StrategyManager:
         return _results
 
     def _run_bot(self, bot_config) -> Tuple[BotStatus, Summary]:
-        self._market_reader.read(bot_config.pair, TimePeriod.min_1)
+        _exchange = self._get_exchange(bot_config.exchange_id)
+        self._market_reader.read(_exchange, bot_config.pair, TimeFrame.min_1)
         _fake_order = Order(
+            _exchange=_exchange,
             bot_id=bot_config.id,
             strategy_id=self._config.id,
             order={},
         )
-        _summary, _error = self._order_writer.write(_fake_order)
-        if _error.is_present():
+        try:
+            _summary = self._order_writer.write(_fake_order)
+        except Exception as _error:
             self._logger.error('Error writing order: %s', _error.message)
             _status = BotStatus(
                 bot_id=bot_config.bot_id,
@@ -60,3 +67,8 @@ class StrategyManager:
             status={},
         )
         return _status, _summary
+
+    def _get_exchange(self, exchange_id: str) -> Exchange:
+        for exchange in self._exchanges:
+            if exchange.id == exchange_id:
+                return exchange

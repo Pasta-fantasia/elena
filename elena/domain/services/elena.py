@@ -33,17 +33,22 @@ class Elena:
         self._logger.info(f'Starting cycle at %s', _now.isoformat())
         for _strategy_config in config_loader.strategies:
             _strategy_manager = StrategyManager(
-                _strategy_config,
-                self._logger,
-                self._bot_manager,
-                self._market_reader,
-                self._order_writer
+                strategy_config=_strategy_config,
+                logger=self._logger,
+                bot_manager=self._bot_manager,
+                market_reader=self._market_reader,
+                order_writer=self._order_writer,
+                exchanges=config_loader.exchanges
             )
             _result = _strategy_manager.run()
             self._write_strategy_result(_result)
 
     def _write_strategy_result(self, result: List[Tuple[BotStatus, Summary]]):
         for _tuple in result:
-            _err = self._bot_manager.write(_tuple[0])
-            if _err.is_present():
-                raise RuntimeError(_err.message)
+            self._write_bot_status(_tuple[0])
+
+    def _write_bot_status(self, status: BotStatus):
+        try:
+            self._bot_manager.write(status)
+        except Exception as _err:
+            raise _err

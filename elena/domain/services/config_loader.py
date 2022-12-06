@@ -81,6 +81,8 @@ class ConfigLoader:
                 id=_dict['id'],
                 enabled=_dict['enabled'],
                 api_key=_dict['api_key'],
+                password=_dict['password'],
+                secret=_dict['secret'],
             )
             if _exchange.enabled:
                 _results.append(_exchange)

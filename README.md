@@ -32,10 +32,9 @@ Strategies:
            - ranging
            - bear
         config:
-          key1: value1
-          key2: value2
-      -
-        id: SAM-1.2
+           key1: value1
+           key2: value2
+      - id: SAM-1.2
         name: Sample strategy 1 bot 2
         enabled: false
         pair: BTC/USDC
@@ -43,27 +42,24 @@ Strategies:
         tags:
            - bull
         config:
-          key1: value1
-          key2: value2
+           key1: value1
+           key2: value2
 Exchanges:
-  -
-    id: bitget
-    enabled: true
-    api_key: ***REMOVED***
-  -
-    id: kucoin
-    enabled: false
-    api_key: ***REMOVED***
+   - id: bitget
+     enabled: true
+     api_key: ***REMOVED***
+   - id: kucoin
+     enabled: false
+     api_key: ***REMOVED***
+     password: ***REMOVED***
+     secret: ***REMOVED***
 Tags:
-  -
-    id: bear
-    enabled: true
-  -
-    id: bull
-    enabled: false
-  -
-    id: ranging
-    enabled: true
+   - id: bear
+     enabled: true
+   - id: bull
+     enabled: false
+   - id: ranging
+     enabled: true
 ```
 
 The default configuration id defined at `elena/config/default_config.yaml` and you can override any default configuration value defining the same key in at `external_config.yaml`.

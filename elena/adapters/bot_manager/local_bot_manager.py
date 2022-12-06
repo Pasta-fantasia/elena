@@ -2,7 +2,6 @@ import pathlib
 from pathlib import Path
 from typing import Dict
 
-from elena.domain.model.Error import Error
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.logger import Logger
@@ -25,7 +24,6 @@ class LocalBotManager(BotManager):
         )
         pass
 
-    def write(self, status: BotStatus) -> Error:
+    def write(self, status: BotStatus):
         self._logger.info('Writing %s bot status to disk', status.bot_id)
         # TODO Implement me!!
-        return Error.none()
