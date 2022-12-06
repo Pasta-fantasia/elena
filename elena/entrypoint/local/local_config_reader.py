@@ -6,7 +6,7 @@ from typing import Dict
 import yaml
 
 
-class LocalConfigLoader:
+class LocalConfigReader:
 
     def __init__(self):
         home = self._get_home()

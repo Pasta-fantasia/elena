@@ -42,8 +42,8 @@ class StrategyManager:
     def _run_bot(self, bot_config) -> Tuple[BotStatus, Summary]:
         self._market_reader.read(bot_config.pair, TimePeriod.min_1)
         _fake_order = Order(
-            bot_id=bot_config.bot_id,
-            strategy_id=self._config.strategy_id,
+            bot_id=bot_config.id,
+            strategy_id=self._config.id,
             order={},
         )
         _summary, _error = self._order_writer.write(_fake_order)
@@ -56,7 +56,7 @@ class StrategyManager:
             return _status, _summary
 
         _status = BotStatus(
-            bot_id=bot_config.bot_id,
+            bot_id=bot_config.id,
             status={},
         )
         return _status, _summary

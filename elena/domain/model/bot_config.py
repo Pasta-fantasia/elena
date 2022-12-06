@@ -6,7 +6,7 @@ from elena.domain.model.trading_pair import TradingPair
 
 
 class BotConfig(BaseModel):
-    bot_id: str
+    id: str
     strategy_id: str
     name: str
     enabled: bool = True
