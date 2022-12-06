@@ -45,16 +45,15 @@ Strategies:
         config:
           key1: value1
           key2: value2
-CCTX:
-  exchanges:
-    -
-      id: bitget
-      enabled: true
-      API-KEY: ***REMOVED***
-    -
-      id: kucoin
-      enabled: false
-      API-KEY: ***REMOVED***
+Exchanges:
+ -
+   id: bitget
+   enabled: true
+   api_key: ***REMOVED***
+ -
+   id: kucoin
+   enabled: false
+   api_key: ***REMOVED***
 Tags:
   -
     id: bear
