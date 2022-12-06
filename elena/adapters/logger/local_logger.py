@@ -25,26 +25,20 @@ class LocalLogger(Logger):
         )
         print(f"Logging {config['LocalLogger']['level']} level to file `{_file}`")
 
-    @staticmethod
-    def critical(msg, *args, **kwargs):
+    def critical(self, msg, *args, **kwargs):
         logging.critical(msg, *args, **kwargs)
 
-    @staticmethod
-    def error(msg, *args, **kwargs):
+    def error(self, msg, *args, **kwargs):
         logging.error(msg, *args, **kwargs)
 
-    @staticmethod
-    def exception(msg, *args, exc_info=True, **kwargs):
+    def exception(self, msg, *args, exc_info=True, **kwargs):
         logging.exception(msg, *args, exc_info=exc_info, **kwargs)
 
-    @staticmethod
-    def warning(msg, *args, **kwargs):
+    def warning(self, msg, *args, **kwargs):
         logging.warning(msg, *args, **kwargs)
 
-    @staticmethod
-    def info(msg, *args, **kwargs):
+    def info(self, msg, *args, **kwargs):
         logging.info(msg, *args, **kwargs)
 
-    @staticmethod
-    def debug(msg, *args, **kwargs):
+    def debug(self, msg, *args, **kwargs):
         logging.debug(msg, *args, **kwargs)

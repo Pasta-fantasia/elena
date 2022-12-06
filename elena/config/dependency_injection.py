@@ -4,8 +4,8 @@ from dependency_injector import containers, providers
 
 from elena.adapters.bot_status_manager.local_bot_manager import LocalBotManager
 from elena.adapters.logger.local_logger import LocalLogger
-from elena.adapters.market_reader.kucoin_market_reader import KuCoinMarketReader
-from elena.adapters.order_writer.kucoin_order_writer import KuCoinOrderWriter
+from elena.adapters.market_reader.cctx_market_reader import CctxMarketReader
+from elena.adapters.order_writer.cctx_order_writer import CctxOrderWriter
 from elena.domain.services.elena import Elena
 
 
@@ -21,12 +21,12 @@ def get_container(config: Dict) -> containers.DynamicContainer:
         logger=logger
     )
     market_reader = providers.Singleton(
-        KuCoinMarketReader,
+        CctxMarketReader,
         config=config,
         logger=logger
     )
     order_writer = providers.Singleton(
-        KuCoinOrderWriter,
+        CctxOrderWriter,
         config=config,
         logger=logger
     )

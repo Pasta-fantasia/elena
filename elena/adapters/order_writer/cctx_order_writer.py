@@ -7,14 +7,14 @@ from elena.domain.ports.logger import Logger
 from elena.domain.ports.order_writer import OrderWriter
 
 
-class KuCoinOrderWriter(OrderWriter):
+class CctxOrderWriter(OrderWriter):
 
     def __init__(self, config: Dict, logger: Logger):
         self._config = config
         self._logger = logger
 
     def write(self, order: Order) -> Tuple[Summary, Error]:
-        self._logger.info('Writing order %s to KuCoin', order)
+        self._logger.info('Writing order %s with CCTX', order)
         # TODO Implement me!!
         _summary = Summary(
             bot_id=order.bot_id,

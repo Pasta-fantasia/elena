@@ -30,6 +30,10 @@ Strategies:
         config:
           key1: value1
           key2: value2
+        exchange: kucoin
+        tags:
+           - ranging
+           - bear
       -
         bot_id: SAM-1.2
         name: Sample strategy 1 bot 2
@@ -38,12 +42,29 @@ Strategies:
         config:
           key1: value1
           key2: value2
-Market:
+        exchange: bitget
+        tags:
+           - bull
+CCTX:
   exchanges:
     -
-      name: KuCoin
+      id: bitget
+      enabled: true
       API-KEY: ***REMOVED***
+    -
+      id: kucoin
       enabled: false
+      API-KEY: ***REMOVED***
+Tags:
+  -
+    id: bear
+    enabled: true
+  -
+    id: bull
+    enabled: false
+  -
+    id: ranging
+    enabled: true
 ```
 
 The default configuration id defined at `elena/config/default_config.yaml` and you can override any default configuration value defining the same key in at `external_config.yaml`.
@@ -59,16 +80,14 @@ pip install git+ssh://git@github.com/Ciskam-Lab/elena.git@main#egg=elena
 ```
 
 
-## General flow
+## Cycle flow
 
-1. Cargamos los estados de los tags de la persistencia
-2. Cargamos la configuración
-3. Por cada Strategy definidfa en la config
-4. Por cada bot de la strategy
-   1. Verificamos que el tag esté activo
-   2. Recuperar la estructura de Strategy y la instanciamos
-   3. MarketReader:
-      1. El estado de las órdenes del bot
-      1. Si es necesario, leemos la serie de datos
-   4. Ejecutar el método `next()` de la Strategy
-   5. Persistir la estructura de la instancia de Strategy
+1. Load config
+2. For every enabled Strategy
+3. For every enabled bot with at least one enabled tag
+4. Retrieve the bot from disk and instantiate it
+5. MarketReader:
+   1. Read the bot orders status
+   2. The market data if required
+6. Run `next()` method
+7. Persist the bot to disk

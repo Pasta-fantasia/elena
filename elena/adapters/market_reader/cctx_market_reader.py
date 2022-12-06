@@ -8,13 +8,13 @@ from elena.domain.ports.logger import Logger
 from elena.domain.ports.market_reader import MarketReader
 
 
-class KuCoinMarketReader(MarketReader):
+class CctxMarketReader(MarketReader):
 
     def __init__(self, config: Dict, logger: Logger):
         self._config = config
         self._logger = logger
 
     def read(self, pair: TradingPair, period: TimePeriod) -> Tuple[MarketCandles, Error]:
-        self._logger.info('Read KuCoin market for pair %s', pair)
+        self._logger.info('Read market with CCTX for pair %s', pair)
         # TODO Implement me!!
         return Error.none()
