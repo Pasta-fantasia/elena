@@ -11,7 +11,7 @@ from elena.domain.ports.market_reader import MarketReader
 from elena.domain.ports.order_writer import OrderWriter
 
 
-class Strategy:
+class StrategyManager:
 
     def __init__(self,
                  strategy_config: StrategyConfig,

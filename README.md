@@ -18,33 +18,33 @@ A typical `external_config.yaml` file content:
 ```yaml
 Strategies:
   -
-    strategy_id: SAMPLE-1
+    id: SAMPLE-1
     name: Sample strategy 1
-    enabled: false
+    enabled: true
     bots:
       -
-        bot_id: SAM-1.1
+        id: SAM-1.1
         name: Sample strategy 1 bot 1
         enabled: true
         pair: ETH/USDT
-        config:
-          key1: value1
-          key2: value2
         exchange: kucoin
         tags:
            - ranging
            - bear
-      -
-        bot_id: SAM-1.2
-        name: Sample strategy 1 bot 2
-        enabled: false
-        pair: BTC/USDC
         config:
           key1: value1
           key2: value2
+      -
+        id: SAM-1.2
+        name: Sample strategy 1 bot 2
+        enabled: false
+        pair: BTC/USDC
         exchange: bitget
         tags:
            - bull
+        config:
+          key1: value1
+          key2: value2
 CCTX:
   exchanges:
     -
@@ -83,7 +83,7 @@ pip install git+ssh://git@github.com/Ciskam-Lab/elena.git@main#egg=elena
 ## Cycle flow
 
 1. Load config
-2. For every enabled Strategy
+2. For every enabled StrategyManager
 3. For every enabled bot with at least one enabled tag
 4. Retrieve the bot from disk and instantiate it
 5. MarketReader:
