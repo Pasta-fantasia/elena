@@ -56,7 +56,7 @@ class CctxMarketReader(MarketReader):
         candles = pd.DataFrame()
         while retry:
             try:
-                candles = connection.fetch_ohlcv(str(pair), time_frame.value, limit=self._config['limit'])
+                candles = connection.fetch_ohlcv(str(pair), time_frame.value, limit=self._config['fetch_ohlcv_limit'])
                 self._logger.debug('Fetched %d %s %d candles from %s to %s',
                                    len(candles),
                                    str(pair),
@@ -67,7 +67,7 @@ class CctxMarketReader(MarketReader):
                 retry = False
             except ccxt.RateLimitExceeded as e:
                 self._logger.info('Retrying connection to exchange, %s: %s', type(e).__name__, e)
-                connection.sleep(self._config['retry_every_milliseconds'])
+                connection.sleep(self._config['fetch_ohlcv_limit_retry_every_milliseconds'])
             except Exception as err:
                 raise err
             i += 1
