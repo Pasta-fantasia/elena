@@ -45,9 +45,13 @@ class StrategyManager:
 
     def _run_bot(self, bot_config) -> Tuple[BotStatus, Summary]:
         _exchange = self._get_exchange(bot_config.exchange_id)
-        self._market_reader.read_candles(_exchange, bot_config.pair, TimeFrame.min_1)
+        _candles = self._market_reader.read_candles(_exchange, bot_config.pair, TimeFrame.min_1)
+        _order_book = self._market_reader.read_order_book(_exchange, bot_config.pair)
+        return self._write_order(_exchange, bot_config)
+
+    def _write_order(self, exchange: Exchange, bot_config) -> Tuple[BotStatus, Summary]:
         _fake_order = Order(
-            _exchange=_exchange,
+            _exchange=exchange,
             bot_id=bot_config.id,
             strategy_id=self._config.id,
             order={},
@@ -59,6 +63,11 @@ class StrategyManager:
             _status = BotStatus(
                 bot_id=bot_config.bot_id,
                 status={'error': _error},
+            )
+            _summary = Summary(
+                bot_id=bot_config.bot_id,
+                strategy_id=self._config.id,
+                summanry={'error': _error.__str__()}
             )
             return _status, _summary
 
