@@ -1,7 +1,7 @@
 from typing import Tuple, List
 
 from elena.domain.model.bot_status import BotStatus
-from elena.domain.model.exchange import Exchange
+from elena.domain.model.exchange import Exchange, ExchangeType
 from elena.domain.model.order import Order
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.model.summary import Summary
@@ -68,7 +68,7 @@ class StrategyManager:
         )
         return _status, _summary
 
-    def _get_exchange(self, exchange_id: str) -> Exchange:
+    def _get_exchange(self, exchange_id: ExchangeType) -> Exchange:
         for exchange in self._exchanges:
-            if exchange.id == exchange_id:
+            if exchange.id == exchange_id.value:
                 return exchange
