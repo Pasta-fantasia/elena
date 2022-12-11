@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List
 
 import ccxt
@@ -29,11 +30,14 @@ class CctxMarketReader(MarketReader):
         return _candles
 
     def _connect(self, exchange: Exchange):
-        return self._connect_mapper[exchange.id]({
+        logging.debug('Connecting to %s ...', exchange.id.value)
+        _conn = self._connect_mapper[exchange.id]({
             'apiKey': exchange.api_key,
-            'secret': exchange.secret,
             'password': exchange.password,
+            'secret': exchange.secret,
         })
+        logging.info('Connected to %s', exchange.id.value)
+        return _conn
 
     def _fetch_candles(self, connection, pair: TradingPair, time_frame: TimeFrame) -> pd.DataFrame:
         candles_list = self._fetch_candles_with_retry(connection, pair, time_frame)
@@ -84,7 +88,6 @@ class CctxMarketReader(MarketReader):
 
     @staticmethod
     def _map_order_book(_ob) -> OrderBook:
-        return OrderBook(
-            bids=[PriceAmount(price=bid[0], amount=bid[1]) for bid in _ob.bids],
-            asks=[PriceAmount(price=bid[0], amount=bid[1]) for bid in _ob.asks],
-        )
+        _bids = [PriceAmount(price=bid[0], amount=bid[1]) for bid in _ob['bids']]
+        _asks = [PriceAmount(price=bid[0], amount=bid[1]) for bid in _ob['asks']]
+        return OrderBook(bids=_bids, asks=_asks)

@@ -5,7 +5,6 @@ from elena.domain.model.exchange import Exchange, ExchangeType
 from elena.domain.model.order import Order
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.model.summary import Summary
-from elena.domain.model.time_frame import TimeFrame
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.market_reader import MarketReader
@@ -45,7 +44,7 @@ class StrategyManager:
 
     def _run_bot(self, bot_config) -> Tuple[BotStatus, Summary]:
         _exchange = self._get_exchange(bot_config.exchange_id)
-        _candles = self._market_reader.read_candles(_exchange, bot_config.pair, TimeFrame.min_1)
+        # _candles = self._market_reader.read_candles(_exchange, bot_config.pair, TimeFrame.min_1)
         _order_book = self._market_reader.read_order_book(_exchange, bot_config.pair)
         return self._write_order(_exchange, bot_config)
 
