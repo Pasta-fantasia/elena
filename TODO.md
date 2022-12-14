@@ -1,14 +1,12 @@
 # TODO
 
-## [Pere] CTTX market reader
+## [Pere] CTTX market reader & order manager
 
 - Read market data
-- Read order status
-
-
-## [Pere] CTTX order writer
-
-- Write orders
+- Read order book
+- Place order
+- Cancel order
+- Fetch order
 
 
 ## [Pere] Create fake StrategyManager class

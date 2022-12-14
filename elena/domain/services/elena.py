@@ -6,7 +6,7 @@ from elena.domain.model.summary import Summary
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.market_reader import MarketReader
-from elena.domain.ports.order_writer import OrderWriter
+from elena.domain.ports.order_manager import OrderManager
 from elena.domain.services.config_loader import ConfigLoader
 from elena.domain.services.strategy_manager import StrategyManager
 
@@ -18,13 +18,13 @@ class Elena:
                  logger: Logger,
                  bot_manager: BotManager,
                  market_reader: MarketReader,
-                 order_writer: OrderWriter
+                 order_manager: OrderManager
                  ):
         self._config = config
         self._logger = logger
         self._bot_manager = bot_manager
         self._market_reader = market_reader
-        self._order_writer = order_writer
+        self._order_manager = order_manager
         self._logger.info('Elena initialized')
 
     def run(self):
@@ -37,7 +37,7 @@ class Elena:
                 logger=self._logger,
                 bot_manager=self._bot_manager,
                 market_reader=self._market_reader,
-                order_writer=self._order_writer,
+                order_manager=self._order_manager,
                 exchanges=config_loader.exchanges
             )
             _result = _strategy_manager.run()

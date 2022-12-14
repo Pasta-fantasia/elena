@@ -22,7 +22,12 @@ class CctxMarketReader(MarketReader):
         self._config = config['CctxMarketReader']
         self._logger = logger
 
-    def read_candles(self, exchange: Exchange, pair: TradingPair, time_frame: TimeFrame) -> pd.DataFrame:
+    def read_candles(
+            self,
+            exchange: Exchange,
+            pair: TradingPair,
+            time_frame: TimeFrame = TimeFrame.min_1
+    ) -> pd.DataFrame:
         self._logger.debug('Reading market candles from %s with CCTX for pair %s ...', exchange.id, pair)
         _conn = self._connect(exchange)
         _candles = self._fetch_candles(_conn, pair, time_frame)
@@ -70,7 +75,11 @@ class CctxMarketReader(MarketReader):
             i += 1
         return _candles
 
-    def read_order_book(self, exchange: Exchange, pair: TradingPair) -> OrderBook:
+    def read_order_book(
+            self,
+            exchange: Exchange,
+            pair: TradingPair
+    ) -> OrderBook:
         self._logger.debug('Reading market order book from %s with CCTX for pair %s ...', exchange.id, pair)
 
         _conn = self._connect(exchange)
