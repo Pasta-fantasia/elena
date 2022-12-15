@@ -51,10 +51,12 @@ class StrategyManager:
     def _place_order(self, exchange: Exchange, bot_config) -> Tuple[BotStatus, Summary]:
         try:
             _order = self._order_manager.place(
+                exchange=exchange,
                 pair=bot_config.pair,
-                type=OrderType.market,
+                type=OrderType.limit,
                 side=OrderSide.buy,
-                amount=1.23
+                amount=0.001,
+                price=20_000
             )
         except Exception as _error:
             self._logger.error('Error writing order: %s', _error)

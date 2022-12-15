@@ -6,3 +6,4 @@ LocalBotManager:
 CctxMarketReader:
   fetch_ohlcv_limit: 100
   fetch_ohlcv_limit_retry_every_milliseconds: 1000
+CctxOrderManager:

@@ -1,5 +1,6 @@
 from typing import Protocol, Dict, Optional
 
+from elena.domain.model.exchange import Exchange
 from elena.domain.model.order import Order, OrderSide, OrderType
 from elena.domain.model.trading_pair import TradingPair
 
@@ -8,6 +9,7 @@ class OrderManager(Protocol):
 
     def place(
             self,
+            exchange: Exchange,
             pair: TradingPair,
             type: OrderType,
             side: OrderSide,
@@ -17,6 +19,7 @@ class OrderManager(Protocol):
     ) -> Order:
         """
         Places an order to an Exchange
+        :param exchange: exchange where to read market data
         :param pair: the order pair
         :param type: the type of your order
         :param side: the direction of your order
@@ -28,12 +31,14 @@ class OrderManager(Protocol):
 
     def cancel(
             self,
+            exchange: Exchange,
             id: str,
             pair: TradingPair,
             params: Dict = {}
     ) -> Order:
         """
         Cancels an order on a Exchange
+        :param exchange: exchange where to read market data
         :param id: the order id to cancel
         :param pair: the order pair (required by some exchanges)
         :param params: Extra parameters specific to the exchange API endpoint
@@ -43,11 +48,13 @@ class OrderManager(Protocol):
     def fetch(
             self,
             id: str,
+            exchange: Exchange,
             pair: TradingPair,
             params: Dict = {}
     ) -> Order:
         """
         Retrieves an order from Exchange
+        :param exchange: exchange where to read market data
         :param id: the order id to retrieve
         :param pair: the order pair (required by some exchanges)
         :param params: Extra parameters specific to the exchange API endpoint

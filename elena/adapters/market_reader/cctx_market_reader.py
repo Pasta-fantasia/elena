@@ -1,10 +1,10 @@
-import logging
 from typing import Dict, List
 
 import ccxt
 import pandas as pd
 
-from elena.domain.model.exchange import Exchange, ExchangeType
+from elena.adapters.common import common_cctx
+from elena.domain.model.exchange import Exchange
 from elena.domain.model.order_book import OrderBook, PriceAmount
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
@@ -13,10 +13,6 @@ from elena.domain.ports.market_reader import MarketReader
 
 
 class CctxMarketReader(MarketReader):
-    _connect_mapper = {
-        ExchangeType.bitget: ccxt.bitget,
-        ExchangeType.kucoin: ccxt.kucoin
-    }
 
     def __init__(self, config: Dict, logger: Logger):
         self._config = config['CctxMarketReader']
@@ -29,20 +25,10 @@ class CctxMarketReader(MarketReader):
             time_frame: TimeFrame = TimeFrame.min_1
     ) -> pd.DataFrame:
         self._logger.debug('Reading market candles from %s with CCTX for pair %s ...', exchange.id, pair)
-        _conn = self._connect(exchange)
+        _conn = common_cctx.connect(exchange, self._logger)
         _candles = self._fetch_candles(_conn, pair, time_frame)
         self._logger.info('Read %d %s candles from %s', _candles.shape[0], pair, exchange.id.value)
         return _candles
-
-    def _connect(self, exchange: Exchange):
-        logging.debug('Connecting to %s ...', exchange.id.value)
-        _conn = self._connect_mapper[exchange.id]({
-            'apiKey': exchange.api_key,
-            'password': exchange.password,
-            'secret': exchange.secret,
-        })
-        logging.info('Connected to %s', exchange.id.value)
-        return _conn
 
     def _fetch_candles(self, connection, pair: TradingPair, time_frame: TimeFrame) -> pd.DataFrame:
         candles_list = self._fetch_candles_with_retry(connection, pair, time_frame)
@@ -82,7 +68,7 @@ class CctxMarketReader(MarketReader):
     ) -> OrderBook:
         self._logger.debug('Reading market order book from %s with CCTX for pair %s ...', exchange.id, pair)
 
-        _conn = self._connect(exchange)
+        _conn = common_cctx.connect(exchange, self._logger)
         _ob = self._fetch_order_book(_conn, pair)
         self._logger.info('Read %d bids and %d asks for %s from %s', len(_ob.bids), len(_ob.asks), pair,
                           exchange.id.value)
