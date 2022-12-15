@@ -1,7 +1,8 @@
-from typing import Protocol
+from typing import Protocol, Dict
 
 import pandas as pd
 
+from elena.domain.model.balance import Balance
 from elena.domain.model.exchange import Exchange
 from elena.domain.model.order_book import OrderBook
 from elena.domain.model.time_frame import TimeFrame
@@ -35,5 +36,16 @@ class MarketReader(Protocol):
         :param exchange: exchange where to read market data
         :param pair: trading pair to read
         :return: the current order book
+        """
+        pass
+
+    def get_balance(
+            self,
+            params: Dict = {}
+    ) -> Balance:
+        """
+        Gets the amount of funds available for trading or funds locked in orders
+        :param params: Extra parameters specific to the exchange API endpoint
+        :return: The balance
         """
         pass
