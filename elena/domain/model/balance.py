@@ -11,7 +11,6 @@ class ByAvailability(BaseModel):
 
 
 class ByCurrency(BaseModel):
-    currency: Currency
     free: float
     used: float
     total: float

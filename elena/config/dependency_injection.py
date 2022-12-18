@@ -3,8 +3,8 @@ from typing import Dict
 from dependency_injector import containers, providers
 
 from elena.adapters.bot_manager.local_bot_manager import LocalBotManager
+from elena.adapters.exchange_reader.cctx_exchange_reader import CctxExchangeReader
 from elena.adapters.logger.local_logger import LocalLogger
-from elena.adapters.market_reader.cctx_market_reader import CctxMarketReader
 from elena.adapters.order_manager.cctx_order_manager import CctxOrderManager
 from elena.domain.services.elena import Elena
 
@@ -20,8 +20,8 @@ def get_container(config: Dict) -> containers.DynamicContainer:
         config=config,
         logger=logger
     )
-    market_reader = providers.Singleton(
-        CctxMarketReader,
+    exchange_reader = providers.Singleton(
+        CctxExchangeReader,
         config=config,
         logger=logger
     )
@@ -35,7 +35,7 @@ def get_container(config: Dict) -> containers.DynamicContainer:
         config=config,
         logger=logger,
         bot_manager=bot_manager,
-        market_reader=market_reader,
+        exchange_reader=exchange_reader,
         order_manager=order_manager
     )
     return container

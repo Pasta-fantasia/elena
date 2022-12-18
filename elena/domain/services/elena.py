@@ -4,8 +4,8 @@ from typing import List, Tuple, Dict
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.summary import Summary
 from elena.domain.ports.bot_manager import BotManager
+from elena.domain.ports.exchange_reader import ExchangeReader
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.market_reader import MarketReader
 from elena.domain.ports.order_manager import OrderManager
 from elena.domain.services.config_loader import ConfigLoader
 from elena.domain.services.strategy_manager import StrategyManager
@@ -17,13 +17,13 @@ class Elena:
                  config: Dict,
                  logger: Logger,
                  bot_manager: BotManager,
-                 market_reader: MarketReader,
+                 exchange_reader: ExchangeReader,
                  order_manager: OrderManager
                  ):
         self._config = config
         self._logger = logger
         self._bot_manager = bot_manager
-        self._market_reader = market_reader
+        self._exchange_reader = exchange_reader
         self._order_manager = order_manager
         self._logger.info('Elena initialized')
 
@@ -36,7 +36,7 @@ class Elena:
                 strategy_config=_strategy_config,
                 logger=self._logger,
                 bot_manager=self._bot_manager,
-                market_reader=self._market_reader,
+                exchange_reader=self._exchange_reader,
                 order_manager=self._order_manager,
                 exchanges=config_loader.exchanges
             )

@@ -6,8 +6,8 @@ from elena.domain.model.order import OrderType, OrderSide
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.model.summary import Summary
 from elena.domain.ports.bot_manager import BotManager
+from elena.domain.ports.exchange_reader import ExchangeReader
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.market_reader import MarketReader
 from elena.domain.ports.order_manager import OrderManager
 
 
@@ -17,14 +17,14 @@ class StrategyManager:
                  strategy_config: StrategyConfig,
                  logger: Logger,
                  bot_manager: BotManager,
-                 market_reader: MarketReader,
+                 exchange_reader: ExchangeReader,
                  order_manager: OrderManager,
                  exchanges: List[Exchange],
                  ):
         self._config = strategy_config
         self._logger = logger
         self._bot_manager = bot_manager
-        self._market_reader = market_reader
+        self._exchange_reader = exchange_reader
         self._order_manager = order_manager
         self._exchanges = exchanges
 
@@ -32,7 +32,7 @@ class StrategyManager:
         """
         Runs all strategy bots. A Bot is an instance of a strategy with a certain configuration
           1. retrieves the bot status of the previous execution with BotManager
-          2. read info from market to define orders with MarketReader
+          2. read info from market to define orders with ExchangeReader
           3. write orders to an Exchange with OrderManager
         :return: the list of all bot status of this execution, and the summary of every execution
         """
@@ -44,8 +44,8 @@ class StrategyManager:
 
     def _run_bot(self, bot_config) -> Tuple[BotStatus, Summary]:
         _exchange = self._get_exchange(bot_config.exchange_id)
-        _candles = self._market_reader.read_candles(_exchange, bot_config.pair)
-        _order_book = self._market_reader.read_order_book(_exchange, bot_config.pair)
+        _candles = self._exchange_reader.read_candles(_exchange, bot_config.pair)
+        _order_book = self._exchange_reader.read_order_book(_exchange, bot_config.pair)
         return self._place_order(_exchange, bot_config)
 
     def _place_order(self, exchange: Exchange, bot_config) -> Tuple[BotStatus, Summary]:

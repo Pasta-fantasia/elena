@@ -8,14 +8,14 @@ from elena.domain.model.exchange import Exchange
 from elena.domain.model.order_book import OrderBook, PriceAmount
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
+from elena.domain.ports.exchange_reader import ExchangeReader
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.market_reader import MarketReader
 
 
-class CctxMarketReader(MarketReader):
+class CctxExchangeReader(ExchangeReader):
 
     def __init__(self, config: Dict, logger: Logger):
-        self._config = config['CctxMarketReader']
+        self._config = config['CctxExchangeReader']
         self._logger = logger
 
     def read_candles(
@@ -24,7 +24,7 @@ class CctxMarketReader(MarketReader):
             pair: TradingPair,
             time_frame: TimeFrame = TimeFrame.min_1
     ) -> pd.DataFrame:
-        self._logger.debug('Reading market candles from %s with CCTX for pair %s ...', exchange.id, pair)
+        self._logger.debug('Reading exchange candles from %s with CCTX for pair %s ...', exchange.id, pair)
         _conn = common_cctx.connect(exchange, self._logger)
         _candles = self._fetch_candles(_conn, pair, time_frame)
         self._logger.info('Read %d %s candles from %s', _candles.shape[0], pair, exchange.id.value)
@@ -66,7 +66,7 @@ class CctxMarketReader(MarketReader):
             exchange: Exchange,
             pair: TradingPair
     ) -> OrderBook:
-        self._logger.debug('Reading market order book from %s with CCTX for pair %s ...', exchange.id, pair)
+        self._logger.debug('Reading exchange order book from %s with CCTX for pair %s ...', exchange.id, pair)
 
         _conn = common_cctx.connect(exchange, self._logger)
         _ob = self._fetch_order_book(_conn, pair)

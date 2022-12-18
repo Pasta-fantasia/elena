@@ -9,7 +9,7 @@ from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 
 
-class MarketReader(Protocol):
+class ExchangeReader(Protocol):
 
     def read_candles(
             self,
@@ -18,7 +18,7 @@ class MarketReader(Protocol):
             time_frame: TimeFrame = TimeFrame.min_1
     ) -> pd.DataFrame:
         """
-        Reads market candles
+        Reads market candles from exchange
         :param exchange: exchange where to read market data
         :param pair: trading pair to read
         :param time_frame: time frame to read
@@ -32,8 +32,8 @@ class MarketReader(Protocol):
             pair: TradingPair
     ) -> OrderBook:
         """
-        Reads market order book
-        :param exchange: exchange where to read market data
+        Reads exchange order book
+        :param exchange: exchange where to read exchange data
         :param pair: trading pair to read
         :return: the current order book
         """

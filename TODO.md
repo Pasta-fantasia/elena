@@ -1,8 +1,8 @@
 # TODO
 
-## [Pere] CTTX market reader & order manager
+## [Pere] CTTX exchange reader & order manager
 
-- Read market data
+- Read exchange data
 - Read order book
 - Place order
 - Cancel order

@@ -83,8 +83,8 @@ pip install git+ssh://git@github.com/Ciskam-Lab/elena.git@main#egg=elena
 2. For every enabled StrategyManager
 3. For every enabled bot with at least one enabled tag
 4. Retrieve the bot from disk and instantiate it
-5. MarketReader:
+5. ExchangeReader:
    1. Read the bot orders status
-   2. The market data if required
+   2. The exchange data if required
 6. Run `next()` method
 7. Persist the bot to disk
