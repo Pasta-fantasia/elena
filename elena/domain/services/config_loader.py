@@ -80,6 +80,7 @@ class ConfigLoader:
             _exchange = Exchange(
                 id=_dict['id'],
                 enabled=_dict['enabled'],
+                sandbox_mode=_dict['sandbox_mode'],
                 api_key=_dict['api_key'],
                 password=_dict['password'],
                 secret=_dict['secret'],

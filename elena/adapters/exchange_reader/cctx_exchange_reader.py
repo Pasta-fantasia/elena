@@ -119,7 +119,7 @@ class CctxExchangeReader(ExchangeReader):
             currencies=_currencies,
             info=_info,
         )
-        self._logger.debug('Read balance: %s', _bal)
+        self._logger.info('Read balance: %s', _bal)
         return _bal
 
     @staticmethod

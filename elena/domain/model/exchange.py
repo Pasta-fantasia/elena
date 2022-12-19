@@ -10,6 +10,7 @@ class ExchangeType(str, Enum):
 class Exchange(BaseModel):
     id: ExchangeType
     enabled: bool = True
+    sandbox_mode: bool = False
     api_key: str
     password: str
     secret: str

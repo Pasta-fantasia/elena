@@ -16,5 +16,6 @@ def connect(exchange: Exchange, logger: Logger):
         'password': exchange.password,
         'secret': exchange.secret,
     })
-    logger.info('Connected to %s', exchange.id.value)
+    _conn.set_sandbox_mode(exchange.sandbox_mode)
+    logger.info('Connected to %s at %s', exchange.id.value, _conn.urls['api']['public'])
     return _conn
