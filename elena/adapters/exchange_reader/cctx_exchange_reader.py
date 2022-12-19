@@ -1,9 +1,12 @@
-from typing import Dict, List
+import time
+from typing import Dict, List, Set
 
 import ccxt
 import pandas as pd
 
 from elena.adapters.common import common_cctx
+from elena.domain.model.balance import Balance, ByAvailability, ByCurrency
+from elena.domain.model.currency import Currency
 from elena.domain.model.exchange import Exchange
 from elena.domain.model.order_book import OrderBook, PriceAmount
 from elena.domain.model.time_frame import TimeFrame
@@ -82,7 +85,75 @@ class CctxExchangeReader(ExchangeReader):
         return self._map_order_book(_ob)
 
     @staticmethod
-    def _map_order_book(_ob) -> OrderBook:
-        _bids = [PriceAmount(price=bid[0], amount=bid[1]) for bid in _ob['bids']]
-        _asks = [PriceAmount(price=bid[0], amount=bid[1]) for bid in _ob['asks']]
+    def _map_order_book(ob: Dict) -> OrderBook:
+        _bids = [PriceAmount(price=bid[0], amount=bid[1]) for bid in ob['bids']]
+        _asks = [PriceAmount(price=bid[0], amount=bid[1]) for bid in ob['asks']]
         return OrderBook(bids=_bids, asks=_asks)
+
+    def get_balance(
+            self,
+            exchange: Exchange,
+            params: Dict = {}
+    ) -> Balance:
+        self._logger.debug('Reading balance from %s with CCTX', exchange.id)
+
+        _conn = common_cctx.connect(exchange, self._logger)
+        try:
+            _bal = _conn.fetch_balance(params)
+        except Exception as err:
+            raise err
+        return self._map_balance(_bal)
+
+    def _map_balance(self, bal: Dict) -> Balance:
+        _timestamp = self._map_timestamp(bal['timestamp'])
+        _free = self._map_by_availability(bal['free'])
+        _used = self._map_by_availability(bal['used'])
+        _total = self._map_by_availability(bal['total'])
+        _currencies = self._map_by_currency(bal)
+        _info = bal['info']
+        _bal = Balance(
+            timestamp=_timestamp,
+            free=_free,
+            used=_used,
+            total=_total,
+            currencies=_currencies,
+            info=_info,
+        )
+        self._logger.debug('Read balance: %s', _bal)
+        return _bal
+
+    @staticmethod
+    def _map_timestamp(timestamp) -> int:
+        if timestamp:
+            return timestamp
+        else:
+            return int(time.time() * 1000)
+
+    def _map_by_availability(self, dic: Dict) -> Set[ByAvailability]:
+        lst = []
+        for sym in dic:
+            _by_availability = self._build_by_availability(sym, dic[sym])
+            if _by_availability:
+                lst.append(_by_availability)
+        return lst
+
+    def _build_by_availability(self, sym: str, amount: float):
+        try:
+            return ByAvailability(currency=Currency(sym), amount=amount)
+        except ValueError as err:
+            self._logger.warning(err)
+            return None
+
+    def _map_by_currency(self, dic: Dict) -> Dict[Currency, ByCurrency]:
+        _dic = {}
+        for _curr in Currency:
+            _dic[_curr.value] = self._map_currency(_curr, dic)
+        return _dic
+
+    @staticmethod
+    def _map_currency(curr: Currency, dic: Dict) -> Dict[Currency, ByCurrency]:
+        try:
+            _value = dic[curr.value]
+            return ByCurrency(free=_value['free'], used=_value['used'], total=_value['total'])
+        except KeyError:
+            return ByCurrency(free=0.0, used=0.0, total=0.0)

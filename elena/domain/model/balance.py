@@ -1,4 +1,4 @@
-from typing import Dict, Set
+from typing import Dict, List
 
 from pydantic import BaseModel
 
@@ -17,9 +17,9 @@ class ByCurrency(BaseModel):
 
 
 class Balance(BaseModel):
-    timestamp: int  # Unix timestamp in milliseconds
-    free: Set[ByAvailability]  # money, available for trading, by currency
-    used: Set[ByAvailability]  # money on hold, locked, frozen, or pending, by currency
-    total: Set[ByAvailability]  # total (free + used), by currency
+    timestamp: int  # Unix Timestamp in milliseconds since Epoch 1 Jan 1970
+    free: List[ByAvailability]  # money, available for trading, by currency
+    used: List[ByAvailability]  # money on hold, locked, frozen, or pending, by currency
+    total: List[ByAvailability]  # total (free + used), by currency
     currencies: Dict[Currency, ByCurrency]  # balance indexed by currency
     info: Dict  # the original untouched non-parsed reply with details

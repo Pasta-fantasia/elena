@@ -41,10 +41,12 @@ class ExchangeReader(Protocol):
 
     def get_balance(
             self,
+            exchange: Exchange,
             params: Dict = {}
     ) -> Balance:
         """
         Gets the amount of funds available for trading or funds locked in orders
+        :param exchange: exchange where to read market data
         :param params: Extra parameters specific to the exchange API endpoint
         :return: The balance
         """
