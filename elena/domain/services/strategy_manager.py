@@ -1,5 +1,6 @@
 from typing import Tuple, List
 
+from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.exchange import Exchange, ExchangeType
 from elena.domain.model.order import OrderType, OrderSide
@@ -42,18 +43,18 @@ class StrategyManager:
             _results.append(_result)
         return _results
 
-    def _run_bot(self, bot_config) -> Tuple[BotStatus, Summary]:
+    def _run_bot(self, bot_config: BotConfig) -> Tuple[BotStatus, Summary]:
         _exchange = self._get_exchange(bot_config.exchange_id)
         # _candles = self._exchange_reader.read_candles(_exchange, bot_config.pair)
         # _order_book = self._exchange_reader.read_order_book(_exchange, bot_config.pair)
         balance = self._exchange_reader.get_balance(_exchange)
-        # return self._place_order(_exchange, bot_config)
+        return self._place_order(_exchange, bot_config)
 
-    def _place_order(self, exchange: Exchange, bot_config) -> Tuple[BotStatus, Summary]:
+    def _place_order(self, exchange: Exchange, bot_config: BotConfig) -> Tuple[BotStatus, Summary]:
         try:
             _order = self._order_manager.place(
                 exchange=exchange,
-                pair=bot_config.pair,
+                bot_config=bot_config,
                 type=OrderType.limit,
                 side=OrderSide.buy,
                 amount=0.001,
@@ -62,7 +63,7 @@ class StrategyManager:
         except Exception as _error:
             self._logger.error('Error writing order: %s', _error)
             _status = BotStatus(
-                bot_id=bot_config.bot_id,
+                bot_id=bot_config.id,
                 status={'error': _error},
             )
             _summary = Summary(

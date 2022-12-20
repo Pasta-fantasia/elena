@@ -1,5 +1,6 @@
 from typing import Protocol, Dict, Optional
 
+from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.exchange import Exchange
 from elena.domain.model.order import Order, OrderSide, OrderType
 from elena.domain.model.trading_pair import TradingPair
@@ -10,7 +11,7 @@ class OrderManager(Protocol):
     def place(
             self,
             exchange: Exchange,
-            pair: TradingPair,
+            bot_config: BotConfig,
             type: OrderType,
             side: OrderSide,
             amount: float,
@@ -20,6 +21,7 @@ class OrderManager(Protocol):
         """
         Places an order to an Exchange
         :param exchange: exchange where to read market data
+        :param bot_config: the current bot configuration
         :param pair: the order pair
         :param type: the type of your order
         :param side: the direction of your order
