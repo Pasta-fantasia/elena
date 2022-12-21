@@ -1,3 +1,4 @@
+import time
 from typing import List
 
 from elena.domain.model.bot_config import BotConfig
@@ -48,13 +49,20 @@ class StrategyManager:
         # _order_book = self._exchange_reader.read_order_book(_exchange, bot_config.pair)
         # _balance = self._exchange_reader.get_balance(_exchange)
         _order = self._place_order(_exchange, bot_config)
+        time.sleep(2)
         _status = BotStatus(
             config=bot_config,
             orders=[_order],
         )
         self._fetch_orders(_exchange, _status)
-
+        time.sleep(2)
+        self._cancel_order(_exchange, bot_config, _order.id)
         return _status
+
+    def _get_exchange(self, exchange_id: ExchangeType) -> Exchange:
+        for exchange in self._exchanges:
+            if exchange.id == exchange_id.value:
+                return exchange
 
     def _place_order(self, exchange: Exchange, bot_config: BotConfig) -> Order:
         _order = self._order_manager.place(
@@ -65,7 +73,7 @@ class StrategyManager:
             amount=0.001,
             price=20_000
         )
-        self._logger.info('Order: %s', _order)
+        self._logger.info('Placed order: %s', _order)
         return _order
 
     def _fetch_orders(self, exchange: Exchange, bot_status: BotStatus) -> List[Order]:
@@ -77,10 +85,14 @@ class StrategyManager:
                 id=order.id,
             )
             _orders.append(_order)
-        self._logger.info('Orders: %s', _orders)
+        self._logger.info('Fetched orders: %s', _orders)
         return _orders
 
-    def _get_exchange(self, exchange_id: ExchangeType) -> Exchange:
-        for exchange in self._exchanges:
-            if exchange.id == exchange_id.value:
-                return exchange
+    def _cancel_order(self, exchange: Exchange, bot_config: BotConfig, id: str) -> Order:
+        _order = self._order_manager.cancel(
+            exchange=exchange,
+            bot_config=bot_config,
+            id=id
+        )
+        self._logger.info('Canceled order: %s', id)
+        return _order

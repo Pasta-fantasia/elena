@@ -27,20 +27,17 @@ class CctxOrderManager(OrderManager):
             price: Optional[float] = None,
             params: Dict = {}
     ) -> Order:
-        try:
-            _conn = common_cctx.connect(exchange, self._logger)
-            _order = _conn.create_order(
-                symbol=str(bot_config.pair),
-                type=type.value,
-                side=side.value,
-                amount=amount,
-                price=price,
-                params=params
-            )
-            result = self._map_order(exchange, bot_config, bot_config.pair, _order)
-            return result
-        except Exception as err:
-            raise err
+        _conn = common_cctx.connect(exchange, self._logger)
+        _order = _conn.create_order(
+            symbol=str(bot_config.pair),
+            type=type.value,
+            side=side.value,
+            amount=amount,
+            price=price,
+            params=params
+        )
+        result = self._map_order(exchange, bot_config, bot_config.pair, _order)
+        return result
 
     def _map_order(self, exchange: Exchange, bot_config: BotConfig, pair: TradingPair, order) -> Order:
         return Order(
@@ -112,11 +109,16 @@ class CctxOrderManager(OrderManager):
     def cancel(
             self,
             exchange: Exchange,
+            bot_config: BotConfig,
             id: str,
-            pair: TradingPair,
             params: Dict = {}
-    ) -> Order:
-        pass
+    ):
+        _conn = common_cctx.connect(exchange, self._logger)
+        _conn.cancel_order(
+            id=id,
+            symbol=str(bot_config.pair),
+            params=params
+        )
 
     def fetch(
             self,
@@ -125,14 +127,11 @@ class CctxOrderManager(OrderManager):
             id: str,
             params: Dict = {}
     ) -> Order:
-        try:
-            _conn = common_cctx.connect(exchange, self._logger)
-            _order = _conn.fetch_order(
-                id=id,
-                symbol=str(bot_config.pair),
-                params=params
-            )
-            result = self._map_order(exchange, bot_config, bot_config.pair, _order)
-            return result
-        except Exception as err:
-            raise err
+        _conn = common_cctx.connect(exchange, self._logger)
+        _order = _conn.fetch_order(
+            id=id,
+            symbol=str(bot_config.pair),
+            params=params
+        )
+        result = self._map_order(exchange, bot_config, bot_config.pair, _order)
+        return result

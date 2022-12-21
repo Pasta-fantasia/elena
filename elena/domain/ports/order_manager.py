@@ -3,7 +3,6 @@ from typing import Protocol, Dict, Optional
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.exchange import Exchange
 from elena.domain.model.order import Order, OrderSide, OrderType
-from elena.domain.model.trading_pair import TradingPair
 
 
 class OrderManager(Protocol):
@@ -28,22 +27,24 @@ class OrderManager(Protocol):
         :param amount: how much of currency you want to trade
         :param price: the price at which the order is to be fulfilled (ignored in market orders)
         :param params: Extra parameters specific to the exchange API endpoint
+        :return: the placed Order, error if any
         """
         pass
 
     def cancel(
             self,
-            exchange: Exchange,
             id: str,
-            pair: TradingPair,
+            exchange: Exchange,
+            bot_config: BotConfig,
             params: Dict = {}
-    ) -> Order:
+    ):
         """
         Cancels an order on a Exchange
         :param exchange: exchange where to read market data
+        :param bot_config: the current bot configuration
         :param id: the order id to cancel
-        :param pair: the order pair (required by some exchanges)
         :param params: Extra parameters specific to the exchange API endpoint
+        :return: error if any
         """
         pass
 
@@ -60,5 +61,6 @@ class OrderManager(Protocol):
         :param bot_config: the current bot configuration
         :param id: the order id to retrieve
         :param params: Extra parameters specific to the exchange API endpoint
+        :return: the list of orders, error if any
         """
         pass
