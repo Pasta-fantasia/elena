@@ -1,8 +1,6 @@
 from datetime import datetime
-from typing import List, Tuple, Dict
+from typing import Dict
 
-from elena.domain.model.bot_status import BotStatus
-from elena.domain.model.summary import Summary
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.exchange_reader import ExchangeReader
 from elena.domain.ports.logger import Logger
@@ -40,15 +38,5 @@ class Elena:
                 order_manager=self._order_manager,
                 exchanges=config_loader.exchanges
             )
-            _result = _strategy_manager.run()
-            self._write_strategy_result(_result)
-
-    def _write_strategy_result(self, result: List[Tuple[BotStatus, Summary]]):
-        for _tuple in result:
-            self._write_bot_status(_tuple[0])
-
-    def _write_bot_status(self, status: BotStatus):
-        try:
-            self._bot_manager.write(status)
-        except Exception as _err:
-            raise _err
+            _statuses = _strategy_manager.run()
+            self._bot_manager.write_all(_statuses)

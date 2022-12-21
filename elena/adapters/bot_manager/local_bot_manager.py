@@ -1,6 +1,6 @@
 import pathlib
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.ports.bot_manager import BotManager
@@ -24,6 +24,10 @@ class LocalBotManager(BotManager):
         )
         pass
 
+    def write_all(self, statuses: List[BotStatus]):
+        for status in statuses:
+            self.write(status)
+
     def write(self, status: BotStatus):
-        self._logger.info('Writing %s bot status to disk', status.bot_id)
+        self._logger.info('Writing %s bot status to disk', status.json())
         # TODO Implement me!!
