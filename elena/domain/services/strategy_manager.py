@@ -52,6 +52,8 @@ class StrategyManager:
             config=bot_config,
             orders=[_order],
         )
+        self._fetch_orders(_exchange, _status)
+
         return _status
 
     def _place_order(self, exchange: Exchange, bot_config: BotConfig) -> Order:
@@ -63,8 +65,20 @@ class StrategyManager:
             amount=0.001,
             price=20_000
         )
-        self._logger.info('Order: %s', _order.json())
+        self._logger.info('Order: %s', _order)
         return _order
+
+    def _fetch_orders(self, exchange: Exchange, bot_status: BotStatus) -> List[Order]:
+        _orders = []
+        for order in bot_status.orders:
+            _order = self._order_manager.fetch(
+                exchange=exchange,
+                bot_config=bot_status.config,
+                id=order.id,
+            )
+            _orders.append(_order)
+        self._logger.info('Orders: %s', _orders)
+        return _orders
 
     def _get_exchange(self, exchange_id: ExchangeType) -> Exchange:
         for exchange in self._exchanges:

@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 
 from elena.adapters.common import common_cctx
 from elena.domain.model.bot_config import BotConfig
@@ -73,16 +73,22 @@ class CctxOrderManager(OrderManager):
         else:
             return None
 
-    @staticmethod
-    def _map_fee(fee) -> Optional[Fee]:
+    def _map_fee(self, fee) -> Optional[Fee]:
         if fee:
             return Fee(
-                currency=Currency(fee['currency']),
-                cost=fee['cost'],
-                rate=fee['rate'],
+                currency=Currency(self._nvl(fee, 'currency', 0.0)),
+                cost=self._nvl(fee, 'cost', 0.0),
+                rate=self._nvl(fee, 'rate', 0.0),
             )
         else:
             return None
+
+    @staticmethod
+    def _nvl(dic: Dict, key: str, default_value: Any) -> Any:
+        try:
+            return dic[key]
+        except KeyError:
+            return default_value
 
     def _map_trades(self, trades) -> List[Trade]:
         lst = []
@@ -115,8 +121,18 @@ class CctxOrderManager(OrderManager):
     def fetch(
             self,
             exchange: Exchange,
+            bot_config: BotConfig,
             id: str,
-            pair: TradingPair,
             params: Dict = {}
     ) -> Order:
-        pass
+        try:
+            _conn = common_cctx.connect(exchange, self._logger)
+            _order = _conn.fetch_order(
+                id=id,
+                symbol=str(bot_config.pair),
+                params=params
+            )
+            result = self._map_order(exchange, bot_config, bot_config.pair, _order)
+            return result
+        except Exception as err:
+            raise err

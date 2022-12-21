@@ -51,14 +51,14 @@ class OrderManager(Protocol):
             self,
             id: str,
             exchange: Exchange,
-            pair: TradingPair,
+            bot_config: BotConfig,
             params: Dict = {}
     ) -> Order:
         """
         Retrieves an order from Exchange
         :param exchange: exchange where to read market data
+        :param bot_config: the current bot configuration
         :param id: the order id to retrieve
-        :param pair: the order pair (required by some exchanges)
         :param params: Extra parameters specific to the exchange API endpoint
         """
         pass
