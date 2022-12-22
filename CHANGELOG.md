@@ -23,10 +23,11 @@
 - sleep_until_factor parameter 
 
 ## 1.5.3
-- Rename Auto cancel parameter in .json
+- Rename Auto cancel_order parameter in .json
 
 ## 1.5.2
-- Auto cancel parameter in .json
+
+- Auto cancel_order parameter in .json
 - Log error connection
 - Default values on _read_state
 

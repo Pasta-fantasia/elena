@@ -7,9 +7,8 @@ from elena.domain.model.exchange import Exchange, ExchangeType
 from elena.domain.model.order import OrderType, OrderSide, Order
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot_manager import BotManager
-from elena.domain.ports.exchange_reader import ExchangeReader
+from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.order_manager import OrderManager
 
 
 class StrategyManager:
@@ -18,22 +17,20 @@ class StrategyManager:
                  strategy_config: StrategyConfig,
                  logger: Logger,
                  bot_manager: BotManager,
-                 exchange_reader: ExchangeReader,
-                 order_manager: OrderManager,
+                 exchange_manager: ExchangeManager,
                  exchanges: List[Exchange],
                  ):
         self._config = strategy_config
         self._logger = logger
         self._bot_manager = bot_manager
-        self._exchange_reader = exchange_reader
-        self._order_manager = order_manager
+        self._exchange_manager = exchange_manager
         self._exchanges = exchanges
 
     def run(self) -> List[BotStatus]:
         """
         Runs all strategy bots. A Bot is an instance of a strategy with a certain configuration
           1. retrieves the bot status of the previous execution with BotManager
-          2. read info from market to define orders with ExchangeReader
+          2. read info from market to define orders with ExchangeManager
           3. write orders to an Exchange with OrderManager
         :return: the list of all bot status of this execution
         """
@@ -45,9 +42,9 @@ class StrategyManager:
 
     def _run_bot(self, bot_config: BotConfig) -> BotStatus:
         _exchange = self._get_exchange(bot_config.exchange_id)
-        # _candles = self._exchange_reader.read_candles(_exchange, bot_config.pair)
-        # _order_book = self._exchange_reader.read_order_book(_exchange, bot_config.pair)
-        _balance = self._exchange_reader.get_balance(_exchange)
+        # _candles = self._exchange_manager.read_candles(_exchange, bot_config.pair)
+        # _order_book = self._exchange_manager.read_order_book(_exchange, bot_config.pair)
+        _balance = self._exchange_manager.get_balance(_exchange)
         _order = self._place_order(_exchange, bot_config)
         time.sleep(2)
         _status = BotStatus(
@@ -65,7 +62,7 @@ class StrategyManager:
                 return exchange
 
     def _place_order(self, exchange: Exchange, bot_config: BotConfig) -> Order:
-        _order = self._order_manager.place(
+        _order = self._exchange_manager.place_order(
             exchange=exchange,
             bot_config=bot_config,
             type=OrderType.limit,
@@ -79,7 +76,7 @@ class StrategyManager:
     def _fetch_orders(self, exchange: Exchange, bot_status: BotStatus) -> List[Order]:
         _orders = []
         for order in bot_status.orders:
-            _order = self._order_manager.fetch(
+            _order = self._exchange_manager.fetch_order(
                 exchange=exchange,
                 bot_config=bot_status.config,
                 id=order.id,
@@ -89,7 +86,7 @@ class StrategyManager:
         return _orders
 
     def _cancel_order(self, exchange: Exchange, bot_config: BotConfig, id: str) -> Order:
-        _order = self._order_manager.cancel(
+        _order = self._exchange_manager.cancel_order(
             exchange=exchange,
             bot_config=bot_config,
             id=id

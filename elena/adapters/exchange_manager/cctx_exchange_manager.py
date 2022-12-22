@@ -1,24 +1,40 @@
 import time
-from typing import Dict, List, Set, Optional
+from typing import Dict, List, Optional, Any
 
 import ccxt
 import pandas as pd
 
-from elena.adapters.common import common_cctx
 from elena.domain.model.balance import Balance, ByAvailability, ByCurrency
-from elena.domain.model.exchange import Exchange
+from elena.domain.model.bot_config import BotConfig
+from elena.domain.model.exchange import Exchange, ExchangeType
+from elena.domain.model.order import Order, OrderType, OrderSide, OrderStatusType, Fee, Trade, TakerOrMaker
 from elena.domain.model.order_book import OrderBook, PriceAmount
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
-from elena.domain.ports.exchange_reader import ExchangeReader
+from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 
 
-class CctxExchangeReader(ExchangeReader):
+class CctxExchangeManager(ExchangeManager):
+    _connect_mapper = {
+        ExchangeType.bitget: ccxt.bitget,
+        ExchangeType.kucoin: ccxt.kucoin
+    }
 
     def __init__(self, config: Dict, logger: Logger):
-        self._config = config['CctxExchangeReader']
+        self._config = config['CctxExchangeManager']
         self._logger = logger
+
+    def _connect(self, exchange: Exchange):
+        self._logger.debug('Connecting to %s ...', exchange.id.value)
+        _conn = self._connect_mapper[exchange.id]({
+            'apiKey': exchange.api_key,
+            'password': exchange.password,
+            'secret': exchange.secret,
+        })
+        _conn.set_sandbox_mode(exchange.sandbox_mode)
+        self._logger.info('Connected to %s at %s', exchange.id.value, _conn.urls['api']['public'])
+        return _conn
 
     def read_candles(
             self,
@@ -27,7 +43,7 @@ class CctxExchangeReader(ExchangeReader):
             time_frame: TimeFrame = TimeFrame.min_1
     ) -> pd.DataFrame:
         self._logger.debug('Reading exchange candles from %s with CCTX for pair %s ...', exchange.id, pair)
-        _conn = common_cctx.connect(exchange, self._logger)
+        _conn = self._connect(exchange)
         _candles = self._fetch_candles(_conn, pair, time_frame)
         self._logger.info('Read %d %s candles from %s', _candles.shape[0], pair, exchange.id.value)
         return _candles
@@ -74,7 +90,7 @@ class CctxExchangeReader(ExchangeReader):
     ) -> OrderBook:
         self._logger.debug('Reading exchange order book from %s with CCTX for pair %s ...', exchange.id, pair)
 
-        _conn = common_cctx.connect(exchange, self._logger)
+        _conn = self._connect(exchange)
         _ob = self._fetch_order_book(_conn, pair)
         self._logger.info('Read %d bids and %d asks for %s from %s', len(_ob.bids), len(_ob.asks), pair,
                           exchange.id.value)
@@ -95,14 +111,13 @@ class CctxExchangeReader(ExchangeReader):
 
     def get_balance(
             self,
-            exchange: Exchange,
-            params: Dict = {}
+            exchange: Exchange
     ) -> Balance:
         self._logger.debug('Reading balance from %s with CCTX', exchange.id)
 
-        _conn = common_cctx.connect(exchange, self._logger)
+        _conn = self._connect(exchange)
         try:
-            _bal = _conn.fetch_balance(params)
+            _bal = _conn.fetch_balance()
         except Exception as err:
             raise err
         return self._map_balance(_bal)
@@ -132,7 +147,7 @@ class CctxExchangeReader(ExchangeReader):
         else:
             return int(time.time() * 1000)
 
-    def _map_by_availability(self, dic: Dict) -> Set[ByAvailability]:
+    def _map_by_availability(self, dic: Dict) -> List[ByAvailability]:
         lst = []
         for sym in dic:
             _by_availability = self._build_by_availability(sym, dic[sym])
@@ -166,3 +181,117 @@ class CctxExchangeReader(ExchangeReader):
             return ByCurrency(free=_value['free'], used=_value['used'], total=_value['total'])
         except KeyError:
             return None
+
+    def place_order(
+            self,
+            exchange: Exchange,
+            bot_config: BotConfig,
+            type: OrderType,
+            side: OrderSide,
+            amount: float,
+            price: Optional[float] = None
+    ) -> Order:
+        _conn = self._connect(exchange)
+        _order = _conn.create_order(
+            symbol=str(bot_config.pair),
+            type=type.value,
+            side=side.value,
+            amount=amount,
+            price=price
+        )
+        result = self._map_order(exchange, bot_config, bot_config.pair, _order)
+        return result
+
+    def _map_order(self, exchange: Exchange, bot_config: BotConfig, pair: TradingPair, order) -> Order:
+        return Order(
+            id=order['id'],
+            exchange_id=exchange.id,
+            bot_id=bot_config.id,
+            strategy_id=bot_config.strategy_id,
+            pair=pair,
+            client_order_id=order['clientOrderId'],
+            timestamp=order['timestamp'],
+            last_trade_timestamp=order['lastTradeTimestamp'],
+            type=OrderType(order['type']),
+            side=OrderSide(order['side']),
+            price=order['price'],
+            amount=order['amount'],
+            cost=order['cost'],
+            average=order['average'],
+            filled=order['filled'],
+            remaining=order['remaining'],
+            status=self._map_status(order['status']),
+            trades=self._map_trades(order['trades']),
+            fee=self._map_fee(order['fee']),
+            info=order['info'],
+        )
+
+    @staticmethod
+    def _map_status(status) -> Optional[OrderStatusType]:
+        if status:
+            return OrderStatusType(status)
+        else:
+            return None
+
+    def _map_fee(self, fee) -> Optional[Fee]:
+        if fee:
+            _curr = self._nvl(fee, 'currency', None)
+            if _curr:
+                return Fee(
+                    currency=_curr,
+                    cost=self._nvl(fee, 'cost', 0.0),
+                    rate=self._nvl(fee, 'rate', 0.0),
+                )
+        return None
+
+    @staticmethod
+    def _nvl(dic: Dict, key: str, default_value: Any) -> Any:
+        try:
+            return dic[key]
+        except KeyError:
+            return default_value
+
+    def _map_trades(self, trades) -> List[Trade]:
+        lst = []
+        if not trades:
+            return lst
+        for trade in trades:
+            lst.append(self._map_trade(trade))
+        return lst
+
+    def _map_trade(self, trade) -> Trade:
+        return Trade(
+            id=trade['id'],
+            timestamp=trade['timestamp'],
+            taker_or_maker=TakerOrMaker(trade['takerOrMaker']),
+            price=trade['price'],
+            cost=trade['cost'],
+            fee=self._map_fee(trade['fee']),
+            info=trade['info'],
+        )
+
+    def cancel_order(
+            self,
+            exchange: Exchange,
+            bot_config: BotConfig,
+            id: str
+    ):
+        _conn = self._connect(exchange)
+        _conn.cancel_order(
+            id=id,
+            symbol=str(bot_config.pair)
+        )
+
+    def fetch_order(
+            self,
+            exchange: Exchange,
+            bot_config: BotConfig,
+            id: str
+    ) -> Order:
+        _conn = self._connect(exchange)
+        _order = _conn.fetch_order(
+            id=id,
+            symbol=str(bot_config.pair)
+        )
+        result = self._map_order(exchange, bot_config, bot_config.pair, _order)
+        return result
