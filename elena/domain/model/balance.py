@@ -2,11 +2,9 @@ from typing import Dict, List
 
 from pydantic import BaseModel
 
-from elena.domain.model.currency import Currency
-
 
 class ByAvailability(BaseModel):
-    currency: Currency
+    currency: str
     amount: float
 
 
@@ -21,5 +19,5 @@ class Balance(BaseModel):
     free: List[ByAvailability]  # money, available for trading, by currency
     used: List[ByAvailability]  # money on hold, locked, frozen, or pending, by currency
     total: List[ByAvailability]  # total (free + used), by currency
-    currencies: Dict[Currency, ByCurrency]  # balance indexed by currency
+    currencies: Dict[str, ByCurrency]  # balance indexed by currency
     info: Dict  # the original untouched non-parsed reply with details

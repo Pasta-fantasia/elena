@@ -3,7 +3,6 @@ from typing import Optional, Dict, List
 from pydantic import BaseModel
 from pydantic.config import Enum
 
-from elena.domain.model.currency import Currency
 from elena.domain.model.exchange import ExchangeType
 from elena.domain.model.trading_pair import TradingPair
 
@@ -32,7 +31,7 @@ class TakerOrMaker(str, Enum):
 
 
 class Fee(BaseModel):
-    currency: Currency  # which currency the fee is (usually quote)
+    currency: str  # which currency the fee is (usually quote)
     cost: float  # the fee amount in that currency
     rate: float  # the fee rate (if available)
 

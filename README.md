@@ -47,11 +47,13 @@ Strategies:
 Exchanges:
    - id: bitget
      enabled: true
+     sandbox_mode: true
      api_key: ***REMOVED***
      password: ***REMOVED***
      secret: ***REMOVED***
    - id: kucoin
      enabled: false
+     sandbox_mode: false
      api_key: ***REMOVED***
      password: ***REMOVED***
      secret: ***REMOVED***

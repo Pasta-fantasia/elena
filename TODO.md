@@ -2,11 +2,16 @@
 
 ## [Pere] CTTX exchange reader & order manager
 
-- Read exchange data
+- Read candles from exchange
 - Read order book
+- Get balance
+- Sandbox mode
 - Place order
-- Cancel order
 - Fetch order
+- Cancel order
+- Currency as string
+- Join MarketReader and OrderManager
+- Simplify Order
 
 
 ## [Pere] Create fake StrategyManager class

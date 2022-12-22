@@ -1,12 +1,11 @@
 import time
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
 
 import ccxt
 import pandas as pd
 
 from elena.adapters.common import common_cctx
 from elena.domain.model.balance import Balance, ByAvailability, ByCurrency
-from elena.domain.model.currency import Currency
 from elena.domain.model.exchange import Exchange
 from elena.domain.model.order_book import OrderBook, PriceAmount
 from elena.domain.model.time_frame import TimeFrame
@@ -33,10 +32,14 @@ class CctxExchangeReader(ExchangeReader):
         self._logger.info('Read %d %s candles from %s', _candles.shape[0], pair, exchange.id.value)
         return _candles
 
+    _columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume']
+
     def _fetch_candles(self, connection, pair: TradingPair, time_frame: TimeFrame) -> pd.DataFrame:
         candles_list = self._fetch_candles_with_retry(connection, pair, time_frame)
         candles_df = pd.DataFrame(candles_list)
-        candles_df.columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume']
+        if candles_df.shape == (0, 0):
+            return pd.DataFrame(columns=self._columns)
+        candles_df.columns = self._columns
         candles_df["Open time"] = pd.to_numeric(candles_df["Open time"], downcast="integer")
         candles_df["Open"] = pd.to_numeric(candles_df["Open"], downcast="float")
         candles_df["High"] = pd.to_numeric(candles_df["High"], downcast="float")
@@ -139,21 +142,27 @@ class CctxExchangeReader(ExchangeReader):
 
     def _build_by_availability(self, sym: str, amount: float):
         try:
-            return ByAvailability(currency=Currency(sym), amount=amount)
+            return ByAvailability(currency=sym, amount=amount)
         except ValueError as err:
             self._logger.warning(err)
             return None
 
-    def _map_by_currency(self, dic: Dict) -> Dict[Currency, ByCurrency]:
+    _exclude = ['info', 'timestamp', 'datetime', 'free', 'used', 'total']
+
+    def _map_by_currency(self, dic: Dict) -> Dict[str, ByCurrency]:
         _dic = {}
-        for _curr in Currency:
-            _dic[_curr.value] = self._map_currency(_curr, dic)
+        for _key in dic:
+            if _key in self._exclude:
+                continue
+            _val = self._map_currency(_key, dic)
+            if _val:
+                _dic[_key] = _val
         return _dic
 
     @staticmethod
-    def _map_currency(curr: Currency, dic: Dict) -> Dict[Currency, ByCurrency]:
+    def _map_currency(curr: str, dic: Dict) -> Optional[ByCurrency]:
         try:
-            _value = dic[curr.value]
+            _value = dic[curr]
             return ByCurrency(free=_value['free'], used=_value['used'], total=_value['total'])
         except KeyError:
-            return ByCurrency(free=0.0, used=0.0, total=0.0)
+            return None

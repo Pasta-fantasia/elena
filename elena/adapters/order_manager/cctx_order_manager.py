@@ -2,7 +2,6 @@ from typing import Dict, Optional, List, Any
 
 from elena.adapters.common import common_cctx
 from elena.domain.model.bot_config import BotConfig
-from elena.domain.model.currency import Currency
 from elena.domain.model.exchange import Exchange
 from elena.domain.model.order import Order, OrderStatusType, Trade, TakerOrMaker, Fee
 from elena.domain.model.order import OrderSide, OrderType
@@ -72,13 +71,14 @@ class CctxOrderManager(OrderManager):
 
     def _map_fee(self, fee) -> Optional[Fee]:
         if fee:
-            return Fee(
-                currency=Currency(self._nvl(fee, 'currency', 0.0)),
-                cost=self._nvl(fee, 'cost', 0.0),
-                rate=self._nvl(fee, 'rate', 0.0),
-            )
-        else:
-            return None
+            _curr = self._nvl(fee, 'currency', None)
+            if _curr:
+                return Fee(
+                    currency=_curr,
+                    cost=self._nvl(fee, 'cost', 0.0),
+                    rate=self._nvl(fee, 'rate', 0.0),
+                )
+        return None
 
     @staticmethod
     def _nvl(dic: Dict, key: str, default_value: Any) -> Any:

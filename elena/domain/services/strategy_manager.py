@@ -47,7 +47,7 @@ class StrategyManager:
         _exchange = self._get_exchange(bot_config.exchange_id)
         # _candles = self._exchange_reader.read_candles(_exchange, bot_config.pair)
         # _order_book = self._exchange_reader.read_order_book(_exchange, bot_config.pair)
-        # _balance = self._exchange_reader.get_balance(_exchange)
+        _balance = self._exchange_reader.get_balance(_exchange)
         _order = self._place_order(_exchange, bot_config)
         time.sleep(2)
         _status = BotStatus(
