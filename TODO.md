@@ -1,30 +1,34 @@
 # TODO
 
-## [Pere] CTTX exchange reader & order manager
-
-- Read candles from exchange
-- Read order book
-- Get balance
-- Sandbox mode
-- Place order
-- Fetch order
-- Cancel order
-- Currency as string
-- Join MarketReader and OrderManager
-- Simplify Order
-
-
-## [Pere] Create fake StrategyManager class
-
-- Create class with the same methods that StrategyManager with empty methods (log a message on every method)
-
-
 ## [Pere] Local bot manager
 
 - Implement LocalBotManager with [Pickle](https://docs.python.org/3.4/library/pickle.html?highlight=pickle#pickle)
 
+## [Pere] Create fake Strategy class
 
-## [Fran] Implement fake StrategyManager class
+- Create class with the same methods that Strategy with empty methods (log a message on every method)
+- Integrate Strategy on StrategyManager
+
+## [Pere] Complete cycle with mocked adaptors
+
+- Test framework
+- Mock BotManager
+- Mock ExchangeManager
+- Mock LogManager
+
+## [Fran] Implement fake Strategy class
 
 - Check plot (ya tu sabe)
 - Implement methods
+
+## Quality tools
+
+- Git hooks for format
+- Git hooks for check imports
+- Git hooks for check types
+- Mutation testing
+
+## Charts
+
+- Jupyter notebook with bot results
+- Independent web server
