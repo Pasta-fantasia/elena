@@ -7,7 +7,7 @@ import pandas as pd
 from elena.domain.model.balance import Balance, ByAvailability, ByCurrency
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.exchange import Exchange, ExchangeType
-from elena.domain.model.order import Order, OrderType, OrderSide, OrderStatusType, Fee, Trade, TakerOrMaker
+from elena.domain.model.order import Order, OrderType, OrderSide, OrderStatusType, Fee
 from elena.domain.model.order_book import OrderBook, PriceAmount
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
@@ -209,9 +209,7 @@ class CctxExchangeManager(ExchangeManager):
             bot_id=bot_config.id,
             strategy_id=bot_config.strategy_id,
             pair=pair,
-            client_order_id=order['clientOrderId'],
             timestamp=order['timestamp'],
-            last_trade_timestamp=order['lastTradeTimestamp'],
             type=OrderType(order['type']),
             side=OrderSide(order['side']),
             price=order['price'],
@@ -221,9 +219,7 @@ class CctxExchangeManager(ExchangeManager):
             filled=order['filled'],
             remaining=order['remaining'],
             status=self._map_status(order['status']),
-            trades=self._map_trades(order['trades']),
             fee=self._map_fee(order['fee']),
-            info=order['info'],
         )
 
     @staticmethod
@@ -250,25 +246,6 @@ class CctxExchangeManager(ExchangeManager):
             return dic[key]
         except KeyError:
             return default_value
-
-    def _map_trades(self, trades) -> List[Trade]:
-        lst = []
-        if not trades:
-            return lst
-        for trade in trades:
-            lst.append(self._map_trade(trade))
-        return lst
-
-    def _map_trade(self, trade) -> Trade:
-        return Trade(
-            id=trade['id'],
-            timestamp=trade['timestamp'],
-            taker_or_maker=TakerOrMaker(trade['takerOrMaker']),
-            price=trade['price'],
-            cost=trade['cost'],
-            fee=self._map_fee(trade['fee']),
-            info=trade['info'],
-        )
 
     def cancel_order(
             self,

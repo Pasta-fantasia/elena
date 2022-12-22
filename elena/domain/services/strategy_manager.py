@@ -1,4 +1,3 @@
-import time
 from typing import List
 
 from elena.domain.model.bot_config import BotConfig
@@ -42,17 +41,15 @@ class StrategyManager:
 
     def _run_bot(self, bot_config: BotConfig) -> BotStatus:
         _exchange = self._get_exchange(bot_config.exchange_id)
-        # _candles = self._exchange_manager.read_candles(_exchange, bot_config.pair)
-        # _order_book = self._exchange_manager.read_order_book(_exchange, bot_config.pair)
+        _candles = self._exchange_manager.read_candles(_exchange, bot_config.pair)
+        _order_book = self._exchange_manager.read_order_book(_exchange, bot_config.pair)
         _balance = self._exchange_manager.get_balance(_exchange)
         _order = self._place_order(_exchange, bot_config)
-        time.sleep(2)
         _status = BotStatus(
             config=bot_config,
             orders=[_order],
         )
         self._fetch_orders(_exchange, _status)
-        time.sleep(2)
         self._cancel_order(_exchange, bot_config, _order.id)
         return _status
 
@@ -68,7 +65,7 @@ class StrategyManager:
             type=OrderType.limit,
             side=OrderSide.buy,
             amount=0.001,
-            price=20_000
+            price=10_000
         )
         self._logger.info('Placed order: %s', _order)
         return _order
