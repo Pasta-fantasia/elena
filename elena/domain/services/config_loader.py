@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple
 
 from elena.domain.model.bot_config import BotConfig
-from elena.domain.model.exchange import Exchange
+from elena.domain.model.exchange import Exchange, ExchangeType
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.model.tag import Tag
 from elena.domain.model.trading_pair import TradingPair
@@ -61,7 +61,7 @@ class ConfigLoader:
                 strategy_id=strategy_id,
                 enabled=_dict['enabled'],
                 pair=TradingPair.build(_dict['pair']),
-                exchange_id=_dict['exchange'],
+                exchange_id=ExchangeType(_dict['exchange']),
                 tags=_dict['tags'],
                 config=_dict['config'],
             )
@@ -80,7 +80,10 @@ class ConfigLoader:
             _exchange = Exchange(
                 id=_dict['id'],
                 enabled=_dict['enabled'],
+                sandbox_mode=_dict['sandbox_mode'],
                 api_key=_dict['api_key'],
+                password=_dict['password'],
+                secret=_dict['secret'],
             )
             if _exchange.enabled:
                 _results.append(_exchange)

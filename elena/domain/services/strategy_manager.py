@@ -1,14 +1,13 @@
-from typing import Tuple, List
+from typing import List
 
+from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
-from elena.domain.model.order import Order
+from elena.domain.model.exchange import Exchange, ExchangeType
+from elena.domain.model.order import OrderType, OrderSide, Order
 from elena.domain.model.strategy_config import StrategyConfig
-from elena.domain.model.summary import Summary
-from elena.domain.model.time_period import TimePeriod
 from elena.domain.ports.bot_manager import BotManager
+from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.market_reader import MarketReader
-from elena.domain.ports.order_writer import OrderWriter
 
 
 class StrategyManager:
@@ -17,21 +16,22 @@ class StrategyManager:
                  strategy_config: StrategyConfig,
                  logger: Logger,
                  bot_manager: BotManager,
-                 market_reader: MarketReader,
-                 order_writer: OrderWriter):
+                 exchange_manager: ExchangeManager,
+                 exchanges: List[Exchange],
+                 ):
         self._config = strategy_config
         self._logger = logger
         self._bot_manager = bot_manager
-        self._market_reader = market_reader
-        self._order_writer = order_writer
+        self._exchange_manager = exchange_manager
+        self._exchanges = exchanges
 
-    def run(self) -> List[Tuple[BotStatus, Summary]]:
+    def run(self) -> List[BotStatus]:
         """
         Runs all strategy bots. A Bot is an instance of a strategy with a certain configuration
           1. retrieves the bot status of the previous execution with BotManager
-          2. read info from market to define orders with MarketReader
-          3. write orders to an Exchange with OrderWriter
-        :return: the list of all bot status of this execution, and the summary of every execution
+          2. read info from market to define orders with ExchangeManager
+          3. write orders to an Exchange with OrderManager
+        :return: the list of all bot status of this execution
         """
         _results = []
         for bot_config in self._config.bots:
@@ -39,24 +39,54 @@ class StrategyManager:
             _results.append(_result)
         return _results
 
-    def _run_bot(self, bot_config) -> Tuple[BotStatus, Summary]:
-        self._market_reader.read(bot_config.pair, TimePeriod.min_1)
-        _fake_order = Order(
-            bot_id=bot_config.id,
-            strategy_id=self._config.id,
-            order={},
-        )
-        _summary, _error = self._order_writer.write(_fake_order)
-        if _error.is_present():
-            self._logger.error('Error writing order: %s', _error.message)
-            _status = BotStatus(
-                bot_id=bot_config.bot_id,
-                status={'error': _error.message},
-            )
-            return _status, _summary
-
+    def _run_bot(self, bot_config: BotConfig) -> BotStatus:
+        _exchange = self._get_exchange(bot_config.exchange_id)
+        _candles = self._exchange_manager.read_candles(_exchange, bot_config.pair)
+        _order_book = self._exchange_manager.read_order_book(_exchange, bot_config.pair)
+        _balance = self._exchange_manager.get_balance(_exchange)
+        _order = self._place_order(_exchange, bot_config)
         _status = BotStatus(
-            bot_id=bot_config.id,
-            status={},
+            config=bot_config,
+            orders=[_order],
         )
-        return _status, _summary
+        self._fetch_orders(_exchange, _status)
+        self._cancel_order(_exchange, bot_config, _order.id)
+        return _status
+
+    def _get_exchange(self, exchange_id: ExchangeType) -> Exchange:
+        for exchange in self._exchanges:
+            if exchange.id == exchange_id.value:
+                return exchange
+
+    def _place_order(self, exchange: Exchange, bot_config: BotConfig) -> Order:
+        _order = self._exchange_manager.place_order(
+            exchange=exchange,
+            bot_config=bot_config,
+            type=OrderType.limit,
+            side=OrderSide.buy,
+            amount=0.001,
+            price=10_000
+        )
+        self._logger.info('Placed order: %s', _order)
+        return _order
+
+    def _fetch_orders(self, exchange: Exchange, bot_status: BotStatus) -> List[Order]:
+        _orders = []
+        for order in bot_status.orders:
+            _order = self._exchange_manager.fetch_order(
+                exchange=exchange,
+                bot_config=bot_status.config,
+                id=order.id,
+            )
+            _orders.append(_order)
+        self._logger.info('Fetched orders: %s', _orders)
+        return _orders
+
+    def _cancel_order(self, exchange: Exchange, bot_config: BotConfig, id: str) -> Order:
+        _order = self._exchange_manager.cancel_order(
+            exchange=exchange,
+            bot_config=bot_config,
+            id=id
+        )
+        self._logger.info('Canceled order: %s', id)
+        return _order

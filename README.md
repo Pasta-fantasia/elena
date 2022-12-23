@@ -32,10 +32,9 @@ Strategies:
            - ranging
            - bear
         config:
-          key1: value1
-          key2: value2
-      -
-        id: SAM-1.2
+           key1: value1
+           key2: value2
+      - id: SAM-1.2
         name: Sample strategy 1 bot 2
         enabled: false
         pair: BTC/USDC
@@ -43,27 +42,28 @@ Strategies:
         tags:
            - bull
         config:
-          key1: value1
-          key2: value2
+           key1: value1
+           key2: value2
 Exchanges:
-  -
-    id: bitget
-    enabled: true
-    api_key: ***REMOVED***
-  -
-    id: kucoin
-    enabled: false
-    api_key: ***REMOVED***
+   - id: bitget
+     enabled: true
+     sandbox_mode: true
+     api_key: ***REMOVED***
+     password: ***REMOVED***
+     secret: ***REMOVED***
+   - id: kucoin
+     enabled: false
+     sandbox_mode: false
+     api_key: ***REMOVED***
+     password: ***REMOVED***
+     secret: ***REMOVED***
 Tags:
-  -
-    id: bear
-    enabled: true
-  -
-    id: bull
-    enabled: false
-  -
-    id: ranging
-    enabled: true
+   - id: bear
+     enabled: true
+   - id: bull
+     enabled: false
+   - id: ranging
+     enabled: true
 ```
 
 The default configuration id defined at `elena/config/default_config.yaml` and you can override any default configuration value defining the same key in at `external_config.yaml`.
@@ -85,8 +85,8 @@ pip install git+ssh://git@github.com/Ciskam-Lab/elena.git@main#egg=elena
 2. For every enabled StrategyManager
 3. For every enabled bot with at least one enabled tag
 4. Retrieve the bot from disk and instantiate it
-5. MarketReader:
+5. ExchangeManager:
    1. Read the bot orders status
-   2. The market data if required
+   2. The exchange data if required
 6. Run `next()` method
 7. Persist the bot to disk
