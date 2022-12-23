@@ -34,5 +34,6 @@ class Elena:
                 exchange_manager=self._exchange_manager,
                 exchanges=config_loader.exchanges
             )
-            _statuses = _strategy_manager.run()
+            _statuses = self._bot_manager.load_all(_strategy_config)
+            _statuses = _strategy_manager.run(_statuses)
             self._bot_manager.write_all(_statuses)

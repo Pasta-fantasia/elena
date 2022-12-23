@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
@@ -25,33 +25,41 @@ class StrategyManager:
         self._exchange_manager = exchange_manager
         self._exchanges = exchanges
 
-    def run(self) -> List[BotStatus]:
+    def run(self, statuses: List[BotStatus]) -> List[BotStatus]:
         """
         Runs all strategy bots. A Bot is an instance of a strategy with a certain configuration
           1. retrieves the bot status of the previous execution with BotManager
           2. read info from market to define orders with ExchangeManager
           3. write orders to an Exchange with OrderManager
-        :return: the list of all bot status of this execution
+        :param statuses: the list of all bot statuses from previous execution
+        :return: the updated list of all bot statuses
         """
+        _statuses_dic = {_status.bot_id: _status for _status in statuses}
         _results = []
-        for bot_config in self._config.bots:
-            _result = self._run_bot(bot_config)
+        for _bot_config in self._config.bots:
+            if _bot_config.id in _statuses_dic:
+                _status = _statuses_dic[_bot_config.id]
+            else:
+                _status = None
+            _result = self._run_bot(_status, _bot_config)
             _results.append(_result)
         return _results
 
-    def _run_bot(self, bot_config: BotConfig) -> BotStatus:
+    def _run_bot(self, status: Optional[BotStatus], bot_config: BotConfig) -> BotStatus:
         _exchange = self._get_exchange(bot_config.exchange_id)
         _candles = self._exchange_manager.read_candles(_exchange, bot_config.pair)
         _order_book = self._exchange_manager.read_order_book(_exchange, bot_config.pair)
         _balance = self._exchange_manager.get_balance(_exchange)
         _order = self._place_order(_exchange, bot_config)
-        _status = BotStatus(
-            config=bot_config,
-            orders=[_order],
-        )
-        self._fetch_orders(_exchange, _status)
+        if status:
+            status.orders.append(_order)
+        else:
+            status = BotStatus(
+                bot_id=bot_config.id,
+                orders=[_order]
+            )
         self._cancel_order(_exchange, bot_config, _order.id)
-        return _status
+        return status
 
     def _get_exchange(self, exchange_id: ExchangeType) -> Exchange:
         for exchange in self._exchanges:
@@ -70,12 +78,12 @@ class StrategyManager:
         self._logger.info('Placed order: %s', _order)
         return _order
 
-    def _fetch_orders(self, exchange: Exchange, bot_status: BotStatus) -> List[Order]:
+    def _fetch_orders(self, exchange: Exchange, bot_config: BotConfig, bot_status: BotStatus) -> List[Order]:
         _orders = []
         for order in bot_status.orders:
             _order = self._exchange_manager.fetch_order(
                 exchange=exchange,
-                bot_config=bot_status.config,
+                bot_config=bot_config,
                 id=order.id,
             )
             _orders.append(_order)
