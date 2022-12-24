@@ -1,9 +1,5 @@
 # TODO
 
-## [Pere] Local bot manager
-
-- Implement LocalBotManager with [Pickle](https://docs.python.org/3.4/library/pickle.html?highlight=pickle#pickle)
-
 ## [Pere] Create fake Strategy class
 
 - Create class with the same methods that Strategy with empty methods (log a message on every method)
