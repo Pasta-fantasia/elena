@@ -1,6 +1,6 @@
 from elena.config import dependency_injection
 from elena.constants import VERSION
-from elena.entrypoint.local.local_config_reader import LocalConfigReader
+from elena.adapters.config.local_config_reader import LocalConfigReader
 
 
 def main():
