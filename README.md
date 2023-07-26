@@ -9,7 +9,7 @@
 
 Elena can run on a local machine and we're planning to run it on AWS lambdas. The way the external configuration is loaded is prepared for both running methods, loading a configuration dictionary loaded from a YAML configuration file (local) or stored at a AWS S3 file.
 
-For external local configuration, Elena needs a local home directory with the configuration defined at `external_config.yaml` file.
+For external local configuration, Elena needs a local home directory with the configuration defined at `elena_config.yaml` file.
 1. First, Elena checks the system variable `ELENA_HOME` will be home directory
 3. If not defined, the home directory is the current directory
 
