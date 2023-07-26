@@ -13,7 +13,7 @@ For external local configuration, Elena needs a local home directory with the co
 1. First, Elena checks the system variable `ELENA_HOME` will be home directory
 3. If not defined, the home directory is the current directory
 
-A typical `external_config.yaml` file content:
+A typical `elena_config.yaml` file content:
 
 ```yaml
 Strategies:
