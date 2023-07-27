@@ -5,6 +5,7 @@ from pydantic.config import Enum
 class ExchangeType(str, Enum):
     bitget = 'bitget'
     kucoin = 'kucoin'
+    binance = 'binance'
 
 
 class Exchange(BaseModel):
