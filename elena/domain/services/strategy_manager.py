@@ -53,7 +53,15 @@ class StrategyManager:
         _order_book = self._exchange_manager.read_order_book(_exchange, bot_config.pair)
         #TODO: _balance is only necesary if we are going to put an order
         _balance = self._exchange_manager.get_balance(_exchange)
-        #TODO: we should read the order status of our orders.
+        #TODO:
+        # - we should read the order status of our orders (the bot's orders).
+        # - store the orders on completed trade if some are closed (raise event?)
+        # - call an abstract method next()? that is implemented on child class
+        # - how do we inject/instantiate that class from a .yaml...
+        # - do we need a "init()" on the derivative class? => maybe not.
+        # - how do we get the new orders?
+        # - since time frame is in the config we can run the bots/run next only when the last execution - now()
+        #    is greater than timeframe
 
         _order = self._place_order(_exchange, bot_config)
         status.orders.append(_order)
