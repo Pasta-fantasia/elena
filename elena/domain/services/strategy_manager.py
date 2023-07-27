@@ -47,9 +47,13 @@ class StrategyManager:
 
     def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> BotStatus:
         _exchange = self._get_exchange(bot_config.exchange_id)
+        #TODO: always send time frame... add in config
         _candles = self._exchange_manager.read_candles(_exchange, bot_config.pair)
+        #TODO: _order_book is only necesary if we are going to put an order
         _order_book = self._exchange_manager.read_order_book(_exchange, bot_config.pair)
+        #TODO: _balance is only necesary if we are going to put an order
         _balance = self._exchange_manager.get_balance(_exchange)
+        #TODO: we should read the order status of our orders.
 
         _order = self._place_order(_exchange, bot_config)
         status.orders.append(_order)
