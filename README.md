@@ -25,6 +25,7 @@ Strategies:
       -
         id: SAM-1.1
         name: Sample strategy 1 bot 1
+        class: elena_sample.bot.trailing_stop
         enabled: true
         pair: ETH/USDT
         exchange: kucoin

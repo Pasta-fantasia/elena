@@ -65,8 +65,12 @@ class StrategyManager:
         # - take profit? or freeze a part even revinsting? =>> No, that's on th Strategy code by the user.
         # - move cash between bots?
 
-        _order = self._place_order(_exchange, bot_config)
-        status.orders.append(_order)
+
+        # TODO self._bot_manager.run() ?
+        # - save any status
+
+
+
         return status
 
     def _get_exchange(self, exchange_id: ExchangeType) -> Exchange:

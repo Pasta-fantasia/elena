@@ -37,3 +37,5 @@ class BotManager(Protocol):
         :return: error if any
         """
         pass
+
+

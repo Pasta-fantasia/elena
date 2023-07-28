@@ -41,6 +41,8 @@ class ExchangeManager(Protocol):
         """
         pass
 
+    # TODO read all our orders
+
     def get_balance(
             self,
             exchange: Exchange

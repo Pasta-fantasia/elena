@@ -6,6 +6,8 @@ class ExchangeType(str, Enum):
     bitget = 'bitget'
     kucoin = 'kucoin'
     binance = 'binance'
+    coinex = 'coinex'
+    kraken = 'kraken'
     # TODO: can it be dynamic reading from cctx?
 
 
