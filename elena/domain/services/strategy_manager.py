@@ -49,16 +49,18 @@ class StrategyManagerImpl(StrategyManager):
 
     def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> BotStatus:
 
-        # TODO Instantiate class with importlib https://docs.python.org/3/library/importlib.html
+        # TODO Instantiate bot class with importlib https://docs.python.org/3/library/importlib.html
         _strategy_instance = self._load_strategy_from_class_path()
 
-        _exchange = self._get_exchange(bot_config.exchange_id)
+        status = _bot.next(status, bot_config)
+
+        # _exchange = self._get_exchange(bot_config.exchange_id)
         #TODO: always send time frame... add in config
-        _candles = self._exchange_manager.read_candles(_exchange, bot_config.pair)
+        # _candles = self._exchange_manager.read_candles(_exchange, bot_config.pair)
         #TODO: _order_book is only necesary if we are going to put an order
-        _order_book = self._exchange_manager.read_order_book(_exchange, bot_config.pair)
+        # _order_book = self._exchange_manager.read_order_book(_exchange, bot_config.pair)
         #TODO: _balance is only necesary if we are going to put an order
-        _balance = self._exchange_manager.get_balance(_exchange)
+        # _balance = self._exchange_manager.get_balance(_exchange)
         #TODO:
         # - we should read the order status of our orders (the bot's orders).
         # - store the orders on completed trade if some are closed (raise event?)
