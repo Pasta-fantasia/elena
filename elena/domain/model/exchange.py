@@ -6,6 +6,7 @@ class ExchangeType(str, Enum):
     bitget = 'bitget'
     kucoin = 'kucoin'
     binance = 'binance'
+    # TODO: can it be dynamic reading from cctx?
 
 
 class Exchange(BaseModel):
@@ -15,3 +16,5 @@ class Exchange(BaseModel):
     api_key: str
     password: str
     secret: str
+    # TODO add commission
+    # TODO if id==ExchangeType => we can only have one account per exchange in a config file... is it ok?
