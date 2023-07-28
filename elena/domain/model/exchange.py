@@ -16,5 +16,5 @@ class Exchange(BaseModel):
     api_key: str
     password: str
     secret: str
-    # TODO add commission
+    # TODO add commission... or can we get it from cctx?
     # TODO if id==ExchangeType => we can only have one account per exchange in a config file... is it ok?
