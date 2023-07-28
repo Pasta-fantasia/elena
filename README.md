@@ -17,34 +17,32 @@ A typical `elena_config.yaml` file content:
 
 ```yaml
 Strategies:
-  -
-    id: SAMPLE-1
-    name: Sample strategy 1
-    enabled: true
-    bots:
-      -
-        id: SAM-1.1
-        name: Sample strategy 1 bot 1
-        class: elena_sample.bot.trailing_stop
-        enabled: true
-        pair: ETH/USDT
-        exchange: kucoin
-        tags:
-           - ranging
-           - bear
-        config:
-           key1: value1
-           key2: value2
-      - id: SAM-1.2
-        name: Sample strategy 1 bot 2
-        enabled: false
-        pair: BTC/USDC
-        exchange: bitget
-        tags:
-           - bull
-        config:
-           key1: value1
-           key2: value2
+   - id: SAMPLE-1
+     name: Sample strategy 1
+     enabled: true
+     strategy_class: elena_sample.strategies.trailing_stop
+     bots:
+        - id: SAM-1.1
+          name: Sample strategy 1 bot 1
+          enabled: true
+          pair: ETH/USDT
+          exchange: kucoin
+          tags:
+             - ranging
+             - bear
+          config:
+             key1: value1
+             key2: value2
+        - id: SAM-1.2
+          name: Sample strategy 1 bot 2
+          enabled: false
+          pair: BTC/USDC
+          exchange: bitget
+          tags:
+             - bull
+          config:
+             key1: value1
+             key2: value2
 Exchanges:
    - id: bitget
      enabled: true

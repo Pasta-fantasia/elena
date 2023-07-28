@@ -8,9 +8,10 @@ from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
+from elena.domain.ports.strategy_manager import StrategyManager
 
 
-class StrategyManager:
+class StrategyManagerImpl(StrategyManager):
 
     def __init__(self,
                  strategy_config: StrategyConfig,
@@ -30,7 +31,8 @@ class StrategyManager:
         Runs all strategy bots. A Bot is an instance of a strategy with a certain configuration
           1. retrieves the bot status of the previous execution with BotManager
           2. read info from market to define orders with ExchangeManager
-          3. write orders to an Exchange with OrderManager
+          3. run the strategy logic to decide what to do (buy, sell, wait ...)
+          4. once decided, if any, write orders to an Exchange with OrderManager
         :param previous_statuses: the list of all bot statuses from previous execution
         :return: the updated statuses list of all bot with any update in the current cycle
         """
@@ -46,6 +48,10 @@ class StrategyManager:
         return _updated_statuses
 
     def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> BotStatus:
+
+        # TODO Instantiate class with importlib https://docs.python.org/3/library/importlib.html
+        _strategy_instance = self._load_strategy_from_class_path()
+
         _exchange = self._get_exchange(bot_config.exchange_id)
         #TODO: always send time frame... add in config
         _candles = self._exchange_manager.read_candles(_exchange, bot_config.pair)
@@ -98,3 +104,21 @@ class StrategyManager:
         )
         self._logger.info('Canceled order: %s', id)
         return _order
+
+    def buy(self):
+        ...
+
+    def sell(self):
+        ...
+
+    def stop_loss(self):
+        ...
+
+    def get_candles(self) -> pd.DataFrame:
+        pass
+
+    def get_order_book(self) -> OrderBook:
+        pass
+
+    def get_orders(self) -> t.List[Order]:
+        ...

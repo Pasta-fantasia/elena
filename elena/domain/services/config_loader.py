@@ -46,6 +46,7 @@ class ConfigLoader:
                 id=_dict['id'],
                 name=_dict['name'],
                 enabled=_dict['enabled'],
+                strategy_class=_dict['strategy_class'],
                 bots=self._load_bots(_dict['bots'], _dict['id'])
             )
             if _strategy.enabled:

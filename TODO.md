@@ -1,9 +1,10 @@
 # TODO
 
-## [Pere] Create fake Strategy class
+## [Fran]
 
-- Create class with the same methods that Strategy with empty methods (log a message on every method)
-- Integrate Strategy on StrategyManager
+- Why is not loading `VERSION` in `elena/constants.py`
+
+## [Pere]
 
 ## [Pere] Complete cycle with mocked adaptors
 

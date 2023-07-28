@@ -6,7 +6,7 @@ from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.services.config_loader import ConfigLoader
-from elena.domain.services.strategy_manager import StrategyManager
+from elena.domain.services.strategy_manager import StrategyManagerImpl
 
 
 class Elena:
@@ -31,7 +31,7 @@ class Elena:
             self._run_strategy(_config_loader, _strategy_config)
 
     def _run_strategy(self, config_loader: ConfigLoader, strategy_config: StrategyConfig):
-        _strategy_manager = StrategyManager(
+        _strategy_manager = StrategyManagerImpl(
             strategy_config=strategy_config,
             logger=self._logger,
             bot_manager=self._bot_manager,

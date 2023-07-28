@@ -1,0 +1,41 @@
+Strategies:
+  - id: SAMPLE-1
+    name: Sample strategy 1
+    enabled: true
+    strategy_class: sample.trailing_stop.TrailingStop
+    bots:
+      - id: SAM-1.1
+        name: Sample strategy 1 bot 1
+        enabled: true
+        pair: BTC/USDT
+        exchange: kucoin
+        tags:
+          - ranging
+          - bear
+        config:
+          key1: value1
+          key2: value2
+      - id: SAM-1.2
+        name: Sample strategy 1 bot 2
+        enabled: false
+        pair: ETH/USDT
+        exchange: kucoin
+        tags:
+          - bull
+        config:
+          key1: value1
+          key2: value2
+Exchanges:
+  - id: kucoin  # kucoin_sandbox
+    enabled: true
+    sandbox_mode: true
+    api_key: ***REMOVED***
+    password: "***REMOVED***"
+    secret: ***REMOVED***
+Tags:
+  - id: bear
+    enabled: true
+  - id: bull
+    enabled: true
+  - id: ranging
+    enabled: true
