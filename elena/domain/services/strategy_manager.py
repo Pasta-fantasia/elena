@@ -4,11 +4,14 @@ from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.exchange import Exchange, ExchangeType
 from elena.domain.model.order import OrderType, OrderSide, Order
+from elena.domain.model.order_book import OrderBook
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
+
+import pandas as pd
 
 
 class StrategyManagerImpl(StrategyManager):
@@ -122,5 +125,5 @@ class StrategyManagerImpl(StrategyManager):
     def get_order_book(self) -> OrderBook:
         pass
 
-    def get_orders(self) -> t.List[Order]:
+    def get_orders(self) -> List[Order]:
         ...
