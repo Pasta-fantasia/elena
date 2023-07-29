@@ -31,6 +31,7 @@ class Elena:
             self._run_strategy(_config_loader, _strategy_config)
 
     def _run_strategy(self, config_loader: ConfigLoader, strategy_config: StrategyConfig):
+        self._logger.info(f'Running strategy %s: %s', strategy_config.id, strategy_config.name)
         _strategy_manager = StrategyManagerImpl(
             strategy_config=strategy_config,
             logger=self._logger,

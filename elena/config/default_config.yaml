@@ -1,6 +1,8 @@
 LocalLogger:
   level: INFO
   path: logs  # relative path under home directory
+  max_bytes: 1000000 # 1 MB max log files size
+  backup_count: 5  # Number of log backup files
 LocalBotManager:
   path: bots # relative path under home directory
 CctxExchangeManager:

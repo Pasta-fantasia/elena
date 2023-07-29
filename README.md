@@ -65,7 +65,25 @@ Tags:
      enabled: true
 ```
 
-The default configuration id defined at `elena/config/default_config.yaml` and you can override any default configuration value defining the same key in at `external_config.yaml`.
+Optionally you can override the default configuration for adaptors (logs, paths to bots files and CCTX) by adding
+to `elena_config.yaml` these structure:
+
+```yaml
+LocalLogger:
+   level: INFO
+   path: logs  # relative path under home directory
+   max_bytes: 1000000  # 1 MB max log files size
+   backup_count: 5  # Number of log backup files
+LocalBotManager:
+   path: bots # relative path under home directory
+CctxExchangeManager:
+   fetch_ohlcv_limit: 100
+   fetch_ohlcv_limit_retry_every_milliseconds: 1000
+```
+
+Be aware that if you override any adaptor configuration (i.e. LocalLogger), you need to define all values, not only the
+one you want to change.
+
 
 ## Install
 
