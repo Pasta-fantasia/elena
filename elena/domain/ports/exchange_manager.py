@@ -26,7 +26,7 @@ class ExchangeManager(Protocol):
         :param time_frame: time frame to read
         :return: the market candles
         """
-        pass
+        ...
 
     def read_order_book(
             self,
@@ -39,7 +39,7 @@ class ExchangeManager(Protocol):
         :param pair: trading pair to read
         :return: the current order book
         """
-        pass
+        ...
 
     # TODO read all our orders
 
@@ -52,7 +52,7 @@ class ExchangeManager(Protocol):
         :param exchange: exchange where to read market data
         :return: The balance
         """
-        pass
+        ...
 
     def place_order(
             self,
@@ -73,7 +73,7 @@ class ExchangeManager(Protocol):
         :param price: the price at which the order is to be fulfilled (ignored in market orders)
         :return: the placed Order, error if any
         """
-        pass
+        ...
 
     def cancel_order(
             self,
@@ -88,7 +88,7 @@ class ExchangeManager(Protocol):
         :param id: the order id to cancel_order
         :return: error if any
         """
-        pass
+        ...
 
     def fetch_order(
             self,
@@ -103,4 +103,4 @@ class ExchangeManager(Protocol):
         :param id: the order id to retrieve
         :return: the list of orders, error if any
         """
-        pass
+        ...
