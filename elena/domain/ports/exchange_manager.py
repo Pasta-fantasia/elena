@@ -58,7 +58,7 @@ class ExchangeManager(Protocol):
             self,
             exchange: Exchange,
             bot_config: BotConfig,
-            type: OrderType,
+            order_type: OrderType,
             side: OrderSide,
             amount: float,
             price: Optional[float] = None
@@ -67,7 +67,7 @@ class ExchangeManager(Protocol):
         Places an order to an Exchange
         :param exchange: exchange where to read market data
         :param bot_config: the current bot configuration
-        :param type: the type of your order
+        :param order_type: the type of your order
         :param side: the direction of your order
         :param amount: how much of currency you want to trade
         :param price: the price at which the order is to be fulfilled (ignored in market orders)
@@ -79,13 +79,13 @@ class ExchangeManager(Protocol):
             self,
             exchange: Exchange,
             bot_config: BotConfig,
-            id: str
+            order_id: str
     ):
         """
         Cancels an order on a Exchange
         :param exchange: exchange where to read market data
         :param bot_config: the current bot configuration
-        :param id: the order id to cancel_order
+        :param order_id: the order id to cancel_order
         :return: error if any
         """
         ...
@@ -94,13 +94,13 @@ class ExchangeManager(Protocol):
             self,
             exchange: Exchange,
             bot_config: BotConfig,
-            id: str
+            order_id: str
     ) -> Order:
         """
         Retrieves an order from Exchange
         :param exchange: exchange where to read market data
         :param bot_config: the current bot configuration
-        :param id: the order id to retrieve
+        :param order_id: the order id to retrieve
         :return: the list of orders, error if any
         """
         ...

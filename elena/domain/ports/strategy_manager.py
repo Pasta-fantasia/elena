@@ -5,7 +5,6 @@ import pandas as pd
 
 from elena.domain.model.order import Order
 from elena.domain.model.order_book import OrderBook
-from elena.domain.ports.logger import Logger
 
 
 class StrategyManager(Protocol):
@@ -26,7 +25,4 @@ class StrategyManager(Protocol):
         ...
 
     def get_orders(self) -> t.List[Order]:
-        ...
-
-    def get_logger(self) -> Logger:
         ...

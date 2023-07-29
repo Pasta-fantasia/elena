@@ -142,3 +142,5 @@ dmypy.json
 /.github/
 /elena/sample/logs/
 /elena/sample/bots/
+
+/TODO.md
