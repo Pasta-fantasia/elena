@@ -1,5 +1,7 @@
 from typing import List
 
+import pandas as pd
+
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.exchange import Exchange, ExchangeType
@@ -10,8 +12,7 @@ from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
-
-import pandas as pd
+from elena.sample.trailing_stop import TrailingStop
 
 
 class StrategyManagerImpl(StrategyManager):
@@ -28,6 +29,7 @@ class StrategyManagerImpl(StrategyManager):
         self._bot_manager = bot_manager
         self._exchange_manager = exchange_manager
         self._exchanges = exchanges
+        a = TrailingStop()
 
     def run(self, previous_statuses: List[BotStatus]) -> List[BotStatus]:
         """
@@ -52,19 +54,20 @@ class StrategyManagerImpl(StrategyManager):
 
     def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> BotStatus:
 
-        # TODO Instantiate bot class with importlib https://docs.python.org/3/library/importlib.html
-        _strategy_instance = self._load_strategy_from_class_path()
-
-        status = _bot.next(status, bot_config)
+        # TODO [Pere] Instantiate Strategy class dinamically with importlib
+        #  https://docs.python.org/3/library/importlib.html
+        _strategy_instance = TrailingStop()
+        _strategy_instance.init(manager=self)
+        status = _strategy_instance.next(status, bot_config)
 
         # _exchange = self._get_exchange(bot_config.exchange_id)
-        #TODO: always send time frame... add in config
+        # TODO: always send time frame... add in config
         # _candles = self._exchange_manager.read_candles(_exchange, bot_config.pair)
-        #TODO: _order_book is only necesary if we are going to put an order
+        # TODO: _order_book is only necesary if we are going to put an order
         # _order_book = self._exchange_manager.read_order_book(_exchange, bot_config.pair)
-        #TODO: _balance is only necesary if we are going to put an order
+        # TODO: _balance is only necesary if we are going to put an order
         # _balance = self._exchange_manager.get_balance(_exchange)
-        #TODO:
+        # TODO:
         # - we should read the order status of our orders (the bot's orders).
         # - store the orders on completed trade if some are closed (raise event?)
         # - call an abstract method next()? that is implemented on child class
@@ -76,11 +79,8 @@ class StrategyManagerImpl(StrategyManager):
         # - take profit? or freeze a part even revinsting? =>> No, that's on th Strategy code by the user.
         # - move cash between bots?
 
-
         # TODO self._bot_manager.run() ?
         # - save any status
-
-
 
         return status
 
@@ -127,3 +127,6 @@ class StrategyManagerImpl(StrategyManager):
 
     def get_orders(self) -> List[Order]:
         ...
+
+    def get_logger(self) -> Logger:
+        return self._logger

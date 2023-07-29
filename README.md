@@ -20,7 +20,7 @@ Strategies:
    - id: SAMPLE-1
      name: Sample strategy 1
      enabled: true
-     strategy_class: elena_sample.strategies.trailing_stop
+     strategy_class: elena_sample.strategies.trailing_stop.Tr
      bots:
         - id: SAM-1.1
           name: Sample strategy 1 bot 1
