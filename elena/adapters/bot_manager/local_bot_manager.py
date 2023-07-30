@@ -28,13 +28,13 @@ class LocalBotManager(BotManager):
 
     def load(self, bot_id: str) -> Optional[BotStatus]:
         _filename = self._filename(bot_id)
-        self._logger.info('Reading bot status from disk: %s', _filename)
+        self._logger.debug('Reading bot status from disk: %s', _filename)
         try:
             with open(_filename, 'rb') as f:
                 _status = pickle.load(f)
         except FileNotFoundError:
             return None
-        self._logger.info('Read bot status %s with %d orders', bot_id, len(_status.orders))
+        self._logger.debug('Read bot status %s with %d orders', bot_id, len(_status.orders))
         return _status
 
     def write_all(self, statuses: List[BotStatus]):
@@ -45,10 +45,10 @@ class LocalBotManager(BotManager):
         if not status:
             return
         _filename = self._filename(status.bot_id)
-        self._logger.info('Writing bot status to disk: %s', _filename)
+        self._logger.debug('Writing bot status to disk: %s', _filename)
         with open(_filename, 'wb') as f:
             pickle.dump(status, f, pickle.HIGHEST_PROTOCOL)
-        self._logger.info('Wrote bot status %s with %d orders', status.bot_id, len(status.orders))
+        self._logger.debug('Wrote bot status %s with %d orders', status.bot_id, len(status.orders))
 
     def _filename(self, id: str):
         return path.join(self._path, f'{id}.pickle')

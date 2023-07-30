@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 import pathlib
 import sys
 from os import path
@@ -19,7 +20,11 @@ class LocalLogger(Logger):
             level=_level,
             format="%(asctime)s [%(levelname)s] %(message)s",
             handlers=[
-                logging.FileHandler(_file),
+                logging.handlers.RotatingFileHandler(
+                    _file,
+                    maxBytes=config['LocalLogger']['max_bytes'],
+                    backupCount=config['LocalLogger']['backup_count']
+                ),
                 logging.StreamHandler(sys.stdout)
             ]
         )

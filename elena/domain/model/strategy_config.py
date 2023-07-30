@@ -9,4 +9,5 @@ class StrategyConfig(BaseModel):
     id: str
     name: str
     enabled: bool = True
+    strategy_class: str
     bots: List[BotConfig]

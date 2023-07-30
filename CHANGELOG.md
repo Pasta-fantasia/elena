@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.0
+- Dynamic instance of Strategy
+- Log rotation
+- Minor bugs
+
+## 2.0.0
+- New hexagonal architecture
+
 ## 1.6.3
 - Fix double _self._update_orders_status_values_and_profits()_
 - Add _status == OrderStatus.EXPIRED.value_ as cancellation reason. #lunagate

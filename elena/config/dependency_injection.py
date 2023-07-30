@@ -14,6 +14,7 @@ def get_container(config: Dict) -> containers.DynamicContainer:
     logger = providers.Singleton(
         LocalLogger, config=config
     )
+    container.logger = logger
     bot_manager = providers.Singleton(
         LocalBotManager,
         config=config,

@@ -35,7 +35,7 @@ class LocalConfigReader:
         return self._load_yaml(_file)
 
     def _load_user_config(self, home: str) -> Dict:
-        _file = path.join(home, 'external_config.yaml')
+        _file = path.join(home, 'elena_config.yaml')
         return self._load_yaml(_file)
 
     @staticmethod
