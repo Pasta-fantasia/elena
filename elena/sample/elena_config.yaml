@@ -29,9 +29,9 @@ Exchanges:
   - id: kucoin  # kucoin_sandbox
     enabled: true
     sandbox_mode: true
-    api_key: ***REMOVED***
-    password: "***REMOVED***"
-    secret: ***REMOVED***
+    api_key: x
+    password: x
+    secret: x
 Tags:
   - id: bear
     enabled: true
