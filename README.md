@@ -47,15 +47,15 @@ Exchanges:
    - id: bitget
      enabled: true
      sandbox_mode: true
-     api_key: ***REMOVED***
-     password: ***REMOVED***
-     secret: ***REMOVED***
+     api_key: x
+     password: x
+     secret: x
    - id: kucoin
      enabled: false
      sandbox_mode: false
-     api_key: ***REMOVED***
-     password: ***REMOVED***
-     secret: ***REMOVED***
+     api_key: x
+     password: x
+     secret: x
 Tags:
    - id: bear
      enabled: true
