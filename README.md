@@ -92,7 +92,7 @@ Create a virtual environment, for example at `$HOME/VEs`:
 ```shell
 python3 -m venv elena
 source elena/bin/activate
-pip install git+ssh://git@github.com/Ciskam-Lab/elena.git@main#egg=elena
+pip install git+https://github.com/Pasta-fantasia/elena.git@main#egg=elena
 ```
 
 
