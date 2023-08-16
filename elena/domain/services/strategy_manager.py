@@ -56,8 +56,8 @@ class StrategyManagerImpl(StrategyManager):
 
     def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> BotStatus:
 
-        _bot = self._get_bot_instance()
-        status = _bot.next(status, bot_config)
+        _bot = self._get_bot_instance(bot_config)
+        status = _bot.next(status)
 
         # _exchange = self._get_exchange(bot_config.exchange_id)
         # TODO: always send time frame... add in config
@@ -83,14 +83,14 @@ class StrategyManagerImpl(StrategyManager):
 
         return status
 
-    def _get_bot_instance(self) -> Bot:
+    def _get_bot_instance(self, bot_config: BotConfig) -> Bot:
         _class_parts = self._config.strategy_class.split(".")
         _class_name = _class_parts[-1]
         _module_path = ".".join(_class_parts[0:-1])
         _module = importlib.import_module(_module_path)
         _class = getattr(_module, _class_name)
         _bot = _class()
-        _bot.init(manager=self, logger=self._logger)
+        _bot.init(manager=self, logger=self._logger, bot_config=bot_config)
         return _bot
 
     def _get_exchange(self, exchange_id: ExchangeType) -> Exchange:
@@ -120,10 +120,10 @@ class StrategyManagerImpl(StrategyManager):
         return _order
 
     def buy(self):
-        ...
+        self._logger.error('buy is not implemented')
 
     def sell(self):
-        ...
+        self._logger.error('sell is not implemented')
 
     def stop_loss(self):
         ...

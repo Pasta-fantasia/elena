@@ -9,8 +9,8 @@ from elena.domain.ports.strategy_manager import StrategyManager
 class Bot(Protocol):
     """ A Bot is an instance of a strategy with a certain configuration"""
 
-    def init(self, manager: StrategyManager, logger: Logger):
+    def init(self, manager: StrategyManager, logger: Logger, bot_config: BotConfig):
         ...
 
-    def next(self, status: BotStatus, bot_config: BotConfig) -> BotStatus:
+    def next(self, status: BotStatus) -> BotStatus:
         ...
