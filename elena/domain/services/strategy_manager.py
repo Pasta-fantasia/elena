@@ -3,6 +3,7 @@ from typing import List
 
 import pandas as pd
 
+from elena.domain.model.balance import Balance
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.exchange import Exchange, ExchangeType
@@ -12,9 +13,10 @@ from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.exchange_manager import ExchangeManager
+from elena.domain.model.time_frame import TimeFrame
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
-
+from elena.domain.model.trading_pair import TradingPair
 
 class StrategyManagerImpl(StrategyManager):
 
@@ -93,7 +95,7 @@ class StrategyManagerImpl(StrategyManager):
         _bot.init(manager=self, logger=self._logger, bot_config=bot_config)
         return _bot
 
-    def _get_exchange(self, exchange_id: ExchangeType) -> Exchange:
+    def get_exchange(self, exchange_id: ExchangeType) -> Exchange:
         for exchange in self._exchanges:
             if exchange.id == exchange_id.value:
                 return exchange
@@ -128,8 +130,11 @@ class StrategyManagerImpl(StrategyManager):
     def stop_loss(self):
         ...
 
-    def get_candles(self) -> pd.DataFrame:
-        ...
+    def get_balance(self, exchange: Exchange) -> Balance:
+        return self._exchange_manager.get_balance(exchange)
+
+    def read_candles(self, exchange: Exchange, pair: TradingPair, time_frame: TimeFrame = TimeFrame.min_1) -> pd.DataFrame:
+        return self._exchange_manager.read_candles(exchange,pair,time_frame )
 
     def get_order_book(self) -> OrderBook:
         ...

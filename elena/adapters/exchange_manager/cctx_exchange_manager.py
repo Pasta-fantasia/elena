@@ -18,7 +18,9 @@ from elena.domain.ports.logger import Logger
 class CctxExchangeManager(ExchangeManager):
     _connect_mapper = {
         ExchangeType.bitget: ccxt.bitget,
-        ExchangeType.kucoin: ccxt.kucoin  # TODO add binance, and others?
+        ExchangeType.kucoin: ccxt.kucoin,
+        ExchangeType.binance: ccxt.binance
+        # TODO [Pere] auto add others?
     }
 
     def __init__(self, config: Dict, logger: Logger):
