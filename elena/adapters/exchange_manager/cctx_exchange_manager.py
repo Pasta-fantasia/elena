@@ -76,6 +76,7 @@ class CctxExchangeManager(ExchangeManager):
         while _retry:
             try:
                 _candles = connection.fetch_ohlcv(str(pair), time_frame.value, limit=self._config['fetch_ohlcv_limit'])
+                # TODO: I'm not sure fetch_ohlcv_limit should be at CctxExchangeManager, a bot may requiere more data points and others not. May be it can be overwritten.
                 _retry = False
             except ccxt.RateLimitExceeded as e:
                 self._logger.info('Retrying connection to exchange, %s: %s', type(e).__name__, e)
