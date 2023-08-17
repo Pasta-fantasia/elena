@@ -22,7 +22,7 @@ class StrategyManager(Protocol):
     def sell(self) -> Order:
         ...
 
-    def stop_loss(self) -> Order:
+    def stop_loss_market(self, exchange: Exchange, bot_config: BotConfig, amount: float, stop_price: float) -> Order:
         ...
 
     def get_balance(self, exchange: Exchange) -> Balance:
@@ -34,5 +34,4 @@ class StrategyManager(Protocol):
     def get_order_book(self) -> OrderBook:
         ...
 
-    def get_orders(self) -> t.List[Order]:
-        ...
+

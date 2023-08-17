@@ -7,7 +7,7 @@ from elena.domain.model.balance import Balance
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.exchange import Exchange, ExchangeType
-from elena.domain.model.order import OrderType, OrderSide, Order
+from elena.domain.model.order import OrderType, OrderSide, Order, OrderStatusType
 from elena.domain.model.order_book import OrderBook
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot import Bot
@@ -52,6 +52,7 @@ class StrategyManagerImpl(StrategyManager):
                 _status = _previous_statuses_dic[_bot_config.id]
             else:
                 _status = BotStatus(bot_id=_bot_config.id, orders=[])
+
             _updated_status = self._run_bot(_status, _bot_config)
             _updated_statuses.append(_updated_status)
         return _updated_statuses
@@ -59,6 +60,8 @@ class StrategyManagerImpl(StrategyManager):
     def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> BotStatus:
 
         _bot = self._get_bot_instance(bot_config)
+        _exchange = self._get_exchange(bot_config.exchange_id)
+        updated_order_status = self._update_orders_status(_exchange,status, bot_config)
         status = _bot.next(status)
 
         # _exchange = self._get_exchange(bot_config.exchange_id)
@@ -100,17 +103,6 @@ class StrategyManagerImpl(StrategyManager):
             if exchange.id == exchange_id.value:
                 return exchange
 
-    def _place_order(self, exchange: Exchange, bot_config: BotConfig) -> Order:
-        _order = self._exchange_manager.place_order(
-            exchange=exchange,
-            bot_config=bot_config,
-            order_type=OrderType.limit,
-            side=OrderSide.buy,
-            amount=0.001,
-            price=10_000
-        )
-        self._logger.info('Placed order: %s', _order)
-        return _order
 
     def _cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         _order = self._exchange_manager.cancel_order(
@@ -127,8 +119,23 @@ class StrategyManagerImpl(StrategyManager):
     def sell(self):
         self._logger.error('sell is not implemented')
 
-    def stop_loss(self):
-        ...
+    def stop_loss_market(self, exchange: Exchange, bot_config: BotConfig, amount: float, stop_price: float) -> Order:
+        # https://docs.ccxt.com/#/README?id=stop-loss-orders
+        # sl = exchange.create_order(symbol, 'market', 'sell', amount, None, {'stopPrice': stopLossPrice})
+
+        params = {'stopPrice': stop_price}
+
+        _order = self._exchange_manager.place_order(
+            exchange=exchange,
+            bot_config=bot_config,
+            order_type=OrderType.market,
+            side=OrderSide.sell,
+            amount=amount,
+            params=params
+        )
+        self._logger.info('Placed market stop loss: %s', _order)
+
+        return _order
 
     def get_balance(self, exchange: Exchange) -> Balance:
         return self._exchange_manager.get_balance(exchange)
@@ -139,5 +146,17 @@ class StrategyManagerImpl(StrategyManager):
     def get_order_book(self) -> OrderBook:
         ...
 
-    def get_orders(self) -> List[Order]:
-        ...
+    def _update_orders_status(self, exchange: Exchange, status: BotStatus, bot_config: BotConfig) -> List[Order]:
+        # orders
+        updated_orders = List[Order]
+        for order in status.active_orders:
+            # update status
+            updated_order = self._exchange_manager.fetch_order(exchange, bot_config, order.id)
+            if order.status == OrderStatusType.closed:
+                # notify
+                # updates trades
+                # move to archived
+            else:
+                updated_orders.append(updated_order)
+
+        return updated_orders
