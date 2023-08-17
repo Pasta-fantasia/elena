@@ -192,7 +192,8 @@ class CctxExchangeManager(ExchangeManager):
             type: OrderType,
             side: OrderSide,
             amount: float,
-            price: Optional[float] = None
+            price: Optional[float] = None,
+            params: Optional[Dict] = {},
     ) -> Order:
         _conn = self._connect(exchange)
         _order = _conn.create_order(
@@ -200,7 +201,8 @@ class CctxExchangeManager(ExchangeManager):
             type=type.value,
             side=side.value,
             amount=amount,
-            price=price
+            price=price,
+            params=params
         )
         result = self._map_order(exchange, bot_config, bot_config.pair, _order)
         return result

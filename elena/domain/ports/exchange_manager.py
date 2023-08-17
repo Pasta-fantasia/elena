@@ -61,7 +61,8 @@ class ExchangeManager(Protocol):
             order_type: OrderType,
             side: OrderSide,
             amount: float,
-            price: Optional[float] = None
+            price: Optional[float] = None,
+            params: Optional[Dict] = {}
     ) -> Order:
         """
         Places an order to an Exchange
@@ -71,6 +72,7 @@ class ExchangeManager(Protocol):
         :param side: the direction of your order
         :param amount: how much of currency you want to trade
         :param price: the price at which the order is to be fulfilled (ignored in market orders)
+        :param dict [params]: extra parameters specific to the exchange api endpoint, check https://docs.ccxt.com/#/README?id=orders
         :return: the placed Order, error if any
         """
         ...
