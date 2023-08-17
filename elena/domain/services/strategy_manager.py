@@ -51,7 +51,7 @@ class StrategyManagerImpl(StrategyManager):
             if _bot_config.id in _previous_statuses_dic:
                 _status = _previous_statuses_dic[_bot_config.id]
             else:
-                _status = BotStatus(bot_id=_bot_config.id, orders=[])
+                _status = BotStatus(bot_id=_bot_config.id, active_orders=[], archived_orders=[], active_trades=[], closed_trades=[])
 
             _updated_status = self._run_bot(_status, _bot_config)
             _updated_statuses.append(_updated_status)
@@ -60,7 +60,7 @@ class StrategyManagerImpl(StrategyManager):
     def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> BotStatus:
 
         _bot = self._get_bot_instance(bot_config)
-        _exchange = self._get_exchange(bot_config.exchange_id)
+        _exchange = self.get_exchange(bot_config.exchange_id)
         updated_order_status = self._update_orders_status(_exchange,status, bot_config)
         status = _bot.next(status)
 
@@ -156,6 +156,7 @@ class StrategyManagerImpl(StrategyManager):
                 # notify
                 # updates trades
                 # move to archived
+                pass
             else:
                 updated_orders.append(updated_order)
 

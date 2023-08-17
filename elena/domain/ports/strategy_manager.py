@@ -10,6 +10,7 @@ from elena.domain.model.exchange import Exchange
 from elena.domain.model.exchange import ExchangeType
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
+from elena.domain.model.bot_config import BotConfig
 
 class StrategyManager(Protocol):
 

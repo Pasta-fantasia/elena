@@ -1,4 +1,4 @@
-from typing import Protocol, Optional
+from typing import Protocol, Optional, Dict
 
 import pandas as pd
 
