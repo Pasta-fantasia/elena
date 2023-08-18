@@ -17,13 +17,10 @@ class StrategyManager(Protocol):
     def get_exchange(self, exchange_id: ExchangeType) -> Exchange:
         ...
 
-    def buy(self) -> Order:
+    def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         ...
 
-    def sell(self) -> Order:
-        ...
-
-    def stop_loss_market(self, exchange: Exchange, bot_config: BotConfig, amount: float, stop_price: float) -> Order:
+    def stop_loss_limit(self, exchange: Exchange, bot_config: BotConfig, amount: float, stop_price: float, price: float) -> Order:
         ...
 
     def get_balance(self, exchange: Exchange) -> Balance:

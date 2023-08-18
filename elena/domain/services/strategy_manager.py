@@ -64,28 +64,6 @@ class StrategyManagerImpl(StrategyManager):
         updated_order_status = self._update_orders_status(_exchange,status, bot_config)
         status = _bot.next(status)
 
-        # _exchange = self._get_exchange(bot_config.exchange_id)
-        # TODO: always send time frame... add in config
-        # _candles = self._exchange_manager.read_candles(_exchange, bot_config.pair)
-        # TODO: _order_book is only necessary if we are going to put an order
-        # _order_book = self._exchange_manager.read_order_book(_exchange, bot_config.pair)
-        # TODO: _balance is only necessary if we are going to put an order
-        # _balance = self._exchange_manager.get_balance(_exchange)
-        # TODO:
-        # - we should read the order status of our orders (the bot orders).
-        # - store the orders on completed trade if some are closed (raise event?)
-        # - call an abstract method next()? that is implemented on child class
-        # - how do we inject/instantiate that class from a .yaml...
-        # - do we need a "bt.init()" on the derivative class? => maybe not.
-        # - how do we get the new orders?
-        # - since time frame is in the config we can run the bots/run next only when the last execution - now()
-        #    is greater than timeframe
-        # - take profit? or freeze a part even reinvesting? =>> No, that's on the Strategy code by the user.
-        # - move cash between bots?
-
-        # TODO self._bot_manager.run() ?
-        # - save any status
-
         return status
 
     def _get_bot_instance(self, bot_config: BotConfig) -> Bot:
@@ -104,7 +82,7 @@ class StrategyManagerImpl(StrategyManager):
                 return exchange
 
 
-    def _cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
+    def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         _order = self._exchange_manager.cancel_order(
             exchange=exchange,
             bot_config=bot_config,
@@ -119,18 +97,21 @@ class StrategyManagerImpl(StrategyManager):
     def sell(self):
         self._logger.error('sell is not implemented')
 
-    def stop_loss_market(self, exchange: Exchange, bot_config: BotConfig, amount: float, stop_price: float) -> Order:
+    def stop_loss_limit(self, exchange: Exchange, bot_config: BotConfig, amount: float, stop_price: float, price: float) -> Order:
         # https://docs.ccxt.com/#/README?id=stop-loss-orders
-        # sl = exchange.create_order(symbol, 'market', 'sell', amount, None, {'stopPrice': stopLossPrice})
+        # binance only accept stop_loss_limit for BTC/USDT
 
-        params = {'stopPrice': stop_price}
+        params = {'type': 'spot',
+                  'triggerPrice': stop_price,
+                  'timeInForce': 'GTC'}
+
 
         _order = self._exchange_manager.place_order(
             exchange=exchange,
             bot_config=bot_config,
-            order_type=OrderType.market,
+            type=OrderType.limit,
             side=OrderSide.sell,
-            amount=amount,
+            amount=amount, price=price,
             params=params
         )
         self._logger.info('Placed market stop loss: %s', _order)
@@ -148,16 +129,25 @@ class StrategyManagerImpl(StrategyManager):
 
     def _update_orders_status(self, exchange: Exchange, status: BotStatus, bot_config: BotConfig) -> List[Order]:
         # orders
-        updated_orders = List[Order]
+        updated_orders = []
         for order in status.active_orders:
             # update status
             updated_order = self._exchange_manager.fetch_order(exchange, bot_config, order.id)
             if order.status == OrderStatusType.closed:
                 # notify
+                self._logger.info(f"Notify! Order {order.id} was closed for {order.amount} {order.pair} at {order.average}")
                 # updates trades
+                for trade in status.active_trades:
+                    if trade.exit_order_id == order.id:
+                        status.active_trades.remove(trade)
+                        trade.exit_time = order.timestamp
+                        trade.exit_price = order.average
+                        status.closed_trades.append(trade)
                 # move to archived
-                pass
+                status.archived_orders.append(order)
             else:
                 updated_orders.append(updated_order)
+
+        status.active_orders = updated_orders
 
         return updated_orders
