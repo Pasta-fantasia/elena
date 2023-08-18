@@ -18,6 +18,7 @@ class OrderStatusType(str, Enum):
 class OrderType(str, Enum):
     market = 'market'
     limit = 'limit'
+    stop_loss_limit = 'stop_loss_limit'
 
 
 class OrderSide(str, Enum):
@@ -48,3 +49,7 @@ class Order(BaseModel):
     remaining: Optional[float]  # remaining amount to fill
     status: Optional[OrderStatusType]
     fee: Optional[Fee]
+    trigger_price: Optional[float]
+    stop_price: Optional[float]
+    take_profit_price: Optional[float]
+    stop_loss_price: Optional[float]

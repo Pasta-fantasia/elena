@@ -223,6 +223,10 @@ class CctxExchangeManager(ExchangeManager):
             average=order['average'],
             filled=order['filled'],
             remaining=order['remaining'],
+            trigger_price=order['triggerPrice'],
+            stop_price=order['stopPrice'],
+            take_profit_price=order['takeProfitPrice'],
+            stop_loss_price=order['stopLossPrice'],
             status=self._map_status(order['status']),
             fee=self._map_fee(order['fee']),
         )
@@ -256,11 +260,11 @@ class CctxExchangeManager(ExchangeManager):
             self,
             exchange: Exchange,
             bot_config: BotConfig,
-            id: str
+            order_id: str
     ):
         _conn = self._connect(exchange)
         _conn.cancel_order(
-            id=id,
+            id=order_id,
             symbol=str(bot_config.pair)
         )
 
