@@ -20,6 +20,7 @@ class StrategyManager(Protocol):
     def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         ...
 
+    # TODO: [Pere] I'm not sure if this is the place for this methods.
     def stop_loss_limit(self, exchange: Exchange, bot_config: BotConfig, amount: float, stop_price: float, price: float) -> Order:
         ...
 

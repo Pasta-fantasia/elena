@@ -12,4 +12,3 @@ class TradingPair(BaseModel):
 
     def __str__(self) -> str:
         return f'{self.base}/{self.quote}'
-        # TODO: I'm not sure / will do on all exchanges... I'm sure that can be taken from the exchange it self

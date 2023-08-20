@@ -18,6 +18,7 @@ from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.model.trading_pair import TradingPair
 
+
 class StrategyManagerImpl(StrategyManager):
 
     def __init__(self,
@@ -44,6 +45,12 @@ class StrategyManagerImpl(StrategyManager):
         :param previous_statuses: the list of all bot statuses from previous execution
         :return: the updated statuses list of all bot with any update in the current cycle
         """
+
+        # TODO: [Pere] High priority
+        # TODO: [Pere] Bots should configure if they run every minute, every hour...
+        #  L can be call every minute but bot should be able to run every hour, or every week.
+        #  This can be a timeout / sleep_until
+        #  This configuration looks like the candles ones but it's different
         _previous_statuses_dic = {_status.bot_id: _status for _status in previous_statuses}
         _updated_statuses = []
         for _bot_config in self._config.bots:
@@ -51,7 +58,8 @@ class StrategyManagerImpl(StrategyManager):
             if _bot_config.id in _previous_statuses_dic:
                 _status = _previous_statuses_dic[_bot_config.id]
             else:
-                _status = BotStatus(bot_id=_bot_config.id, active_orders=[], archived_orders=[], active_trades=[], closed_trades=[])
+                _status = BotStatus(bot_id=_bot_config.id, active_orders=[], archived_orders=[], active_trades=[],
+                                    closed_trades=[])
 
             _updated_status = self._run_bot(_status, _bot_config)
             _updated_statuses.append(_updated_status)
@@ -61,7 +69,7 @@ class StrategyManagerImpl(StrategyManager):
 
         _bot = self._get_bot_instance(bot_config)
         _exchange = self.get_exchange(bot_config.exchange_id)
-        updated_order_status = self._update_orders_status(_exchange,status, bot_config)
+        updated_order_status = self._update_orders_status(_exchange, status, bot_config)
         status = _bot.next(status)
 
         return status
@@ -81,7 +89,6 @@ class StrategyManagerImpl(StrategyManager):
             if exchange.id == exchange_id.value:
                 return exchange
 
-
     def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         _order = self._exchange_manager.cancel_order(
             exchange=exchange,
@@ -97,14 +104,14 @@ class StrategyManagerImpl(StrategyManager):
     def sell(self):
         self._logger.error('sell is not implemented')
 
-    def stop_loss_limit(self, exchange: Exchange, bot_config: BotConfig, amount: float, stop_price: float, price: float) -> Order:
+    def stop_loss_limit(self, exchange: Exchange, bot_config: BotConfig, amount: float, stop_price: float,
+                        price: float) -> Order:
         # https://docs.ccxt.com/#/README?id=stop-loss-orders
         # binance only accept stop_loss_limit for BTC/USDT
 
         params = {'type': 'spot',
                   'triggerPrice': stop_price,
                   'timeInForce': 'GTC'}
-
 
         _order = self._exchange_manager.place_order(
             exchange=exchange,
@@ -121,8 +128,9 @@ class StrategyManagerImpl(StrategyManager):
     def get_balance(self, exchange: Exchange) -> Balance:
         return self._exchange_manager.get_balance(exchange)
 
-    def read_candles(self, exchange: Exchange, pair: TradingPair, time_frame: TimeFrame = TimeFrame.min_1) -> pd.DataFrame:
-        return self._exchange_manager.read_candles(exchange,pair,time_frame )
+    def read_candles(self, exchange: Exchange, pair: TradingPair,
+                     time_frame: TimeFrame = TimeFrame.min_1) -> pd.DataFrame:
+        return self._exchange_manager.read_candles(exchange, pair, time_frame)
 
     def get_order_book(self) -> OrderBook:
         ...
@@ -136,10 +144,14 @@ class StrategyManagerImpl(StrategyManager):
             if updated_order.status == OrderStatusType.closed or updated_order.status == OrderStatusType.canceled:
                 # notify
                 if updated_order.status == OrderStatusType.closed:
-                    self._logger.info(f"Notify! Order {updated_order.id} was closed for {updated_order.amount} {updated_order.pair} at {updated_order.average}")
+                    # TODO: [Pere] "self._logger.info(f"Notify!" it's where a notification should be sent to the user.
+                    #  Where we should push or connect to telegram... we can have it read only first.
+                    self._logger.info(
+                        f"Notify! Order {updated_order.id} was closed for {updated_order.amount} {updated_order.pair} at {updated_order.average}")
                 if updated_order.status == OrderStatusType.canceled:
                     self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
-                    # TODO: what shoudl we do if an order is cancelled? Cancel are: manual, somenthing could go wrong in L or the market is stopped.
+                    # TODO: [Fran] what should we do if an order is cancelled? Cancel are: manual, somenthing could go
+                    #  wrong in L or the market is stopped.
                 # updates trades
                 for trade in status.active_trades:
                     if trade.exit_order_id == updated_order.id:
@@ -150,10 +162,13 @@ class StrategyManagerImpl(StrategyManager):
                 # move to archived
                 status.archived_orders.append(updated_order)
             elif updated_order.status == OrderStatusType.open and updated_order.filled > 0:
-                # TODO: How to manage partially filled orders? Should we wait and see? Should we notify and do nothing waiting for the user to act?
-                self._logger.info(f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: {updated_order.filled} of {updated_order.amount} {updated_order.pair} at {updated_order.average}")
+                # TODO: [Fran] How to manage partially filled orders? Should we wait and see?
+                #  Should we notify and do nothing waiting for the user to act?
+                self._logger.info(
+                    f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: {updated_order.filled} of {updated_order.amount} {updated_order.pair} at {updated_order.average}")
                 self.cancel_order(exchange=exchange, bot_config=bot_config, order_id=order.id)
-                # TODO: is this "update" equal for partials?
+                # TODO: [Pere] I'm using orders and trades as pure lists... should we have a layer on top? Not a priority.
+                # TODO: [Fran] is this "update" equal for partials? refactor?
                 # updates trades
                 for trade in status.active_trades:
                     if trade.exit_order_id == updated_order.id:
