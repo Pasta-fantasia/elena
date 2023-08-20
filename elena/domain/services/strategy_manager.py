@@ -88,7 +88,7 @@ class StrategyManagerImpl(StrategyManager):
             bot_config=bot_config,
             order_id=order_id
         )
-        self._logger.info('Canceled order: %s', id)
+        self._logger.info('Canceled order: %s', order_id)
         return _order
 
     def buy(self):
@@ -133,18 +133,36 @@ class StrategyManagerImpl(StrategyManager):
         for order in status.active_orders:
             # update status
             updated_order = self._exchange_manager.fetch_order(exchange, bot_config, order.id)
-            if order.status == OrderStatusType.closed:
+            if updated_order.status == OrderStatusType.closed or updated_order.status == OrderStatusType.canceled:
                 # notify
-                self._logger.info(f"Notify! Order {order.id} was closed for {order.amount} {order.pair} at {order.average}")
+                if updated_order.status == OrderStatusType.closed:
+                    self._logger.info(f"Notify! Order {updated_order.id} was closed for {updated_order.amount} {updated_order.pair} at {updated_order.average}")
+                if updated_order.status == OrderStatusType.canceled:
+                    self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
+                    # TODO: what shoudl we do if an order is cancelled? Cancel are: manual, somenthing could go wrong in L or the market is stopped.
                 # updates trades
                 for trade in status.active_trades:
-                    if trade.exit_order_id == order.id:
+                    if trade.exit_order_id == updated_order.id:
                         status.active_trades.remove(trade)
-                        trade.exit_time = order.timestamp
-                        trade.exit_price = order.average
+                        trade.exit_time = updated_order.timestamp
+                        trade.exit_price = updated_order.average
                         status.closed_trades.append(trade)
                 # move to archived
-                status.archived_orders.append(order)
+                status.archived_orders.append(updated_order)
+            elif updated_order.status == OrderStatusType.open and updated_order.filled > 0:
+                # TODO: How to manage partially filled orders? Should we wait and see? Should we notify and do nothing waiting for the user to act?
+                self._logger.info(f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: {updated_order.filled} of {updated_order.amount} {updated_order.pair} at {updated_order.average}")
+                self.cancel_order(exchange=exchange, bot_config=bot_config, order_id=order.id)
+                # TODO: is this "update" equal for partials?
+                # updates trades
+                for trade in status.active_trades:
+                    if trade.exit_order_id == updated_order.id:
+                        status.active_trades.remove(trade)
+                        trade.exit_time = updated_order.timestamp
+                        trade.exit_price = updated_order.average
+                        status.closed_trades.append(trade)
+                # move to archived
+                status.archived_orders.append(updated_order)
             else:
                 updated_orders.append(updated_order)
 
