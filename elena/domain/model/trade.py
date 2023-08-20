@@ -26,3 +26,5 @@ class Trade(BaseModel):
 
     duration: Optional[int] = 0
     return_pct: Optional[float] = 0
+    # TODO: [Fran] Make the maths to know if we'are earning duration / return_pct
+    # TODO: [Pere] can I have a method here? kind of .open_trade()... or is it a manager? for a list?
