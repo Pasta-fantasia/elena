@@ -46,11 +46,6 @@ class StrategyManagerImpl(StrategyManager):
         :return: the updated statuses list of all bot with any update in the current cycle
         """
 
-        # TODO: [Pere] High priority
-        # TODO: [Pere] Bots should configure if they run every minute, every hour...
-        #  L can be call every minute but bot should be able to run every hour, or every week.
-        #  This can be a timeout / sleep_until
-        #  This configuration looks like the candles ones but it's different
         _previous_statuses_dic = {_status.bot_id: _status for _status in previous_statuses}
         _updated_statuses = []
         for _bot_config in self._config.bots:
@@ -150,7 +145,7 @@ class StrategyManagerImpl(StrategyManager):
                         f"Notify! Order {updated_order.id} was closed for {updated_order.amount} {updated_order.pair} at {updated_order.average}")
                 if updated_order.status == OrderStatusType.canceled:
                     self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
-                    # TODO: [Fran] what should we do if an order is cancelled? Cancel are: manual, somenthing could go
+                    # TODO: [Fran] what should we do if an order is cancelled? Cancel are: manual, something could go
                     #  wrong in L or the market is stopped.
                 # updates trades
                 for trade in status.active_trades:

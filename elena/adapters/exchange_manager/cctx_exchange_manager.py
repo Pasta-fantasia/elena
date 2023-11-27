@@ -20,7 +20,7 @@ class CctxExchangeManager(ExchangeManager):
         ExchangeType.bitget: ccxt.bitget,
         ExchangeType.kucoin: ccxt.kucoin,
         ExchangeType.binance: ccxt.binance
-        # TODO [Pere] auto add others?
+
     }
 
     def __init__(self, config: Dict, logger: Logger):
@@ -76,7 +76,6 @@ class CctxExchangeManager(ExchangeManager):
         while _retry:
             try:
                 _candles = connection.fetch_ohlcv(str(pair), time_frame.value, limit=self._config['fetch_ohlcv_limit'])
-                # TODO: [Pere] fetch_ohlcv_limit may be at CctxExchangeManager but a bot may requiere more data points and others not. It should be overwrittenable.
                 _retry = False
             except ccxt.RateLimitExceeded as e:
                 self._logger.info('Retrying connection to exchange, %s: %s', type(e).__name__, e)

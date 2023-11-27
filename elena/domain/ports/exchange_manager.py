@@ -28,6 +28,23 @@ class ExchangeManager(Protocol):
         """
         ...
 
+    def amount_to_precision(
+            self,
+            exchange: Exchange,
+            pair: TradingPair,
+            amount: float
+    ) -> float:
+        ...
+
+    def price_to_precision(
+            self,
+            exchange: Exchange,
+            pair: TradingPair,
+            price: float
+    ) -> float:
+        ...
+
+
     def read_order_book(
             self,
             exchange: Exchange,
@@ -54,10 +71,6 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    # TODO: [Pere] High priority
-    # TODO: [Pere] bot_config: BotConfig is making thing too complicate here.
-    #  Specially when the only parameter used is pair int the subsequent level.
-    #  Check read_candles is using pair...
     def place_order(
             self,
             exchange: Exchange,
@@ -96,8 +109,6 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    # TODO [Pere] can we read all our orders? open or close in one call?
-    #  reading one it OK but it may send too much requests. Maybe CCXT doesn't have it.
     def fetch_order(
             self,
             exchange: Exchange,
