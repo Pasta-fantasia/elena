@@ -1,5 +1,13 @@
 # TODO
 
+## orders
+
+createLimitBuyOrder(amount, price ) # buy (0.01 BTC at 47k USDT)  pair=BTC/UST
+createLimitSellOrder(amount, price )
+
+createMarketBuyOrder(amount)
+createMarketSellOrder(amount)
+
 ## Why?
 ```
 class ExchangeManager(Protocol):
@@ -19,8 +27,6 @@ If it's an ExchangeMANAGER is it not enough to initialize it with an Exchange in
 
 
 ## CctxExchangeManager
-
-- every method is calling _connect and the connections is not kept anywhere, so every single interaction is validating users
 - do we need it?
 - Implement
   - ExchangeManager.amount_to_precision
@@ -98,7 +104,7 @@ If it's easy expose all
 
 https://github.com/ccxt/ccxt/wiki/Manual#market-structure
 markets = exchange.load_markets()
-or exchange.markets afetr call exchange.load_markets()
+or exchange.markets after call exchange.load_markets()
 
 ```
 {
