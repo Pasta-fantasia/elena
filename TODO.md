@@ -9,14 +9,6 @@ createMarketBuyOrder(amount)
 createMarketSellOrder(amount)
 
 ## Why?
-```
-class ExchangeManager(Protocol):
-
-    def read_candles(
-            self,
-            exchange: Exchange,
-``` 
-If it's an ExchangeMANAGER is it not enough to initialize it with an Exchange instance? Why a protocol? We may want ot have a multi exchange strategy but maybe on v3
 
 
 ## Exceptions
@@ -24,45 +16,10 @@ If it's an ExchangeMANAGER is it not enough to initialize it with an Exchange in
 
 ## Trades, how to implement them
 
-
-
-## CctxExchangeManager
-- do we need it?
-- Implement
-  - ExchangeManager.amount_to_precision
-  - ExchangeManager.price_to_precision
-
 ## ExchangeManager and CctxExchangeManager
-- _fetch_candles needs how the limit parameter... and _fetch_candles_with_retry may paginate to get that limit. 
-- _connect_mapper: auto add others? This way if a user want to use Coinbase he/she needs to change elena's code
-- Exchange.ExchangeType looks like a type but we can only have one at a single time, check StrategyManagerImpl(StrategyManager)
-  ``` def get_exchange(self, exchange_id: ExchangeType) -> Exchange:
-        for exchange in self._exchanges:
-            if exchange.id == exchange_id.value:
-                return exchange```
-- expose active, limits, taker/maker fees (and percentage)  check bellow
+- ExchangeType read from ccxt.exchanges
+
 - fetch_order() OK,  but we may want to get all the orders at once, at least at bot level.
-
-## ExchangeManager(Protocol)
-
-While 
-```
-def read_candles(
-            self,
-            exchange: Exchange,
-            pair: TradingPair,
-            time_frame: TimeFrame = TimeFrame.min_1
-    ) -> pd.DataFrame:
-```
-
-Then:
-``` 
-    def place_order(
-            self,
-            exchange: Exchange,
-            bot_config: BotConfig,
-```
-*bot_config: BotConfig,???* It makes Strategies too complex.
 
 
 ## Model.BotConfig
