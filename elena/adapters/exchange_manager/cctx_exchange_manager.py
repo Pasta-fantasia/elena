@@ -1,4 +1,5 @@
 import time
+from functools import lru_cache
 from typing import Dict, List, Optional, Any
 
 import ccxt
@@ -27,6 +28,7 @@ class CctxExchangeManager(ExchangeManager):
         self._config = config['CctxExchangeManager']
         self._logger = logger
 
+    @lru_cache
     def _connect(self, exchange: Exchange):
         self._logger.debug('Connecting to %s ...', exchange.id.value)
         _conn = self._connect_mapper[exchange.id]({
