@@ -32,7 +32,12 @@ class StrategyManager(Protocol):
     def get_order_book(self) -> OrderBook:
         ...
 
-    def limit_min_amount(self, exchange: Exchange, bot_config: BotConfig) -> float:
+    def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
         ...
 
+    def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
+        ...
+
+    def price_to_precision(self, exchange: Exchange, pair: TradingPair, price: float) -> float:
+        ...
 

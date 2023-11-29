@@ -28,20 +28,10 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    def amount_to_precision(
-            self,
-            exchange: Exchange,
-            pair: TradingPair,
-            amount: float
-    ) -> float:
+    def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
         ...
 
-    def price_to_precision(
-            self,
-            exchange: Exchange,
-            pair: TradingPair,
-            price: float
-    ) -> float:
+    def price_to_precision(self, exchange: Exchange, pair: TradingPair, price: float) -> float:
         ...
 
 

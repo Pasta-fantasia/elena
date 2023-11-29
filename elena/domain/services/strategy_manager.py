@@ -180,5 +180,11 @@ class StrategyManagerImpl(StrategyManager):
 
         return updated_orders
 
-    def limit_min_amount(self, exchange: Exchange, bot_config: BotConfig) -> float:
-        return self._exchange_manager.limit_min_amount(exchange, bot_config)
+    def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
+        return self._exchange_manager.limit_min_amount(exchange, pair)
+
+    def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
+        return self._exchange_manager.amount_to_precision(exchange, pair, amount)
+
+    def price_to_precision(self, exchange: Exchange, pair: TradingPair, price: float) -> float:
+        return self._exchange_manager.price_to_precision(exchange, pair, price)
