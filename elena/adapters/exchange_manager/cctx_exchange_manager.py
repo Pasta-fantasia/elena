@@ -398,19 +398,19 @@ class CctxExchangeManager(ExchangeManager):
     ) -> float:
 
         _conn = self._connect(exchange)
-        return _conn.markets[str(pair)]['limits']['amount']['min']
+        return float(_conn.markets[str(pair)]['limits']['amount']['min'])
 
     def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
         _conn = self._connect(exchange)
         if amount>0:
-            return _conn.amount_to_precision(str(pair), amount)
+            return float(_conn.amount_to_precision(str(pair), amount))
         else:
             return 0.0
 
     def price_to_precision(self, exchange: Exchange, pair: TradingPair, price: float) -> float:
         _conn = self._connect(exchange)
         if price>0:
-            return _conn.price_to_precision(str(pair), price)
+            return float(_conn.price_to_precision(str(pair), price))
         else:
             return 0.0
 
