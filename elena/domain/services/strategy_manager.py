@@ -179,3 +179,6 @@ class StrategyManagerImpl(StrategyManager):
         status.active_orders = updated_orders
 
         return updated_orders
+
+    def limit_min_amount(self, exchange: Exchange, bot_config: BotConfig) -> float:
+        return self._exchange_manager.limit_min_amount(exchange, bot_config)

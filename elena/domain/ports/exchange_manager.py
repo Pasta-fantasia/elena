@@ -123,3 +123,6 @@ class ExchangeManager(Protocol):
         :return: the list of orders, error if any
         """
         ...
+
+    def limit_min_amount(self, exchange: Exchange, bot_config: BotConfig) -> float:
+        ...
