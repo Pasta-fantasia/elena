@@ -18,27 +18,133 @@ from elena.domain.ports.logger import Logger
 
 class CctxExchangeManager(ExchangeManager):
     _connect_mapper = {
+        ExchangeType.ace: ccxt.ace,
+        ExchangeType.alpaca: ccxt.alpaca,
+        ExchangeType.ascendex: ccxt.ascendex,
+        ExchangeType.bequant: ccxt.bequant,
+        ExchangeType.bigone: ccxt.bigone,
+        ExchangeType.binance: ccxt.binance,
+        ExchangeType.binancecoinm: ccxt.binancecoinm,
+        ExchangeType.binanceus: ccxt.binanceus,
+        ExchangeType.binanceusdm: ccxt.binanceusdm,
+        ExchangeType.bingx: ccxt.bingx,
+        ExchangeType.bit2c: ccxt.bit2c,
+        ExchangeType.bitbank: ccxt.bitbank,
+        ExchangeType.bitbay: ccxt.bitbay,
+        ExchangeType.bitbns: ccxt.bitbns,
+        ExchangeType.bitcoincom: ccxt.bitcoincom,
+        ExchangeType.bitfinex: ccxt.bitfinex,
+        ExchangeType.bitfinex2: ccxt.bitfinex2,
+        ExchangeType.bitflyer: ccxt.bitflyer,
+        ExchangeType.bitforex: ccxt.bitforex,
         ExchangeType.bitget: ccxt.bitget,
+        ExchangeType.bithumb: ccxt.bithumb,
+        ExchangeType.bitmart: ccxt.bitmart,
+        ExchangeType.bitmex: ccxt.bitmex,
+        ExchangeType.bitopro: ccxt.bitopro,
+        ExchangeType.bitpanda: ccxt.bitpanda,
+        ExchangeType.bitrue: ccxt.bitrue,
+        ExchangeType.bitso: ccxt.bitso,
+        ExchangeType.bitstamp: ccxt.bitstamp,
+        ExchangeType.bitstamp1: ccxt.bitstamp1,
+        ExchangeType.bittrex: ccxt.bittrex,
+        ExchangeType.bitvavo: ccxt.bitvavo,
+        ExchangeType.bkex: ccxt.bkex,
+        ExchangeType.bl3p: ccxt.bl3p,
+        ExchangeType.blockchaincom: ccxt.blockchaincom,
+        ExchangeType.btcalpha: ccxt.btcalpha,
+        ExchangeType.btcbox: ccxt.btcbox,
+        ExchangeType.btcmarkets: ccxt.btcmarkets,
+        ExchangeType.btctradeua: ccxt.btctradeua,
+        ExchangeType.btcturk: ccxt.btcturk,
+        ExchangeType.bybit: ccxt.bybit,
+        ExchangeType.cex: ccxt.cex,
+        ExchangeType.coinbase: ccxt.coinbase,
+        ExchangeType.coinbaseprime: ccxt.coinbaseprime,
+        ExchangeType.coinbasepro: ccxt.coinbasepro,
+        ExchangeType.coincheck: ccxt.coincheck,
+        ExchangeType.coinex: ccxt.coinex,
+        ExchangeType.coinfalcon: ccxt.coinfalcon,
+        ExchangeType.coinmate: ccxt.coinmate,
+        ExchangeType.coinone: ccxt.coinone,
+        ExchangeType.coinsph: ccxt.coinsph,
+        ExchangeType.coinspot: ccxt.coinspot,
+        ExchangeType.cryptocom: ccxt.cryptocom,
+        ExchangeType.currencycom: ccxt.currencycom,
+        ExchangeType.delta: ccxt.delta,
+        ExchangeType.deribit: ccxt.deribit,
+        ExchangeType.digifinex: ccxt.digifinex,
+        ExchangeType.exmo: ccxt.exmo,
+        ExchangeType.fmfwio: ccxt.fmfwio,
+        ExchangeType.gate: ccxt.gate,
+        ExchangeType.gateio: ccxt.gateio,
+        ExchangeType.gemini: ccxt.gemini,
+        ExchangeType.hitbtc: ccxt.hitbtc,
+        ExchangeType.hitbtc3: ccxt.hitbtc3,
+        ExchangeType.hollaex: ccxt.hollaex,
+        ExchangeType.huobi: ccxt.huobi,
+        ExchangeType.huobijp: ccxt.huobijp,
+        ExchangeType.huobipro: ccxt.huobipro,
+        ExchangeType.idex: ccxt.idex,
+        ExchangeType.independentreserve: ccxt.independentreserve,
+        ExchangeType.indodax: ccxt.indodax,
+        ExchangeType.kraken: ccxt.kraken,
+        ExchangeType.krakenfutures: ccxt.krakenfutures,
         ExchangeType.kucoin: ccxt.kucoin,
-        ExchangeType.binance: ccxt.binance
-
+        ExchangeType.kucoinfutures: ccxt.kucoinfutures,
+        ExchangeType.kuna: ccxt.kuna,
+        ExchangeType.latoken: ccxt.latoken,
+        ExchangeType.lbank: ccxt.lbank,
+        ExchangeType.lbank2: ccxt.lbank2,
+        ExchangeType.luno: ccxt.luno,
+        ExchangeType.lykke: ccxt.lykke,
+        ExchangeType.mercado: ccxt.mercado,
+        ExchangeType.mexc: ccxt.mexc,
+        ExchangeType.mexc3: ccxt.mexc3,
+        ExchangeType.ndax: ccxt.ndax,
+        ExchangeType.novadax: ccxt.novadax,
+        ExchangeType.oceanex: ccxt.oceanex,
+        ExchangeType.okcoin: ccxt.okcoin,
+        ExchangeType.okex: ccxt.okex,
+        ExchangeType.okex5: ccxt.okex5,
+        ExchangeType.okx: ccxt.okx,
+        ExchangeType.paymium: ccxt.paymium,
+        ExchangeType.phemex: ccxt.phemex,
+        ExchangeType.poloniex: ccxt.poloniex,
+        ExchangeType.poloniexfutures: ccxt.poloniexfutures,
+        ExchangeType.probit: ccxt.probit,
+        ExchangeType.tidex: ccxt.tidex,
+        ExchangeType.timex: ccxt.timex,
+        ExchangeType.tokocrypto: ccxt.tokocrypto,
+        ExchangeType.upbit: ccxt.upbit,
+        ExchangeType.wavesexchange: ccxt.wavesexchange,
+        ExchangeType.wazirx: ccxt.wazirx,
+        ExchangeType.whitebit: ccxt.whitebit,
+        ExchangeType.woo: ccxt.woo,
+        ExchangeType.yobit: ccxt.yobit,
+        ExchangeType.zaif: ccxt.zaif,
+        ExchangeType.zonda: ccxt.zonda,
     }
 
     def __init__(self, config: Dict, logger: Logger):
         self._config = config['CctxExchangeManager']
         self._logger = logger
+        self._conn = None
 
-    @lru_cache
     def _connect(self, exchange: Exchange):
-        self._logger.debug('Connecting to %s ...', exchange.id.value)
-        _conn = self._connect_mapper[exchange.id]({
-            'apiKey': exchange.api_key,
-            'password': exchange.password,
-            'secret': exchange.secret,
-        })
-        _conn.set_sandbox_mode(exchange.sandbox_mode)
-        self._logger.info('Connected to %s at %s', exchange.id.value, _conn.urls['api']['public'])
-        return _conn
+        if self._conn == None: # TODO: WARNING one cahce for only ONE Exchange
+            self._logger.debug('Connecting to %s ...', exchange.id.value)
+            _conn = self._connect_mapper[exchange.id]({
+                'apiKey': exchange.api_key,
+                'password': exchange.password,
+                'secret': exchange.secret,
+            })
+            _conn.set_sandbox_mode(exchange.sandbox_mode)
+            self._logger.debug('Loading markets from %s ...', exchange.id.value)
+            _conn.load_markets()
+            self._logger.info('Connected to %s at %s', exchange.id.value, _conn.urls['api']['public'])
+            self._conn = _conn
+        return self._conn
 
     def read_candles(
             self,
@@ -282,3 +388,29 @@ class CctxExchangeManager(ExchangeManager):
         )
         result = self._map_order(exchange, bot_config, bot_config.pair, _order)
         return result
+
+
+
+    def limit_min_amount(
+            self,
+            exchange: Exchange,
+            pair: TradingPair
+    ) -> float:
+
+        _conn = self._connect(exchange)
+        return float(_conn.markets[str(pair)]['limits']['amount']['min'])
+
+    def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
+        _conn = self._connect(exchange)
+        if amount>0:
+            return float(_conn.amount_to_precision(str(pair), amount))
+        else:
+            return 0.0
+
+    def price_to_precision(self, exchange: Exchange, pair: TradingPair, price: float) -> float:
+        _conn = self._connect(exchange)
+        if price>0:
+            return float(_conn.price_to_precision(str(pair), price))
+        else:
+            return 0.0
+

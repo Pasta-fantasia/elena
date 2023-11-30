@@ -28,20 +28,10 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    def amount_to_precision(
-            self,
-            exchange: Exchange,
-            pair: TradingPair,
-            amount: float
-    ) -> float:
+    def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
         ...
 
-    def price_to_precision(
-            self,
-            exchange: Exchange,
-            pair: TradingPair,
-            price: float
-    ) -> float:
+    def price_to_precision(self, exchange: Exchange, pair: TradingPair, price: float) -> float:
         ...
 
 
@@ -122,4 +112,7 @@ class ExchangeManager(Protocol):
         :param order_id: the order id to retrieve
         :return: the list of orders, error if any
         """
+        ...
+
+    def limit_min_amount(self, exchange: Exchange, bot_config: BotConfig) -> float:
         ...
