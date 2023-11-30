@@ -1,5 +1,5 @@
 import time
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 import ccxt
 import pandas as pd
@@ -7,7 +7,8 @@ import pandas as pd
 from elena.domain.model.balance import Balance, ByAvailability, ByCurrency
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.exchange import Exchange, ExchangeType
-from elena.domain.model.order import Order, OrderType, OrderSide, OrderStatusType, Fee
+from elena.domain.model.order import (Fee, Order, OrderSide, OrderStatusType,
+                                      OrderType)
 from elena.domain.model.order_book import OrderBook, PriceAmount
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
@@ -123,25 +124,29 @@ class CctxExchangeManager(ExchangeManager):
         ExchangeType.zaif: ccxt.zaif,
         ExchangeType.zonda: ccxt.zonda,
     }
-    _candles_columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume']
+    _candles_columns = ["Open time", "Open", "High", "Low", "Close", "Volume"]
 
     def __init__(self, config: Dict, logger: Logger):
-        self._config = config['CctxExchangeManager']
+        self._config = config["CctxExchangeManager"]
         self._logger = logger
         self._conn = None
 
     def _connect(self, exchange: Exchange):
         if self._conn is None:  # TODO: WARNING one cache for only ONE Exchange
-            self._logger.debug('Connecting to %s ...', exchange.id.value)
-            conn = self._connect_mapper[exchange.id]({
-                'apiKey': exchange.api_key,
-                'password': exchange.password,
-                'secret': exchange.secret,
-            })
+            self._logger.debug("Connecting to %s ...", exchange.id.value)
+            conn = self._connect_mapper[exchange.id](
+                {
+                    "apiKey": exchange.api_key,
+                    "password": exchange.password,
+                    "secret": exchange.secret,
+                }
+            )
             conn.set_sandbox_mode(exchange.sandbox_mode)
-            self._logger.debug('Loading markets from %s ...', exchange.id.value)
+            self._logger.debug("Loading markets from %s ...", exchange.id.value)
             conn.load_markets()
-            self._logger.info('Connected to %s at %s', exchange.id.value, conn.urls['api']['public'])
+            self._logger.info(
+                "Connected to %s at %s", exchange.id.value, conn.urls["api"]["public"]
+            )
             self._conn = conn
         return self._conn
 
@@ -149,30 +154,42 @@ class CctxExchangeManager(ExchangeManager):
         self,
         exchange: Exchange,
         pair: TradingPair,
-        time_frame: TimeFrame = TimeFrame.min_1
+        time_frame: TimeFrame = TimeFrame.min_1,  # type: ignore
     ) -> pd.DataFrame:
-        self._logger.debug('Reading exchange candles from %s with CCTX for pair %s ...', exchange.id, pair)
+        self._logger.debug(
+            "Reading exchange candles from %s with CCTX for pair %s ...",
+            exchange.id,
+            pair,
+        )
         conn = self._connect(exchange)
         candles = self._fetch_candles(conn, pair, time_frame)
-        self._logger.info('Read %d %s candles from %s', candles.shape[0], pair, exchange.id.value)
+        self._logger.info(
+            "Read %d %s candles from %s", candles.shape[0], pair, exchange.id.value
+        )
         return candles
 
-    def _fetch_candles(self, connection, pair: TradingPair, time_frame: TimeFrame) -> pd.DataFrame:
+    def _fetch_candles(
+        self, connection, pair: TradingPair, time_frame: TimeFrame
+    ) -> pd.DataFrame:
         candles_list = self._fetch_candles_with_retry(connection, pair, time_frame)
         candles_df = pd.DataFrame(candles_list)
         if candles_df.shape == (0, 0):
             return pd.DataFrame(columns=self._candles_columns)
         candles_df.columns = self._candles_columns
-        candles_df["Open time"] = pd.to_numeric(candles_df["Open time"], downcast="integer")
+        candles_df["Open time"] = pd.to_numeric(
+            candles_df["Open time"], downcast="integer"
+        )
         candles_df["Open"] = pd.to_numeric(candles_df["Open"], downcast="float")
         candles_df["High"] = pd.to_numeric(candles_df["High"], downcast="float")
         candles_df["Low"] = pd.to_numeric(candles_df["Low"], downcast="float")
         candles_df["Close"] = pd.to_numeric(candles_df["Close"], downcast="float")
         candles_df["Volume"] = pd.to_numeric(candles_df["Volume"], downcast="float")
-        candles_df.set_index('Open time')
+        candles_df.set_index("Open time")
         return candles_df
 
-    def _fetch_candles_with_retry(self, connection, pair: TradingPair, time_frame: TimeFrame) -> List[List]:
+    def _fetch_candles_with_retry(
+        self, connection, pair: TradingPair, time_frame: TimeFrame
+    ) -> List[List]:
         # https://github.com/ccxt/ccxt/issues/10273
         # from https://github.com/ccxt/ccxt/blob/master/examples/py/kucoin-rate-limit.py
         i = 0
@@ -180,27 +197,38 @@ class CctxExchangeManager(ExchangeManager):
         candles = pd.DataFrame()
         while retry:
             try:
-                candles = connection.fetch_ohlcv(str(pair), time_frame.value, limit=self._config['fetch_ohlcv_limit'])
+                candles = connection.fetch_ohlcv(
+                    str(pair), time_frame.value, limit=self._config["fetch_ohlcv_limit"]
+                )
                 retry = False
             except ccxt.RateLimitExceeded as e:
-                self._logger.info('Retrying connection to exchange, %s: %s', type(e).__name__, e)
-                connection.sleep(self._config['fetch_ohlcv_limit_retry_every_milliseconds'])
+                self._logger.info(
+                    "Retrying connection to exchange, %s: %s", type(e).__name__, e
+                )
+                connection.sleep(
+                    self._config["fetch_ohlcv_limit_retry_every_milliseconds"]
+                )
             except Exception as err:
                 raise err
             i += 1
         return candles
 
-    def read_order_book(
-        self,
-        exchange: Exchange,
-        pair: TradingPair
-    ) -> OrderBook:
-        self._logger.debug('Reading exchange order book from %s with CCTX for pair %s ...', exchange.id, pair)
+    def read_order_book(self, exchange: Exchange, pair: TradingPair) -> OrderBook:
+        self._logger.debug(
+            "Reading exchange order book from %s with CCTX for pair %s ...",
+            exchange.id,
+            pair,
+        )
 
         conn = self._connect(exchange)
         ob = self._fetch_order_book(conn, pair)
-        self._logger.info('Read %d bids and %d asks for %s from %s', len(ob.bids), len(ob.asks), pair,
-                          exchange.id.value)
+        self._logger.info(
+            "Read %d bids and %d asks for %s from %s",
+            len(ob.bids),
+            len(ob.asks),
+            pair,
+            exchange.id.value,
+        )
         return ob
 
     def _fetch_order_book(self, connection, pair: TradingPair) -> OrderBook:
@@ -212,15 +240,12 @@ class CctxExchangeManager(ExchangeManager):
 
     @staticmethod
     def _map_order_book(ob: Dict) -> OrderBook:
-        bids = [PriceAmount(price=bid[0], amount=bid[1]) for bid in ob['bids']]
-        asks = [PriceAmount(price=bid[0], amount=bid[1]) for bid in ob['asks']]
+        bids = [PriceAmount(price=bid[0], amount=bid[1]) for bid in ob["bids"]]
+        asks = [PriceAmount(price=bid[0], amount=bid[1]) for bid in ob["asks"]]
         return OrderBook(bids=bids, asks=asks)
 
-    def get_balance(
-        self,
-        exchange: Exchange
-    ) -> Balance:
-        self._logger.debug('Reading balance from %s with CCTX', exchange.id)
+    def get_balance(self, exchange: Exchange) -> Balance:
+        self._logger.debug("Reading balance from %s with CCTX", exchange.id)
 
         conn = self._connect(exchange)
         try:
@@ -230,12 +255,12 @@ class CctxExchangeManager(ExchangeManager):
         return self._map_balance(bal)
 
     def _map_balance(self, bal: Dict) -> Balance:
-        timestamp = self._map_timestamp(bal['timestamp'])
-        free = self._map_by_availability(bal['free'])
-        used = self._map_by_availability(bal['used'])
-        total = self._map_by_availability(bal['total'])
+        timestamp = self._map_timestamp(bal["timestamp"])
+        free = self._map_by_availability(bal["free"])
+        used = self._map_by_availability(bal["used"])
+        total = self._map_by_availability(bal["total"])
         currencies = self._map_by_currency(bal)
-        info = bal['info']
+        info = bal["info"]
         bal = Balance(
             timestamp=timestamp,
             free=free,
@@ -244,7 +269,7 @@ class CctxExchangeManager(ExchangeManager):
             currencies=currencies,
             info=info,
         )
-        self._logger.debug('Read balance: %s', bal)
+        self._logger.debug("Read balance: %s", bal)
         return bal
 
     @staticmethod
@@ -269,7 +294,7 @@ class CctxExchangeManager(ExchangeManager):
             self._logger.warning(err)
             return None
 
-    _exclude = ['info', 'timestamp', 'datetime', 'free', 'used', 'total']
+    _exclude = ["info", "timestamp", "datetime", "free", "used", "total"]
 
     def _map_by_currency(self, balance: Dict) -> Dict[str, ByCurrency]:
         currencies = {}
@@ -285,7 +310,9 @@ class CctxExchangeManager(ExchangeManager):
     def _map_currency(currency: str, balance: Dict) -> Optional[ByCurrency]:
         try:
             value = balance[currency]
-            return ByCurrency(free=value['free'], used=value['used'], total=value['total'])
+            return ByCurrency(
+                free=value["free"], used=value["used"], total=value["total"]
+            )
         except KeyError:
             return None
 
@@ -306,33 +333,35 @@ class CctxExchangeManager(ExchangeManager):
             side=side.value,
             amount=amount,
             price=price,
-            params=params
+            params=params,
         )
         result = self._map_order(exchange, bot_config, bot_config.pair, order)
         return result
 
-    def _map_order(self, exchange: Exchange, bot_config: BotConfig, pair: TradingPair, order) -> Order:
+    def _map_order(
+        self, exchange: Exchange, bot_config: BotConfig, pair: TradingPair, order
+    ) -> Order:
         return Order(
-            id=order['id'],
+            id=order["id"],
             exchange_id=exchange.id,
             bot_id=bot_config.id,
             strategy_id=bot_config.strategy_id,
             pair=pair,
-            timestamp=order['timestamp'],
-            type=OrderType(order['type']),
-            side=OrderSide(order['side']),
-            price=order['price'],
-            amount=order['amount'],
-            cost=order['cost'],
-            average=order['average'],
-            filled=order['filled'],
-            remaining=order['remaining'],
-            trigger_price=order['triggerPrice'],
-            stop_price=order['stopPrice'],
-            take_profit_price=order['takeProfitPrice'],
-            stop_loss_price=order['stopLossPrice'],
-            status=self._map_status(order['status']),
-            fee=self._map_fee(order['fee']),
+            timestamp=order["timestamp"],
+            type=OrderType(order["type"]),
+            side=OrderSide(order["side"]),
+            price=order["price"],
+            amount=order["amount"],
+            cost=order["cost"],
+            average=order["average"],
+            filled=order["filled"],
+            remaining=order["remaining"],
+            trigger_price=order["triggerPrice"],
+            stop_price=order["stopPrice"],
+            take_profit_price=order["takeProfitPrice"],
+            stop_loss_price=order["stopLossPrice"],
+            status=self._map_status(order["status"]),
+            fee=self._map_fee(order["fee"]),
         )
 
     @staticmethod
@@ -344,12 +373,12 @@ class CctxExchangeManager(ExchangeManager):
 
     def _map_fee(self, fee) -> Optional[Fee]:
         if fee:
-            currency = self._nvl(fee, 'currency', None)
+            currency = self._nvl(fee, "currency", None)
             if currency:
                 return Fee(
                     currency=currency,
-                    cost=self._nvl(fee, 'cost', 0.0),
-                    rate=self._nvl(fee, 'rate', 0.0),
+                    cost=self._nvl(fee, "cost", 0.0),
+                    rate=self._nvl(fee, "rate", 0.0),
                 )
         return None
 
@@ -360,49 +389,35 @@ class CctxExchangeManager(ExchangeManager):
         except KeyError:
             return default_value
 
-    def cancel_order(
-        self,
-        exchange: Exchange,
-        bot_config: BotConfig,
-        order_id: str
-    ):
+    def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str):
         conn = self._connect(exchange)
-        conn.cancel_order(
-            id=order_id,
-            symbol=str(bot_config.pair)
-        )
+        conn.cancel_order(id=order_id, symbol=str(bot_config.pair))
 
     def fetch_order(
-        self,
-        exchange: Exchange,
-        bot_config: BotConfig,
-        order_id: str
+        self, exchange: Exchange, bot_config: BotConfig, order_id: str
     ) -> Order:
         conn = self._connect(exchange)
-        order = conn.fetch_order(
-            id=order_id,
-            symbol=str(bot_config.pair)
-        )
+        order = conn.fetch_order(id=order_id, symbol=str(bot_config.pair))
         result = self._map_order(exchange, bot_config, bot_config.pair, order)
         return result
 
-    def limit_min_amount(
-        self,
-        exchange: Exchange,
-        pair: TradingPair
-    ) -> float:
+    def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
 
         conn = self._connect(exchange)
-        return float(conn.markets[str(pair)]['limits']['amount']['min'])
+        return float(conn.markets[str(pair)]["limits"]["amount"]["min"])
 
-    def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
+    def amount_to_precision(
+        self, exchange: Exchange, pair: TradingPair, amount: float
+    ) -> float:
         conn = self._connect(exchange)
         if amount > 0:
             return float(conn.amount_to_precision(str(pair), amount))
         else:
             return 0.0
 
-    def price_to_precision(self, exchange: Exchange, pair: TradingPair, price: float) -> float:
+    def price_to_precision(
+        self, exchange: Exchange, pair: TradingPair, price: float
+    ) -> float:
         conn = self._connect(exchange)
         if price > 0:
             return float(conn.price_to_precision(str(pair), price))

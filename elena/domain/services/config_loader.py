@@ -8,7 +8,6 @@ from elena.domain.model.trading_pair import TradingPair
 
 
 class ConfigLoader:
-
     def __init__(self, config: Dict):
         self._tags, self._tag_ids = self._load_tags(config)
         self._strategies = self._load_strategies(config)
@@ -29,10 +28,10 @@ class ConfigLoader:
     @staticmethod
     def _load_tags(config) -> Tuple[List[Tag], List[str]]:
         results = []
-        for tags in config['Tags']:
+        for tags in config["Tags"]:
             tag = Tag(
-                id=tags['id'],
-                enabled=tags['enabled'],
+                id=tags["id"],
+                enabled=tags["enabled"],
             )
             if tag.enabled:
                 results.append(tag)
@@ -41,13 +40,13 @@ class ConfigLoader:
 
     def _load_strategies(self, config: Dict) -> List[StrategyConfig]:
         results = []
-        for strategies in config['Strategies']:
+        for strategies in config["Strategies"]:
             strategy = StrategyConfig(
-                id=strategies['id'],
-                name=strategies['name'],
-                enabled=strategies['enabled'],
-                strategy_class=strategies['strategy_class'],
-                bots=self._load_bots(strategies['bots'], strategies['id'])
+                id=strategies["id"],
+                name=strategies["name"],
+                enabled=strategies["enabled"],
+                strategy_class=strategies["strategy_class"],
+                bots=self._load_bots(strategies["bots"], strategies["id"]),
             )
             if strategy.enabled:
                 results.append(strategy)
@@ -57,14 +56,14 @@ class ConfigLoader:
         results = []
         for bot in bots:
             config = BotConfig(
-                id=bot['id'],
-                name=bot['name'],
+                id=bot["id"],
+                name=bot["name"],
                 strategy_id=strategy_id,
-                enabled=bot['enabled'],
-                pair=TradingPair.build(bot['pair']),
-                exchange_id=ExchangeType(bot['exchange']),
-                tags=bot['tags'],
-                config=bot['config'],
+                enabled=bot["enabled"],
+                pair=TradingPair.build(bot["pair"]),
+                exchange_id=ExchangeType(bot["exchange"]),
+                tags=bot["tags"],
+                config=bot["config"],
             )
             if self._enabled(config):
                 results.append(config)
@@ -72,19 +71,19 @@ class ConfigLoader:
 
     def _enabled(self, bot: BotConfig) -> bool:
         match = set(self._tag_ids).intersection(bot.tags)
-        return bot.enabled and match
+        return bot.enabled and match  # type: ignore
 
     @staticmethod
     def _load_exchanges(config) -> List[Exchange]:
         results = []
-        for exchanges in config['Exchanges']:
+        for exchanges in config["Exchanges"]:
             exchange = Exchange(
-                id=exchanges['id'],
-                enabled=exchanges['enabled'],
-                sandbox_mode=exchanges['sandbox_mode'],
-                api_key=exchanges['api_key'],
-                password=exchanges['password'],
-                secret=exchanges['secret'],
+                id=exchanges["id"],
+                enabled=exchanges["enabled"],
+                sandbox_mode=exchanges["sandbox_mode"],
+                api_key=exchanges["api_key"],
+                password=exchanges["password"],
+                secret=exchanges["secret"],
             )
             if exchange.enabled:
                 results.append(exchange)
