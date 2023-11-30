@@ -1,4 +1,4 @@
-from typing import Protocol, Optional
+from typing import Protocol, Optional, Dict
 
 import pandas as pd
 
@@ -28,6 +28,23 @@ class ExchangeManager(Protocol):
         """
         ...
 
+    def amount_to_precision(
+            self,
+            exchange: Exchange,
+            pair: TradingPair,
+            amount: float
+    ) -> float:
+        ...
+
+    def price_to_precision(
+            self,
+            exchange: Exchange,
+            pair: TradingPair,
+            price: float
+    ) -> float:
+        ...
+
+
     def read_order_book(
             self,
             exchange: Exchange,
@@ -41,7 +58,7 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    # TODO read all our orders
+
 
     def get_balance(
             self,
@@ -61,7 +78,8 @@ class ExchangeManager(Protocol):
             order_type: OrderType,
             side: OrderSide,
             amount: float,
-            price: Optional[float] = None
+            price: Optional[float] = None,
+            params: Optional[Dict] = {}
     ) -> Order:
         """
         Places an order to an Exchange
@@ -71,6 +89,7 @@ class ExchangeManager(Protocol):
         :param side: the direction of your order
         :param amount: how much of currency you want to trade
         :param price: the price at which the order is to be fulfilled (ignored in market orders)
+        :param dict [params]: extra parameters specific to the exchange api endpoint, check https://docs.ccxt.com/#/README?id=orders
         :return: the placed Order, error if any
         """
         ...

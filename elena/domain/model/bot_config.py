@@ -14,4 +14,4 @@ class BotConfig(BaseModel):
     pair: TradingPair
     exchange_id: ExchangeType
     tags: List[str]
-    config: Dict  # TODO Transform to data class
+    config: Dict

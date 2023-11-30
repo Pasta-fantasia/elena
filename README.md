@@ -92,7 +92,7 @@ Create a virtual environment, for example at `$HOME/VEs`:
 ```shell
 python3 -m venv elena
 source elena/bin/activate
-pip install git+ssh://git@github.com/Ciskam-Lab/elena.git@main#egg=elena
+pip install git+https://github.com/Pasta-fantasia/elena.git@main#egg=elena
 ```
 
 
@@ -107,3 +107,4 @@ pip install git+ssh://git@github.com/Ciskam-Lab/elena.git@main#egg=elena
    2. The exchange data if required
 6. Run `next()` method
 7. Persist the bot to disk
+
