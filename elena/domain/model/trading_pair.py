@@ -7,8 +7,8 @@ class TradingPair(BaseModel):
 
     @staticmethod
     def build(pair):
-        _base, _quote = pair.split('/')
-        return TradingPair(base=_base, quote=_quote)
+        base, _quote = pair.split('/')
+        return TradingPair(base=base, quote=_quote)
 
     def __str__(self) -> str:
         return f'{self.base}/{self.quote}'

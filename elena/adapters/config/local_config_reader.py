@@ -30,19 +30,19 @@ class LocalConfigReader:
         return home
 
     def _load_default_config(self) -> Dict:
-        _dir = path.join(pathlib.Path(__file__).parent.parent.parent.absolute(), 'config')
-        _file = path.join(_dir, 'default_config.yaml')
-        return self._load_yaml(_file)
+        dir = path.join(pathlib.Path(__file__).parent.parent.parent.absolute(), 'config')
+        file = path.join(dir, 'default_config.yaml')
+        return self._load_yaml(file)
 
     def _load_user_config(self, home: str) -> Dict:
-        _file = path.join(home, 'elena_config.yaml')
-        return self._load_yaml(_file)
+        file = path.join(home, 'elena_config.yaml')
+        return self._load_yaml(file)
 
     @staticmethod
     def _load_yaml(file: str) -> Dict:
         with open(file, 'r') as f:
-            _yaml = yaml.safe_load(f)
-        return _yaml
+            yaml_content = yaml.safe_load(f)
+        return yaml_content
 
     @staticmethod
     def _update_config_with_home(config: Dict, home: str) -> Dict:

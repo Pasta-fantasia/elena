@@ -46,38 +46,38 @@ class StrategyManagerImpl(StrategyManager):
         :return: the updated statuses list of all bot with any update in the current cycle
         """
 
-        _previous_statuses_dic = {_status.bot_id: _status for _status in previous_statuses}
-        _updated_statuses = []
-        for _bot_config in self._config.bots:
-            self._logger.info(f'Running bot %s: %s', _bot_config.id, _bot_config.name)
-            if _bot_config.id in _previous_statuses_dic:
-                _status = _previous_statuses_dic[_bot_config.id]
+        previous_statuses = {_status.bot_id: _status for _status in previous_statuses}
+        updated_statuses = []
+        for bot_config in self._config.bots:
+            self._logger.info(f'Running bot %s: %s', bot_config.id, bot_config.name)
+            if bot_config.id in previous_statuses:
+                status = previous_statuses[bot_config.id]
             else:
-                _status = BotStatus(bot_id=_bot_config.id, active_orders=[], archived_orders=[], active_trades=[],
+                status = BotStatus(bot_id=bot_config.id, active_orders=[], archived_orders=[], active_trades=[],
                                     closed_trades=[])
 
-            _updated_status = self._run_bot(_status, _bot_config)
-            _updated_statuses.append(_updated_status)
-        return _updated_statuses
+            updated_status = self._run_bot(status, bot_config)
+            updated_statuses.append(updated_status)
+        return updated_statuses
 
     def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> BotStatus:
 
-        _bot = self._get_bot_instance(bot_config)
-        _exchange = self.get_exchange(bot_config.exchange_id)
-        updated_order_status = self._update_orders_status(_exchange, status, bot_config)
-        status = _bot.next(status)
+        bot = self._get_bot_instance(bot_config)
+        exchange = self.get_exchange(bot_config.exchange_id)
+        updated_order_status = self._update_orders_status(exchange, status, bot_config)
+        status = bot.next(status)
 
         return status
 
     def _get_bot_instance(self, bot_config: BotConfig) -> Bot:
-        _class_parts = self._config.strategy_class.split(".")
-        _class_name = _class_parts[-1]
-        _module_path = ".".join(_class_parts[0:-1])
-        _module = importlib.import_module(_module_path)
-        _class = getattr(_module, _class_name)
-        _bot = _class()
-        _bot.init(manager=self, logger=self._logger, bot_config=bot_config)
-        return _bot
+        class_parts = self._config.strategy_class.split(".")
+        class_name = class_parts[-1]
+        module_path = ".".join(class_parts[0:-1])
+        module = importlib.import_module(module_path)
+        _class = getattr(module, class_name)
+        bot = _class()
+        bot.init(manager=self, logger=self._logger, bot_config=bot_config)
+        return bot
 
     def get_exchange(self, exchange_id: ExchangeType) -> Exchange:
         for exchange in self._exchanges:
@@ -85,13 +85,13 @@ class StrategyManagerImpl(StrategyManager):
                 return exchange
 
     def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
-        _order = self._exchange_manager.cancel_order(
+        order = self._exchange_manager.cancel_order(
             exchange=exchange,
             bot_config=bot_config,
             order_id=order_id
         )
         self._logger.info('Canceled order: %s', order_id)
-        return _order
+        return order
 
     def buy(self):
         self._logger.error('buy is not implemented')
@@ -108,7 +108,7 @@ class StrategyManagerImpl(StrategyManager):
                   'triggerPrice': stop_price,
                   'timeInForce': 'GTC'}
 
-        _order = self._exchange_manager.place_order(
+        order = self._exchange_manager.place_order(
             exchange=exchange,
             bot_config=bot_config,
             type=OrderType.limit,
@@ -116,9 +116,9 @@ class StrategyManagerImpl(StrategyManager):
             amount=amount, price=price,
             params=params
         )
-        self._logger.info('Placed market stop loss: %s', _order)
+        self._logger.info('Placed market stop loss: %s', order)
 
-        return _order
+        return order
 
     def get_balance(self, exchange: Exchange) -> Balance:
         return self._exchange_manager.get_balance(exchange)

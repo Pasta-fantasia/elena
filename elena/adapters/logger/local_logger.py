@@ -12,23 +12,23 @@ from elena.domain.ports.logger import Logger
 class LocalLogger(Logger):
 
     def __init__(self, config: Dict):
-        _level = logging.getLevelName(config['LocalLogger']['level'])
-        _path = pathlib.Path(config['LocalLogger']['path'])
-        Path(_path).mkdir(parents=True, exist_ok=True)
-        _file = path.join(pathlib.Path(_path), 'elena.log')
+        level = logging.getLevelName(config['LocalLogger']['level'])
+        file_path = pathlib.Path(config['LocalLogger']['path'])
+        Path(file_path).mkdir(parents=True, exist_ok=True)
+        file = path.join(pathlib.Path(file_path), 'elena.log')
         logging.basicConfig(
-            level=_level,
+            level=level,
             format="%(asctime)s [%(levelname)s] %(message)s",
             handlers=[
                 logging.handlers.RotatingFileHandler(
-                    _file,
+                    file,
                     maxBytes=config['LocalLogger']['max_bytes'],
                     backupCount=config['LocalLogger']['backup_count']
                 ),
                 logging.StreamHandler(sys.stdout)
             ]
         )
-        print(f"Logging {config['LocalLogger']['level']} level to file `{_file}`")
+        print(f"Logging {config['LocalLogger']['level']} level to file `{file}`")
 
     def critical(self, msg, *args, **kwargs):
         logging.critical(msg, *args, **kwargs)
