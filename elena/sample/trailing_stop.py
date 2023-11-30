@@ -11,11 +11,12 @@ class TrailingStop(Bot):
     _logger: Logger
     _name: str
 
-    def init(self, manager: StrategyManager, logger: Logger):
+    def init(self, manager: StrategyManager, logger: Logger, bot_config: BotConfig):
         self._manager = manager
         self._logger = logger
+        self._config = bot_config
         self._name = self.__class__.__name__
 
-    def next(self, status: BotStatus, bot_config: BotConfig) -> BotStatus:
+    def next(self, status: BotStatus) -> BotStatus:
         self._logger.info('%s strategy: processing next cycle ...', self._name)
         return status
