@@ -34,7 +34,6 @@ class ExchangeType(str, Enum):
     bitstamp1 = 'bitstamp1'
     bittrex = 'bittrex'
     bitvavo = 'bitvavo'
-    bkex = 'bkex'
     bl3p = 'bl3p'
     blockchaincom = 'blockchaincom'
     btcalpha = 'btcalpha'

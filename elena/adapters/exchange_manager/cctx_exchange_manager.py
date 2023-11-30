@@ -1,5 +1,4 @@
 import time
-from functools import lru_cache
 from typing import Dict, List, Optional, Any
 
 import ccxt
@@ -49,7 +48,6 @@ class CctxExchangeManager(ExchangeManager):
         ExchangeType.bitstamp1: ccxt.bitstamp1,
         ExchangeType.bittrex: ccxt.bittrex,
         ExchangeType.bitvavo: ccxt.bitvavo,
-        ExchangeType.bkex: ccxt.bkex,
         ExchangeType.bl3p: ccxt.bl3p,
         ExchangeType.blockchaincom: ccxt.blockchaincom,
         ExchangeType.btcalpha: ccxt.btcalpha,
