@@ -8,7 +8,6 @@ from elena.domain.model.trading_pair import TradingPair
 
 
 class ConfigLoader:
-
     def __init__(self, config: Dict):
         self._tags, self._tag_ids = self._load_tags(config)
         self._strategies = self._load_strategies(config)
@@ -28,64 +27,64 @@ class ConfigLoader:
 
     @staticmethod
     def _load_tags(config) -> Tuple[List[Tag], List[str]]:
-        _results = []
-        for _dict in config['Tags']:
-            _tag = Tag(
-                id=_dict['id'],
-                enabled=_dict['enabled'],
+        results = []
+        for tags in config["Tags"]:
+            tag = Tag(
+                id=tags["id"],
+                enabled=tags["enabled"],
             )
-            if _tag.enabled:
-                _results.append(_tag)
-        _ids = [tag.id for tag in _results]
-        return _results, _ids
+            if tag.enabled:
+                results.append(tag)
+        ids = [tag.id for tag in results]
+        return results, ids
 
     def _load_strategies(self, config: Dict) -> List[StrategyConfig]:
-        _results = []
-        for _dict in config['Strategies']:
-            _strategy = StrategyConfig(
-                id=_dict['id'],
-                name=_dict['name'],
-                enabled=_dict['enabled'],
-                strategy_class=_dict['strategy_class'],
-                bots=self._load_bots(_dict['bots'], _dict['id'])
+        results = []
+        for strategies in config["Strategies"]:
+            strategy = StrategyConfig(
+                id=strategies["id"],
+                name=strategies["name"],
+                enabled=strategies["enabled"],
+                strategy_class=strategies["strategy_class"],
+                bots=self._load_bots(strategies["bots"], strategies["id"]),
             )
-            if _strategy.enabled:
-                _results.append(_strategy)
-        return _results
+            if strategy.enabled:
+                results.append(strategy)
+        return results
 
     def _load_bots(self, bots: List[Dict], strategy_id: str) -> List[BotConfig]:
-        _results = []
-        for _dict in bots:
-            _bot = BotConfig(
-                id=_dict['id'],
-                name=_dict['name'],
+        results = []
+        for bot in bots:
+            config = BotConfig(
+                id=bot["id"],
+                name=bot["name"],
                 strategy_id=strategy_id,
-                enabled=_dict['enabled'],
-                pair=TradingPair.build(_dict['pair']),
-                exchange_id=ExchangeType(_dict['exchange']),
-                tags=_dict['tags'],
-                config=_dict['config'],
+                enabled=bot["enabled"],
+                pair=TradingPair.build(bot["pair"]),
+                exchange_id=ExchangeType(bot["exchange"]),
+                tags=bot["tags"],
+                config=bot["config"],
             )
-            if self._enabled(_bot):
-                _results.append(_bot)
-        return _results
+            if self._enabled(config):
+                results.append(config)
+        return results
 
     def _enabled(self, bot: BotConfig) -> bool:
-        _match = set(self._tag_ids).intersection(bot.tags)
-        return bot.enabled and _match
+        match = set(self._tag_ids).intersection(bot.tags)
+        return bot.enabled and match  # type: ignore
 
     @staticmethod
     def _load_exchanges(config) -> List[Exchange]:
-        _results = []
-        for _dict in config['Exchanges']:
-            _exchange = Exchange(
-                id=_dict['id'],
-                enabled=_dict['enabled'],
-                sandbox_mode=_dict['sandbox_mode'],
-                api_key=_dict['api_key'],
-                password=_dict['password'],
-                secret=_dict['secret'],
+        results = []
+        for exchanges in config["Exchanges"]:
+            exchange = Exchange(
+                id=exchanges["id"],
+                enabled=exchanges["enabled"],
+                sandbox_mode=exchanges["sandbox_mode"],
+                api_key=exchanges["api_key"],
+                password=exchanges["password"],
+                secret=exchanges["secret"],
             )
-            if _exchange.enabled:
-                _results.append(_exchange)
-        return _results
+            if exchange.enabled:
+                results.append(exchange)
+        return results

@@ -8,22 +8,22 @@ from elena.domain.model.trading_pair import TradingPair
 
 
 class OrderStatusType(str, Enum):
-    open = 'open'
-    closed = 'closed'
-    canceled = 'canceled'
-    expired = 'expired'
-    rejected = 'rejected'
+    open = "open"
+    closed = "closed"
+    canceled = "canceled"
+    expired = "expired"
+    rejected = "rejected"
 
 
 class OrderType(str, Enum):
-    market = 'market'
-    limit = 'limit'
-    stop_loss_limit = 'stop_loss_limit'
+    market = "market"
+    limit = "limit"
+    stop_loss_limit = "stop_loss_limit"
 
 
 class OrderSide(str, Enum):
-    buy = 'buy'
-    sell = 'sell'
+    buy = "buy"
+    sell = "sell"
 
 
 class Fee(BaseModel):

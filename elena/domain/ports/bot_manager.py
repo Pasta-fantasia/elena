@@ -1,11 +1,10 @@
-from typing import Protocol, List, Optional
+from typing import List, Optional, Protocol
 
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.strategy_config import StrategyConfig
 
 
 class BotManager(Protocol):
-
     def load_all(self, strategy_config: StrategyConfig) -> List[BotStatus]:
         """
         Loads all bot statuses pertaining to a Strategy from persistence
