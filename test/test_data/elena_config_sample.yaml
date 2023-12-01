@@ -1,0 +1,46 @@
+Strategies:
+  - id: ExchangeBasicOperationsTest-1
+    name: ExchangeBasicOperationsTest
+    enabled: true
+    strategy_class: elena.test_strategy.exchange_basic_operation_test.ExchangeBasicOperationsTest
+    bots:
+      - id: Exchange_Test_Ops_BTC_USDT
+        name: Exchange Basic Operations Test 1 on BTC/USDT
+        enabled: true
+        pair: BTC/USDT
+        exchange: binance
+        tags:
+          - ranging
+          - bear
+        config:
+          band_length: 13
+          band_mult: 1
+
+
+Exchanges:
+  - id: binance
+    enabled: true
+    sandbox_mode: true
+    api_key: x
+    password: not_in_use
+    secret: x
+
+Tags:
+  - id: bear
+    enabled: true
+  - id: bull
+    enabled: true
+  - id: ranging
+    enabled: true
+
+
+LocalLogger:
+  level: DEBUG
+  path: logs  # relative path under home directory
+  max_bytes: 1000000 # 1 MB max log files size
+  backup_count: 5  # Number of log backup files
+LocalBotManager:
+  path: bots # relative path under home directory
+CctxExchangeManager:
+  fetch_ohlcv_limit: 100
+  fetch_ohlcv_limit_retry_every_milliseconds: 1000
