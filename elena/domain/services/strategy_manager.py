@@ -77,6 +77,7 @@ class StrategyManagerImpl(StrategyManager):
         bot = self._get_bot_instance(bot_config)
         exchange = self.get_exchange(bot_config.exchange_id)
         if not exchange:
+            self._logger.error("Bot %s: %s has no valid exchange configuration.", bot_config.id, bot_config.name)
             return None
         updated_order_status = self._update_orders_status(exchange, status, bot_config)
         status = bot.next(updated_order_status)
