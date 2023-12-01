@@ -144,3 +144,5 @@ dmypy.json
 /elena/sample/bots/
 
 /TODO.md
+/test/test_data/bots/
+/test/test_data/logs/

@@ -6,7 +6,7 @@ from elena.domain.ports.bot import Bot
 from elena.domain.ports.strategy_manager import StrategyManager
 
 
-class TrailingStop(Bot):
+class ExchangeBasicOperationsTest(Bot):
     _manager: StrategyManager
     _logger: Logger
     _config: BotConfig
