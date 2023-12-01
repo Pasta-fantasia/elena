@@ -320,7 +320,7 @@ class CctxExchangeManager(ExchangeManager):
         self,
         exchange: Exchange,
         bot_config: BotConfig,
-        type: OrderType,
+        order_type: OrderType,
         side: OrderSide,
         amount: float,
         price: Optional[float] = None,
@@ -329,7 +329,7 @@ class CctxExchangeManager(ExchangeManager):
         conn = self._connect(exchange)
         order = conn.create_order(
             symbol=str(bot_config.pair),
-            type=type.value,
+            type=order_type.value,
             side=side.value,
             amount=amount,
             price=price,
