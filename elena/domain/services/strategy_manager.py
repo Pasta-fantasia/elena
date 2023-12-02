@@ -1,7 +1,9 @@
 import importlib
+from datetime import datetime
 from typing import List, Optional
 
 import pandas as pd
+from cron_converter import Cron
 
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
@@ -51,9 +53,14 @@ class StrategyManagerImpl(StrategyManager):
         }
         updated_statuses = []
         for bot_config in self._config.bots:
+            run = True
             self._logger.info("Running bot %s: %s", bot_config.id, bot_config.name)
-            if bot_config.id in previous_statuses:
+            if bot_config.id in previous_statuses_dict:
                 status = previous_statuses_dict[bot_config.id]
+                last_execution = datetime.fromtimestamp(status.timestamp / 1000)
+                run = self._check_if_bot_has_to_run(
+                    last_execution, bot_config.cron_expression
+                )
             else:
                 status = BotStatus(
                     bot_id=bot_config.id,
@@ -62,11 +69,28 @@ class StrategyManagerImpl(StrategyManager):
                     active_trades=[],
                     closed_trades=[],
                 )
-
-            updated_status = self._run_bot(status, bot_config)
-            if updated_status:
-                updated_statuses.append(updated_status)
+            if run:
+                updated_status = self._run_bot(status, bot_config)
+                if updated_status:
+                    updated_statuses.append(updated_status)
         return updated_statuses
+
+    @staticmethod
+    def _check_if_bot_has_to_run(
+        last_execution: datetime, cron_expression: str
+    ) -> bool:
+        """
+        Checks if the bot has to run or not comparing with cron expression.
+        :param last_execution: the datetime of previous execution
+        :param cron_expression: the cron expression to check
+        :return: True if the bot has to run, False otherwise
+        """
+        cron_instance = Cron(cron_expression)
+        schedule = cron_instance.schedule(last_execution)
+        schedule.next()
+        next_execution = schedule.next()
+        now = datetime.now()
+        return next_execution <= now
 
     def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> Optional[BotStatus]:
 
