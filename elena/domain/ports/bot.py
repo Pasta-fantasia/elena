@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Optional, Protocol
 
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
@@ -12,5 +12,5 @@ class Bot(Protocol):
     def init(self, manager: StrategyManager, logger: Logger, bot_config: BotConfig):
         ...
 
-    def next(self, status: BotStatus) -> BotStatus:
+    def next(self, status: BotStatus) -> Optional[BotStatus]:
         ...
