@@ -55,7 +55,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         # get candles
         candles = self.read_candles(page_size=100)
 
-        # OLD CODE
+        # TODO: MANUAL MERGE on OLD CODE
         min_amount = self._manager.limit_min_amount(self._exchange, self._config.pair)
 
         # get candles
