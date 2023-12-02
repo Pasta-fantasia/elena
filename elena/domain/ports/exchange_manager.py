@@ -100,5 +100,5 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    def limit_min_amount(self, exchange: Exchange, bot_config: BotConfig) -> float:
+    def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
         ...
