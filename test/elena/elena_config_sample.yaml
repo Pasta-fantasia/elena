@@ -10,6 +10,7 @@ Strategies:
         pair: BTC/USDT
         exchange: binance
         time_frame: 1d # Valid values: 1m, 1h, 1d, 1M, 1y
+        cron_expression: "*/5 * * * *" # At every 5th minute
         tags:
           - ranging
           - bear

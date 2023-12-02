@@ -56,17 +56,21 @@ class ConfigLoader:
     def _load_bots(self, bots: List[Dict], strategy_id: str) -> List[BotConfig]:
         results = []
         for bot in bots:
-            config = BotConfig(
-                id=bot["id"],
-                name=bot["name"],
-                strategy_id=strategy_id,
-                enabled=bot["enabled"],
-                pair=TradingPair.build(bot["pair"]),
-                exchange_id=ExchangeType(bot["exchange"]),
-                time_frame=TimeFrame(bot["time_frame"]),
-                tags=bot["tags"],
-                config=bot["config"],
-            )
+            try:
+                config = BotConfig(
+                    id=bot["id"],
+                    name=bot["name"],
+                    strategy_id=strategy_id,
+                    enabled=bot["enabled"],
+                    pair=TradingPair.build(bot["pair"]),
+                    exchange_id=ExchangeType(bot["exchange"]),
+                    time_frame=TimeFrame(bot["time_frame"]),
+                    cron_expression=bot["cron_expression"],
+                    tags=bot["tags"],
+                    config=bot["config"],
+                )
+            except KeyError as err:
+                raise ValueError(f"Missing bot configuration: {err}")
             if self._enabled(config):
                 results.append(config)
         return results

@@ -15,5 +15,6 @@ class BotConfig(BaseModel):
     pair: TradingPair
     exchange_id: ExchangeType
     time_frame: TimeFrame
+    cron_expression: str
     tags: List[str]
     config: Dict
