@@ -9,6 +9,7 @@ Strategies:
         enabled: true
         pair: BTC/USDT
         exchange: binance
+        time_frame: 1m # Valid values: 1m, 1h, 1d, 1M, 1y
         tags:
           - ranging
           - bear

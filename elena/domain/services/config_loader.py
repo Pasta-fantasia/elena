@@ -4,6 +4,7 @@ from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.exchange import Exchange, ExchangeType
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.model.tag import Tag
+from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 
 
@@ -62,6 +63,7 @@ class ConfigLoader:
                 enabled=bot["enabled"],
                 pair=TradingPair.build(bot["pair"]),
                 exchange_id=ExchangeType(bot["exchange"]),
+                time_frame=TimeFrame(bot["time_frame"]),
                 tags=bot["tags"],
                 config=bot["config"],
             )
