@@ -8,50 +8,54 @@ from elena.adapters.config.local_config_reader import LocalConfigReader
 from elena.adapters.logger.local_logger import LocalLogger
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
-from elena.domain.model.exchange import Exchange
-from elena.domain.model.time_frame import TimeFrame
-from elena.domain.ports.bot import Bot
+from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.services.elena import Elena
 
 
-class ExchangeBasicOperationsBot(Bot):
-    _manager: StrategyManager
-    _logger: Logger
-    _config: BotConfig
-    _exchange: Exchange
-    _name: str
+class ExchangeBasicOperationsBot(GenericBot):
     band_length: float
     band_mult: float
 
     def init(self, manager: StrategyManager, logger: Logger, bot_config: BotConfig):  # type: ignore
-        self._manager = manager
-        self._logger = logger
-        self._name = self.__class__.__name__
-        self._config = bot_config
-
-        exchange = self._manager.get_exchange(self._config.exchange_id)
-        if not exchange:
-            raise Exception(f"Cannot get Exchange from {self._config.exchange_id} ID")
-        self._exchange = exchange
+        super().init(manager, logger, bot_config)
 
         try:
             self.band_length = bot_config.config["band_length"]
             self.band_mult = bot_config.config["band_mult"]
         except Exception as err:
-            logger.error("Error initializing Bot config")
-            logger.error(f"Unexpected {err=}, {type(err)=}")
-
-    def next(self, status: BotStatus) -> BotStatus:
-        self._logger.info("%s strategy: processing next cycle ...", self._name)
+            self._logger.error(f"Error initializing Bot config: {err}", error=err)
 
         # Verify that the exchange is in sandbox mode!!!!
-        if not self._exchange.sandbox_mode:
+        if not self.exchange.sandbox_mode:
             raise Exception(
                 "Exchange is not in sandbox mode, this strategy is ment for testing only!"
             )
 
+    def next(self, status: BotStatus) -> BotStatus:
+        self._logger.info("%s strategy: processing next cycle ...", self.name)
+
+        # NEW CODE
+        # is there any free balance to handle?
+        balance = self.get_balance()
+        if not balance:
+            raise Exception("Cannot get balance")
+
+        base_symbol = self.pair.base
+        base_total = balance.currencies[base_symbol].total
+        base_free = balance.currencies[base_symbol].free
+
+        quote_symbol = self.pair.quote
+        quote_total = balance.currencies[quote_symbol].total
+        quote_free = balance.currencies[quote_symbol].free
+
         # get min amount
+        min_amount = self.limit_min_amount()
+
+        # get candles
+        candles = self.read_candles(page_size=100)
+
+        # OLD CODE
         min_amount = self._manager.limit_min_amount(self._exchange, self._config.pair)
 
         # get candles

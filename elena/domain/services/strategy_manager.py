@@ -1,10 +1,8 @@
 import importlib
-import typing as t
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
 
-from elena.domain.model.balance import Balance
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.exchange import Exchange, ExchangeType
@@ -70,9 +68,7 @@ class StrategyManagerImpl(StrategyManager):
                 updated_statuses.append(updated_status)
         return updated_statuses
 
-    def _run_bot(
-        self, status: BotStatus, bot_config: BotConfig
-    ) -> t.Optional[BotStatus]:
+    def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> Optional[BotStatus]:
 
         bot = self._get_bot_instance(bot_config)
         exchange = self.get_exchange(bot_config.exchange_id)
@@ -84,8 +80,7 @@ class StrategyManagerImpl(StrategyManager):
             )
             return None
         updated_order_status = self._update_orders_status(exchange, status, bot_config)
-        status = bot.next(updated_order_status)
-        return status
+        return bot.next(updated_order_status)
 
     def _get_bot_instance(self, bot_config: BotConfig) -> Bot:
         class_parts = self._config.strategy_class.split(".")
@@ -97,7 +92,7 @@ class StrategyManagerImpl(StrategyManager):
         bot.init(manager=self, logger=self._logger, bot_config=bot_config)
         return bot
 
-    def get_exchange(self, exchange_id: ExchangeType) -> t.Optional[Exchange]:
+    def get_exchange(self, exchange_id: ExchangeType) -> Optional[Exchange]:
         for exchange in self._exchanges:
             if exchange.id == exchange_id.value:
                 return exchange
@@ -181,8 +176,10 @@ class StrategyManagerImpl(StrategyManager):
         self,
         exchange: Exchange,
         pair: TradingPair,
+        page_size: int,
         time_frame: TimeFrame = TimeFrame.min_1,  # type: ignore
     ) -> pd.DataFrame:
+        # TODO User the new parameter page_size ... or remove it
         return self._exchange_manager.read_candles(exchange, pair, time_frame)
 
     def get_order_book(self) -> OrderBook:
@@ -262,6 +259,31 @@ class StrategyManagerImpl(StrategyManager):
 
     def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
         return self._exchange_manager.limit_min_amount(exchange, pair)
+
+    def create_limit_buy_order(
+        self, exchange: Exchange, pair: TradingPair, amount, price
+    ) -> Order:
+        raise NotImplementedError
+
+    def create_limit_sell_order(
+        self, exchange: Exchange, pair: TradingPair, amount, price
+    ) -> Order:
+        raise NotImplementedError
+
+    def create_market_buy_order(
+        self, exchange: Exchange, pair: TradingPair, amount
+    ) -> Order:
+        raise NotImplementedError
+
+    def create_market_sell_order(
+        self, exchange: Exchange, pair: TradingPair, amount
+    ) -> Order:
+        raise NotImplementedError
+
+    def fetch_order(
+        self, exchange: Exchange, pair: TradingPair, order_id: str
+    ) -> Order:
+        raise NotImplementedError
 
     def amount_to_precision(
         self, exchange: Exchange, pair: TradingPair, amount: float
