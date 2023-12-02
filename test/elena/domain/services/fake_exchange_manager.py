@@ -4,8 +4,7 @@ from typing import Dict, Optional
 
 import pandas as pd
 
-from elena.adapters.exchange_manager.cctx_exchange_manager import \
-    CctxExchangeManager
+from elena.adapters.exchange_manager.cctx_exchange_manager import CctxExchangeManager
 from elena.domain.model.balance import Balance
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.exchange import Exchange
@@ -16,6 +15,7 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 
+from test.elena.domain.services.record import Record
 
 class FakeExchangeManager(ExchangeManager):
     def __init__(self, config: Dict, logger: Logger):
