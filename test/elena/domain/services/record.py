@@ -1,7 +1,10 @@
 import json
 import pandas as pd
+import time
 
-from elena.utils import get_time
+
+def get_time():
+    return int(time.time() * 1000)
 
 
 class Record:
