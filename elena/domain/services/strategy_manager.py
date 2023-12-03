@@ -131,10 +131,40 @@ class StrategyManagerImpl(StrategyManager):
         self._logger.info("Canceled order: %s", order_id)
         return order
 
-    def buy(self):
+    def buy_market(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
+        params = {"type": "spot"}
+
+        order = self._exchange_manager.place_order(
+            exchange=exchange,
+            bot_config=bot_config,
+            order_type=OrderType.market,  # type: ignore
+            side=OrderSide.buy,  # type: ignore
+            amount=amount,
+            params=params,
+        )
+        self._logger.info("Placed market buy: %s", order)
+
+        return order
+
+    def sell_market(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
+        params = {"type": "spot"}
+
+        order = self._exchange_manager.place_order(
+            exchange=exchange,
+            bot_config=bot_config,
+            order_type=OrderType.market,  # type: ignore
+            side=OrderSide.sell,  # type: ignore
+            amount=amount,
+            params=params,
+        )
+        self._logger.info("Placed market buy: %s", order)
+
+        return order
+
+    def buy_limit(self):
         self._logger.error("buy is not implemented")
 
-    def sell(self):
+    def sell_limit(self):
         self._logger.error("sell is not implemented")
 
     def stop_loss_limit(
