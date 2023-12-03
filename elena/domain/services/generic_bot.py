@@ -152,7 +152,7 @@ class GenericBot(Bot):
         try:
             return self.manager.create_market_sell_order(
                 self.exchange,
-                self.pair,
+                self.bot_config,
                 amount,
             )
         except Exception as err:

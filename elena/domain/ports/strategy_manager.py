@@ -24,9 +24,6 @@ class StrategyManager(Protocol):
     def buy_market(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
         ...
 
-    def sell_market(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
-        ...
-
     def stop_loss_limit(
         self,
         exchange: Exchange,
@@ -70,9 +67,7 @@ class StrategyManager(Protocol):
     ) -> Order:
         ...
 
-    def create_market_sell_order(
-        self, exchange: Exchange, pair: TradingPair, amount
-    ) -> Order:
+    def create_market_sell_order(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
         ...
 
     def fetch_order(

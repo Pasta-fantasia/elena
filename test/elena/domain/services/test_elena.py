@@ -86,7 +86,7 @@ class ExchangeBasicOperationsBot(GenericBot):
                     amount_to_sell = base_free / 2
                 amount_to_sell = self.manager.amount_to_precision(self.exchange, self.pair, amount_to_sell)
                 if amount_to_sell > min_amount:
-                    market_sell_order = self.manager.sell_market(self.exchange, self.bot_config, amount_to_sell)
+                    market_sell_order = self.create_market_sell_order(amount_to_sell)
                 else:
                     market_sell_order = None
 
