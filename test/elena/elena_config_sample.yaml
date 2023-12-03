@@ -17,6 +17,33 @@ Strategies:
         config:
           band_length: 13
           band_mult: 1
+#      To test with several pairs
+#      - id: Exchange_Test_Ops_IOTX_USDT
+#        name: Exchange Basic Operations Test 1 on IOTX/USDT
+#        enabled: true
+#        pair: IOTX/USDT
+#        exchange: binance
+#        time_frame: 1d # Valid values: 1m, 1h, 1d, 1M, 1y
+#        cron_expression: "*/5 * * * *" # At every 5th minute
+#        tags:
+#          - ranging
+#          - bear
+#        config:
+#          band_length: 13
+#          band_mult: 1
+#      - id: Exchange_Test_Ops_LTC_BTC
+#        name: Exchange Basic Operations Test 1 on LTC/BTC
+#        enabled: true
+#        pair: LTC/BTC
+#        exchange: binance
+#        time_frame: 1d # Valid values: 1m, 1h, 1d, 1M, 1y
+#        cron_expression: "*/5 * * * *" # At every 5th minute
+#        tags:
+#          - ranging
+#          - bear
+#        config:
+#          band_length: 13
+#          band_mult: 1
 
 
 Exchanges:

@@ -249,12 +249,12 @@ class StrategyManagerImpl(StrategyManager):
         return self._exchange_manager.limit_min_amount(exchange, pair)
 
     def create_limit_buy_order(
-        self, exchange: Exchange, pair: TradingPair, amount, price
+        self, exchange: Exchange, bot_config: BotConfig, amount, price
     ) -> Order:
         raise NotImplementedError
 
     def create_limit_sell_order(
-        self, exchange: Exchange, pair: TradingPair, amount, price
+        self, exchange: Exchange, bot_config: BotConfig, amount, price
     ) -> Order:
         raise NotImplementedError
 
@@ -272,7 +272,6 @@ class StrategyManagerImpl(StrategyManager):
         self._logger.info("Placed market buy: %s", order)
 
         return order
-
 
     def create_market_sell_order(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
         params = {"type": "spot"}

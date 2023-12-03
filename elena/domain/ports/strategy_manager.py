@@ -50,17 +50,17 @@ class StrategyManager(Protocol):
         ...
 
     def create_limit_buy_order(
-        self, exchange: Exchange, pair: TradingPair, amount, price
+        self, exchange: Exchange, bot_config: BotConfig, amount, price
     ) -> Order:
         ...
 
     def create_limit_sell_order(
-        self, exchange: Exchange, pair: TradingPair, amount, price
+        self, exchange: Exchange, bot_config: BotConfig, amount, price
     ) -> Order:
         ...
 
     def create_market_buy_order(
-        self, exchange: Exchange, pair: TradingPair, amount
+        self, exchange: Exchange, bot_config: BotConfig, amount
     ) -> Order:
         ...
 

@@ -117,7 +117,7 @@ class GenericBot(Bot):
         try:
             return self.manager.create_limit_buy_order(
                 self.exchange,
-                self.pair,
+                self.bot_config,
                 amount,
                 price,
             )
@@ -129,7 +129,7 @@ class GenericBot(Bot):
         try:
             return self.manager.create_limit_sell_order(
                 self.exchange,
-                self.pair,
+                self.bot_config,
                 amount,
                 price,
             )
