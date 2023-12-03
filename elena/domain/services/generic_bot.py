@@ -80,7 +80,7 @@ class GenericBot(Bot):
             return None
 
     def read_candles(
-        self, page_size: int, time_frame: Optional[TimeFrame] = None
+        self, page_size: int = 100, time_frame: Optional[TimeFrame] = None
     ) -> pd.DataFrame:
         if not time_frame:
             time_frame = self.time_frame
@@ -111,6 +111,12 @@ class GenericBot(Bot):
         except Exception as err:
             self._logger.error(f"Error getting limit min amount: {err}", error=err)
             return None
+
+    def amount_to_precision(self, amount: float) -> float:
+        return self.manager.amount_to_precision(self.exchange, self.pair, amount)
+
+    def price_to_precision(self, price: float) -> float:
+        return self.manager.price_to_precision(self.exchange, self.pair, price)
 
     def create_limit_buy_order(self, amount, price) -> Optional[Order]:
         """buy (0.01 BTC at 47k USDT)  pair=BTC/UST"""
