@@ -1,6 +1,6 @@
 import importlib
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import pandas as pd
 from cron_converter import Cron
@@ -53,27 +53,36 @@ class StrategyManagerImpl(StrategyManager):
         }
         updated_statuses = []
         for bot_config in self._config.bots:
-            run = True
-            self._logger.info("Running bot %s: %s", bot_config.id, bot_config.name)
-            if bot_config.id in previous_statuses_dict:
-                status = previous_statuses_dict[bot_config.id]
-                last_execution = datetime.fromtimestamp(status.timestamp / 1000)
-                run = self._check_if_bot_has_to_run(
-                    last_execution, bot_config.cron_expression
-                )
-            else:
-                status = BotStatus(
-                    bot_id=bot_config.id,
-                    active_orders=[],
-                    archived_orders=[],
-                    active_trades=[],
-                    closed_trades=[],
-                )
+            run, status = self._get_run_status(bot_config, previous_statuses_dict)
             if run:
+                self._logger.info("Running bot %s: %s", bot_config.id, bot_config.name)
                 updated_status = self._run_bot(status, bot_config)
                 if updated_status:
                     updated_statuses.append(updated_status)
         return updated_statuses
+
+    def _get_run_status(
+        self, bot_config: BotConfig, previous_statuses_dict
+    ) -> Tuple[bool, BotStatus]:
+        run = True
+        if bot_config.id in previous_statuses_dict:
+            status = previous_statuses_dict[bot_config.id]
+            last_execution = datetime.fromtimestamp(status.timestamp / 1000)
+            if (
+                bot_config.cron_expression
+            ):  # If there is no cron expression, the bot will run every time
+                run = self._check_if_bot_has_to_run(
+                    last_execution, bot_config.cron_expression
+                )
+        else:
+            status = BotStatus(
+                bot_id=bot_config.id,
+                active_orders=[],
+                archived_orders=[],
+                active_trades=[],
+                closed_trades=[],
+            )
+        return run, status
 
     @staticmethod
     def _check_if_bot_has_to_run(
@@ -131,7 +140,9 @@ class StrategyManagerImpl(StrategyManager):
         self._logger.info("Canceled order: %s", order_id)
         return order
 
-    def buy_market(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
+    def buy_market(
+        self, exchange: Exchange, bot_config: BotConfig, amount: float
+    ) -> Order:
         params = {"type": "spot"}
 
         order = self._exchange_manager.place_order(
@@ -146,7 +157,9 @@ class StrategyManagerImpl(StrategyManager):
 
         return order
 
-    def sell_market(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
+    def sell_market(
+        self, exchange: Exchange, bot_config: BotConfig, amount: float
+    ) -> Order:
         params = {"type": "spot"}
 
         order = self._exchange_manager.place_order(
