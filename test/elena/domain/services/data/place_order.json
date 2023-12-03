@@ -1,0 +1,25 @@
+{
+  "id": "10993014",
+  "exchange_id": "binance",
+  "bot_id": "Exchange_Test_Ops_BTC_USDT",
+  "strategy_id": "ExchangeBasicOperationsTest-1",
+  "pair": {
+    "base": "BTC",
+    "quote": "USDT"
+  },
+  "timestamp": 1701583824117,
+  "type": "market",
+  "side": "buy",
+  "price": 39470.0488144,
+  "amount": 0.25,
+  "cost": 9867.5122036,
+  "average": 39470.0488144,
+  "filled": 0.25,
+  "remaining": 0.0,
+  "status": "closed",
+  "fee": null,
+  "trigger_price": null,
+  "stop_price": null,
+  "take_profit_price": null,
+  "stop_loss_price": null
+}

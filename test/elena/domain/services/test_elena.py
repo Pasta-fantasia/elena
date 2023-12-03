@@ -1,5 +1,8 @@
 import pathlib
 from logging import Logger
+
+from elena.domain.model.time_frame import TimeFrame
+from elena.domain.services.generic_bot import GenericBot
 from test.elena.domain.services.fake_exchange_manager import \
     FakeExchangeManager
 
@@ -56,10 +59,10 @@ class ExchangeBasicOperationsBot(GenericBot):
         candles = self.read_candles(page_size=100)
 
         # TODO: MANUAL MERGE on OLD CODE
-        min_amount = self._manager.limit_min_amount(self._exchange, self._config.pair)
+        min_amount = self.limit_min_amount()
 
         # get candles
-        candles = self._manager.read_candles(self._exchange, self._config.pair, TimeFrame.day_1)
+        candles = self.read_candles(100, TimeFrame.day_1)
 
         market_sell_order = None
         market_buy_order = None
@@ -67,9 +70,9 @@ class ExchangeBasicOperationsBot(GenericBot):
         while not (market_sell_order or market_buy_order):
             # we can't know if we have balances, so we'll try to buy or sell depending on the balances
             # is there any free balance to handle?
-            balance = self._manager.get_balance(self._exchange)
+            balance = self.get_balance()
 
-            base_symbol = self._config.pair.base
+            base_symbol = self.pair.base
             base_total = balance.currencies[base_symbol].total
             base_free = balance.currencies[base_symbol].free
 
@@ -81,16 +84,16 @@ class ExchangeBasicOperationsBot(GenericBot):
                     amount_to_sell = market_buy_order.amount
                 else:
                     amount_to_sell = base_free / 2
-                amount_to_sell = self._manager.amount_to_precision(self._exchange, self._config.pair, amount_to_sell)
+                amount_to_sell = self.manager.amount_to_precision(self.exchange, self.pair, amount_to_sell)
                 if amount_to_sell > min_amount:
-                    market_sell_order = self._manager.sell_market(self._exchange, self._config, amount_to_sell)
+                    market_sell_order = self.manager.sell_market(self.exchange, self.bot_config, amount_to_sell)
                 else:
                     market_sell_order = None
 
             # is there any free balance to handle?
-            balance = self._manager.get_balance(self._exchange)
+            balance = self.get_balance()
 
-            quote_symbol = self._config.pair.quote
+            quote_symbol = self.pair.quote
             quote_total = balance.currencies[quote_symbol].total
             quote_free = balance.currencies[quote_symbol].free
 
@@ -108,9 +111,9 @@ class ExchangeBasicOperationsBot(GenericBot):
                     amount_to_spend = quote_free / 2
                     amount_to_buy = amount_to_spend / yesterday_close_price
 
-                amount_to_buy = self._manager.amount_to_precision(self._exchange, self._config.pair, amount_to_buy)
+                amount_to_buy = self.manager.amount_to_precision(self.exchange, self.pair, amount_to_buy)
                 if amount_to_buy > min_amount:
-                    market_buy_order = self._manager.buy_market(self._exchange, self._config, amount_to_buy)
+                    market_buy_order = self.manager.buy_market(self.exchange, self.bot_config, amount_to_buy)
                 else:
                     pass
 
