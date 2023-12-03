@@ -2,72 +2,11 @@
 
 ## Pere
 
-### Bot
-
-A bot runs a strategy on an exchange for a pair, based on bot configuration
-Has to be able to call all the exchange operations directly, without calling the ExchangeManager
-Will be an abstract class with the following properties and methods:
-
-#### Properties
-
-- id: str
-- name: str
-- pair: TradingPair
-- config: Dict
-- limits                  // value limits when placing orders on this market
-  - fields
-    - amount
-        - min: 0.01,      // order amount should be > min
-        - max: 1000,      // order amount should be < max
-    - price
-        - min: 0.01,      // order price should be > min
-        - max: 1000,      // order price should be < max
-    - cost                // order cost = price * amount
-        - min: 0.01,      // order cost should be > min
-        - max: 1000,      // order cost should be < max
-    - leverage
-        - min: 0.01,      // order leverage should be > min
-        - max: 1000,      // order leverage should be < max
-  - create it as a data class, not a dict
-  - example of usage: `self.limit.amount.max * 22`
+- [x] call `amount_to_precision` & `price_to_precision` before calling exchange
+- [ ] capture all errors, log it and return None if they fail
 
 
-#### Methods
 
-Methods don't raise exceptions, they return None if they fail
-
-- cancel_order(order_id: str) -> t.Optional[Order]
-- get_balance() -> t.Optional[Balance]
-- stop_loss(amount: float, stop_price: float, price: float) -> t.Optional[Order]
-- read_candles(
-          limt:int, # Page size
-          time_frame: TimeFrame = self.bot_config.time_frame
-      ) -> t.Optional[pd.DataFrame]
-- get_order_book() -> t.Optional[OrderBook]
-- createLimitBuyOrder(amount, price ) -> t.Optional[Order] # buy (0.01 BTC at 47k USDT)  pair=BTC/UST
-- createLimitSellOrder(amount, price ) -> t.Optional[Order]
-- createMarketBuyOrder(amount) -> t.Optional[Order]
-- createMarketSellOrder(amount) -> t.Optional[Order]
-- fetch_order() -> t.Optional[Order]
- 
-#### Implementation notes
-
-- call to amount_to_precision & price_to_precision before calling exchange
-- capture all errors, log it and return None if they fail
-
-
-## orders
-
-createLimitBuyOrder(amount, price ) # buy (0.01 BTC at 47k USDT)  pair=BTC/UST
-createLimitSellOrder(amount, price )
-
-createMarketBuyOrder(amount)
-createMarketSellOrder(amount)
-
-## Why?
-
-
-## Exceptions
 
 
 ## Trades, how to implement them
