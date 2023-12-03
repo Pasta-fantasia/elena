@@ -46,7 +46,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         min_amount = self.limit_min_amount()
 
         # get candles
-        candles = self.read_candles(100, TimeFrame.day_1)
+        candles = self.read_candles()
 
         market_sell_order = None
         market_buy_order = None

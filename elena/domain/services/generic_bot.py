@@ -80,7 +80,7 @@ class GenericBot(Bot):
             return None
 
     def read_candles(
-        self, page_size: int, time_frame: Optional[TimeFrame] = None
+        self, page_size: int = 100, time_frame: Optional[TimeFrame] = None
     ) -> pd.DataFrame:
         if not time_frame:
             time_frame = self.time_frame
