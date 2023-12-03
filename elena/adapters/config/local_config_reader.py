@@ -1,14 +1,15 @@
 import os
 import pathlib
 from os import path
-from typing import Dict
+from typing import Dict, Optional
 
 import yaml  # type: ignore
 
 
 class LocalConfigReader:
-    def __init__(self):
-        home = self._get_home()
+    def __init__(self, home: Optional[str] = None):
+        if not home:
+            home = self._get_home()
         default_config = self._load_default_config()
         user_config = self._load_user_config(home)
         config = {**default_config, **user_config}

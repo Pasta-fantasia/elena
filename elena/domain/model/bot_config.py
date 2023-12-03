@@ -3,6 +3,7 @@ from typing import Dict, List
 from pydantic import BaseModel
 
 from elena.domain.model.exchange import ExchangeType
+from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 
 
@@ -13,5 +14,7 @@ class BotConfig(BaseModel):
     enabled: bool = True
     pair: TradingPair
     exchange_id: ExchangeType
+    time_frame: TimeFrame
+    cron_expression: str
     tags: List[str]
     config: Dict

@@ -38,6 +38,7 @@ class StrategyManager(Protocol):
         self,
         exchange: Exchange,
         pair: TradingPair,
+        page_size: int,
         time_frame: TimeFrame = TimeFrame.min_1,  # type: ignore
     ) -> pd.DataFrame:
         ...
@@ -46,6 +47,29 @@ class StrategyManager(Protocol):
         ...
 
     def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
+        ...
+
+    def create_limit_buy_order(
+        self, exchange: Exchange, bot_config: BotConfig, amount, price
+    ) -> Order:
+        ...
+
+    def create_limit_sell_order(
+        self, exchange: Exchange, bot_config: BotConfig, amount, price
+    ) -> Order:
+        ...
+
+    def create_market_buy_order(
+        self, exchange: Exchange, bot_config: BotConfig, amount
+    ) -> Order:
+        ...
+
+    def create_market_sell_order(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
+        ...
+
+    def fetch_order(
+        self, exchange: Exchange, pair: TradingPair, order_id: str
+    ) -> Order:
         ...
 
     def amount_to_precision(
@@ -57,3 +81,4 @@ class StrategyManager(Protocol):
         self, exchange: Exchange, pair: TradingPair, price: float
     ) -> float:
         ...
+

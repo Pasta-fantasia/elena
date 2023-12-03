@@ -140,7 +140,8 @@ dmypy.json
 /cfg/test-user.yaml
 
 /.github/
-/elena/sample/logs/
-/elena/sample/bots/
 
 /TODO.md
+/test/elena/bots/
+/test/elena/logs/
+/test/elena/elena_config.yaml

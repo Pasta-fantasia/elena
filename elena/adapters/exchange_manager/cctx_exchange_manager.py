@@ -402,7 +402,6 @@ class CctxExchangeManager(ExchangeManager):
         return result
 
     def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
-
         conn = self._connect(exchange)
         return float(conn.markets[str(pair)]["limits"]["amount"]["min"])
 
