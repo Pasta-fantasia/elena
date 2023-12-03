@@ -81,7 +81,7 @@ class GenericBot(Bot):
 
     def read_candles(
         self, page_size: int, time_frame: Optional[TimeFrame] = None
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame:
         if not time_frame:
             time_frame = self.time_frame
         try:
@@ -93,7 +93,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             self._logger.error(f"Error reading candles: {err}", error=err)
-            return None
+            return pd.DataFrame()
 
     def get_order_book(self) -> Optional[OrderBook]:
         try:
