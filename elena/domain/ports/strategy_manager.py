@@ -64,7 +64,9 @@ class StrategyManager(Protocol):
     ) -> Order:
         ...
 
-    def create_market_sell_order(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
+    def create_market_sell_order(
+        self, exchange: Exchange, bot_config: BotConfig, amount: float
+    ) -> Order:
         ...
 
     def fetch_order(
@@ -81,4 +83,3 @@ class StrategyManager(Protocol):
         self, exchange: Exchange, pair: TradingPair, price: float
     ) -> float:
         ...
-

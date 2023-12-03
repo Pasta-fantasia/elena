@@ -151,6 +151,10 @@ class StrategyManagerImpl(StrategyManager):
         # https://docs.ccxt.com/#/README?id=stop-loss-orders
         # binance only accept stop_loss_limit for BTC/USDT
 
+        amount = self.amount_to_precision(exchange, bot_config.pair, amount)
+        stop_price = self.price_to_precision(exchange, bot_config.pair, stop_price)
+        price = self.price_to_precision(exchange, bot_config.pair, price)
+
         params = {"type": "spot", "triggerPrice": stop_price, "timeInForce": "GTC"}
 
         order = self._exchange_manager.place_order(
@@ -180,7 +184,7 @@ class StrategyManagerImpl(StrategyManager):
         return self._exchange_manager.read_candles(exchange, pair, time_frame)
 
     def get_order_book(self) -> OrderBook:
-        ...
+        raise NotImplementedError
 
     def _update_orders_status(
         self, exchange: Exchange, status: BotStatus, bot_config: BotConfig
@@ -267,9 +271,12 @@ class StrategyManagerImpl(StrategyManager):
     ) -> Order:
         raise NotImplementedError
 
-    def create_market_buy_order(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
+    def create_market_buy_order(
+        self, exchange: Exchange, bot_config: BotConfig, amount: float
+    ) -> Order:
         params = {"type": "spot"}
 
+        amount = self.amount_to_precision(exchange, bot_config.pair, amount)
         order = self._exchange_manager.place_order(
             exchange=exchange,
             bot_config=bot_config,
@@ -282,9 +289,12 @@ class StrategyManagerImpl(StrategyManager):
 
         return order
 
-    def create_market_sell_order(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
+    def create_market_sell_order(
+        self, exchange: Exchange, bot_config: BotConfig, amount: float
+    ) -> Order:
         params = {"type": "spot"}
 
+        amount = self.amount_to_precision(exchange, bot_config.pair, amount)
         order = self._exchange_manager.place_order(
             exchange=exchange,
             bot_config=bot_config,
