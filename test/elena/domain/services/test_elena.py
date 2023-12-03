@@ -1,8 +1,4 @@
 import pathlib
-from logging import Logger
-
-from elena.domain.model.time_frame import TimeFrame
-from elena.domain.services.generic_bot import GenericBot
 from test.elena.domain.services.fake_exchange_manager import \
     FakeExchangeManager
 
@@ -14,6 +10,7 @@ from elena.domain.model.bot_status import BotStatus
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.services.elena import Elena
+from elena.domain.services.generic_bot import GenericBot
 
 
 class ExchangeBasicOperationsBot(GenericBot):
@@ -44,6 +41,8 @@ class ExchangeBasicOperationsBot(GenericBot):
             raise Exception("Cannot get balance")
 
         min_amount = self.limit_min_amount()
+        if not min_amount:
+            raise Exception("Cannot get min_amount")
 
         # get candles
         candles = self.read_candles()
@@ -55,6 +54,8 @@ class ExchangeBasicOperationsBot(GenericBot):
             # we can't know if we have balances, so we'll try to buy or sell depending on the balances
             # is there any free balance to handle?
             balance = self.get_balance()
+            if not balance:
+                raise Exception("Cannot get balance")
 
             base_symbol = self.pair.base
             base_total = balance.currencies[base_symbol].total
@@ -76,6 +77,8 @@ class ExchangeBasicOperationsBot(GenericBot):
 
             # is there any free balance to handle?
             balance = self.get_balance()
+            if not balance:
+                raise Exception("Cannot get balance")
 
             quote_symbol = self.pair.quote
             quote_total = balance.currencies[quote_symbol].total
@@ -103,7 +106,9 @@ class ExchangeBasicOperationsBot(GenericBot):
 
             if not (market_sell_order or market_buy_order):
                 # but we may have all balances locked...
-                self._logger.error("Can't buy nor sell symbol. Maybe all balances are in open orders.")
+                self._logger.error(
+                    "Can't buy nor sell symbol. Maybe all balances are in open orders."
+                )
                 break
 
         # TODO:
