@@ -38,27 +38,11 @@ class ExchangeBasicOperationsBot(GenericBot):
     def next(self, status: BotStatus) -> BotStatus:
         self._logger.info("%s strategy: processing next cycle ...", self.name)
 
-        # NEW CODE
         # is there any free balance to handle?
         balance = self.get_balance()
         if not balance:
             raise Exception("Cannot get balance")
 
-        base_symbol = self.pair.base
-        base_total = balance.currencies[base_symbol].total
-        base_free = balance.currencies[base_symbol].free
-
-        quote_symbol = self.pair.quote
-        quote_total = balance.currencies[quote_symbol].total
-        quote_free = balance.currencies[quote_symbol].free
-
-        # get min amount
-        min_amount = self.limit_min_amount()
-
-        # get candles
-        candles = self.read_candles(page_size=100)
-
-        # TODO: MANUAL MERGE on OLD CODE
         min_amount = self.limit_min_amount()
 
         # get candles
