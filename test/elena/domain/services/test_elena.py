@@ -113,7 +113,7 @@ class ExchangeBasicOperationsBot(GenericBot):
 
                 amount_to_buy = self.manager.amount_to_precision(self.exchange, self.pair, amount_to_buy)
                 if amount_to_buy > min_amount:
-                    market_buy_order = self.manager.buy_market(self.exchange, self.bot_config, amount_to_buy)
+                    market_buy_order = self.create_market_buy_order(amount_to_sell)
                 else:
                     pass
 

@@ -21,9 +21,6 @@ class StrategyManager(Protocol):
     ) -> Order:
         ...
 
-    def buy_market(self, exchange: Exchange, bot_config: BotConfig, amount: float) -> Order:
-        ...
-
     def stop_loss_limit(
         self,
         exchange: Exchange,
