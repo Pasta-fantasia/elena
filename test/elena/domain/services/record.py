@@ -1,6 +1,7 @@
 import json
-import pandas as pd
 import time
+
+import pandas as pd
 
 
 def get_time():
@@ -33,10 +34,10 @@ class Record:
     def _record(self, kwargs, output, function_name):
         _time = get_time()
         _data = {
-            'time': _time,
-            'function': function_name,
-            'input': kwargs,
-            'output': self._serialize_output(output),
+            "time": _time,
+            "function": function_name,
+            "input": kwargs,
+            "output": self._serialize_output(output),
         }
         self._save(_data, _time, function_name)
 
@@ -47,6 +48,6 @@ class Record:
         return output
 
     def _save(self, data, time, function):
-        _fp = open(f'../test_data/{self.prefix}-{time}-{function}.json', 'w')
+        _fp = open(f"../test_data/{self.prefix}-{time}-{function}.json", "w")
         json.dump(data, _fp, indent=4)
         _fp.close()

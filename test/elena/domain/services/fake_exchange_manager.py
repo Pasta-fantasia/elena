@@ -1,10 +1,14 @@
 import json
 from os.path import dirname, join, realpath
+# TODO: jsons should look like Binance_read_candles_BTC_USDT_min_1.
+#  Record class was doing something like that. But the time parameter is not relevant anymore.
+#       Not sure if that would be possible with amount_to_precision and price_to_precision
 from typing import Dict, Optional
 
 import pandas as pd
 
-from elena.adapters.exchange_manager.cctx_exchange_manager import CctxExchangeManager
+from elena.adapters.exchange_manager.cctx_exchange_manager import \
+    CctxExchangeManager
 from elena.domain.model.balance import Balance
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.exchange import Exchange
@@ -14,11 +18,6 @@ from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-
-# TODO: jsons should look like Binance_read_candles_BTC_USDT_min_1.
-#  Record class was doing something like that. But the time parameter is not relevant anymore.
-#       Not sure if that would be possible with amount_to_precision and price_to_precision
-from test.elena.domain.services.record import Record
 
 
 class FakeExchangeManager(ExchangeManager):
@@ -69,7 +68,10 @@ class FakeExchangeManager(ExchangeManager):
     ) -> float:
         if self._save:
             result = self._cctx.price_to_precision(exchange, pair, price)
-            self.save_to_json(result.dict(), "price_to_precision")
+            self.save_to_json(
+                {"price_to_precision": result},
+                "price_to_precision",
+            )
         else:
             pass  # TODO
         return result
@@ -131,7 +133,10 @@ class FakeExchangeManager(ExchangeManager):
     def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
         if self._save:
             result = self._cctx.limit_min_amount(exchange, pair)
-            self.save_to_json(result, "limit_min_amount")
+            self.save_to_json(
+                {"limit_min_amount": result},
+                "limit_min_amount",
+            )
         else:
             pass  # TODO
         return result
