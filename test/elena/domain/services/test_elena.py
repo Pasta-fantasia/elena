@@ -68,7 +68,7 @@ class ExchangeBasicOperationsBot(GenericBot):
                     amount_to_sell = market_buy_order.amount
                 else:
                     amount_to_sell = base_free / 2
-                amount_to_sell = self.manager.amount_to_precision(self.exchange, self.pair, amount_to_sell)
+                amount_to_sell = self.amount_to_precision(amount_to_sell)
                 if amount_to_sell > min_amount:
                     market_sell_order = self.create_market_sell_order(amount_to_sell)
                 else:
@@ -95,7 +95,7 @@ class ExchangeBasicOperationsBot(GenericBot):
                     amount_to_spend = quote_free / 2
                     amount_to_buy = amount_to_spend / yesterday_close_price
 
-                amount_to_buy = self.manager.amount_to_precision(self.exchange, self.pair, amount_to_buy)
+                amount_to_buy = self.amount_to_precision(amount_to_buy)
                 if amount_to_buy > min_amount:
                     market_buy_order = self.create_market_buy_order(amount_to_sell)
                 else:
