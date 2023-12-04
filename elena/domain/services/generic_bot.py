@@ -53,15 +53,15 @@ class GenericBot(Bot):
                 self.bot_config,
                 order_id,
             )
-        except Exception as err:
-            self._logger.error(f"Error cancelling order {order_id}: {err}", error=err)
+        except Exception:
+            self._logger.error(f"Error cancelling order {order_id}", exc_info=1)
             return None
 
     def get_balance(self) -> Optional[Balance]:
         try:
             return self.manager.get_balance(self.exchange)
-        except Exception as err:
-            self._logger.error(f"Error getting balance: {err}", error=err)
+        except Exception:
+            self._logger.error("Error getting balance", exc_info=1)
             return None
 
     def stop_loss(
@@ -75,8 +75,8 @@ class GenericBot(Bot):
                 stop_price,
                 price,
             )
-        except Exception as err:
-            self._logger.error(f"Error creating stop loss: {err}", error=err)
+        except Exception:
+            self._logger.error("Error creating stop loss", exc_info=1)
             return None
 
     def read_candles(
@@ -91,15 +91,15 @@ class GenericBot(Bot):
                 page_size,
                 time_frame,
             )
-        except Exception as err:
-            self._logger.error(f"Error reading candles: {err}", error=err)
+        except Exception:
+            self._logger.error("Error reading candles", exc_info=1)
             return pd.DataFrame()
 
     def get_order_book(self) -> Optional[OrderBook]:
         try:
             return self.manager.get_order_book()
-        except Exception as err:
-            self._logger.error(f"Error getting order book: {err}", error=err)
+        except Exception:
+            self._logger.error("Error getting order book", exc_info=1)
             return None
 
     def limit_min_amount(self) -> Optional[float]:
@@ -108,8 +108,8 @@ class GenericBot(Bot):
                 self.exchange,
                 self.pair,
             )
-        except Exception as err:
-            self._logger.error(f"Error getting limit min amount: {err}", error=err)
+        except Exception:
+            self._logger.error("Error getting limit min amount", exc_info=1)
             return None
 
     def amount_to_precision(self, amount: float) -> float:
@@ -127,8 +127,8 @@ class GenericBot(Bot):
                 amount,
                 price,
             )
-        except Exception as err:
-            self._logger.error(f"Error creating limit buy order: {err}", error=err)
+        except Exception:
+            self._logger.error("Error creating limit buy order", exc_info=1)
             return None
 
     def create_limit_sell_order(self, amount, price) -> Optional[Order]:
@@ -139,8 +139,8 @@ class GenericBot(Bot):
                 amount,
                 price,
             )
-        except Exception as err:
-            self._logger.error(f"Error creating limit sell order: {err}", error=err)
+        except Exception:
+            self._logger.error("Error creating limit sell order", exc_info=1)
             return None
 
     def create_market_buy_order(self, amount) -> Optional[Order]:
@@ -150,8 +150,8 @@ class GenericBot(Bot):
                 self.bot_config,
                 amount,
             )
-        except Exception as err:
-            self._logger.error(f"Error creating market buy order: {err}", error=err)
+        except Exception:
+            self._logger.error("Error creating market buy order", exc_info=1)
             return None
 
     def create_market_sell_order(self, amount) -> Optional[Order]:
@@ -161,8 +161,8 @@ class GenericBot(Bot):
                 self.bot_config,
                 amount,
             )
-        except Exception as err:
-            self._logger.error(f"Error creating market sell order: {err}", error=err)
+        except Exception:
+            self._logger.error("Error creating market sell order", exc_info=1)
             return None
 
     def fetch_order(self, order_id: str) -> Optional[Order]:
@@ -172,6 +172,6 @@ class GenericBot(Bot):
                 self.pair,
                 order_id,
             )
-        except Exception as err:
-            self._logger.error(f"Error fetching order: {err}", error=err)
+        except Exception:
+            self._logger.error("Error fetching order", exc_info=1)
             return None
