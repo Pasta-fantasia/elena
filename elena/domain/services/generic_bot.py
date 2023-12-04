@@ -114,8 +114,8 @@ class GenericBot(Bot):
     def get_balance(self) -> Optional[Balance]:
         try:
             return self.exchange_manager.get_balance(self.exchange)
-        except Exception as err:
-            self._logger.error(f"Error getting balance: {err}", error=err)
+        except Exception:
+            self._logger.error("Error creating stop loss", exc_info=1)
             return None
 
     def read_candles(
@@ -130,8 +130,8 @@ class GenericBot(Bot):
                 time_frame,
                 page_size
             )
-        except Exception as err:
-            self._logger.error(f"Error reading candles: {err}", error=err)
+        except Exception:
+            self._logger.error("Error reading candles", exc_info=1)
             return pd.DataFrame()
 
     def limit_min_amount(self) -> Optional[float]:
@@ -140,8 +140,8 @@ class GenericBot(Bot):
                 self.exchange,
                 self.pair,
             )
-        except Exception as err:
-            self._logger.error(f"Error getting limit min amount: {err}", error=err)
+        except Exception:
+            self._logger.error("Error getting limit min amount", exc_info=1)
             return None
 
     def amount_to_precision(self, amount: float) -> float:
@@ -153,16 +153,17 @@ class GenericBot(Bot):
     def get_order_book(self) -> Optional[OrderBook]:
         try:
             return self.exchange_manager.get_order_book()
-        except Exception as err:
-            self._logger.error(f"Error getting order book: {err}", error=err)
+        except Exception:
+            self._logger.error("Error getting order book", exc_info=1)
             return None
+
 
     #  ---- Orders operations
     def cancel_order(self, order_id: str) -> Optional[Order]:
         try:
             return self.exchange_manager.cancel_order(self.exchange, self.bot_config, order_id)
-        except Exception as err:
-            self._logger.error(f"Error cancelling order {order_id}: {err}", error=err)
+        except Exception:
+            self._logger.error(f"Error cancelling order {order_id}", exc_info=1)
             return None
 
     def stop_loss(self, amount: float, stop_price: float, price: float) -> Optional[Order]:
@@ -185,8 +186,8 @@ class GenericBot(Bot):
             self._logger.info("Placed market stop loss: %s", order)
             self.status.active_orders.append(order)
             return order
-        except Exception as err:
-            self._logger.error(f"Error creating stop loss: {err}", error=err)
+        except Exception:
+            self._logger.error(f"Error creating stop loss.", exc_info=1)
             return None
 
     def create_limit_buy_order(self, amount, price) -> Optional[Order]:
@@ -213,8 +214,8 @@ class GenericBot(Bot):
             # TODO: order_add + trade_start (going long) | trade_stop (going short)
             self.status.active_orders.append(order)
             return order
-        except Exception as err:
-            self._logger.error(f"Error creating market buy order: {err}", error=err)
+        except Exception:
+            self._logger.error(f"Error creating market buy order", exc_info=1)
             return None
 
     def create_market_sell_order(self, amount) -> Optional[Order]:
@@ -234,8 +235,8 @@ class GenericBot(Bot):
             # TODO: order_add + trade_stop (going long) | trade_start (going short)
             self.status.active_orders.append(order)
             return order
-        except Exception as err:
-            self._logger.error(f"Error creating market sell order: {err}", error=err)
+        except Exception:
+            self._logger.error(f"Error creating market sell order ", exc_info=1)
             return None
 
     def fetch_order(self, order_id: str) -> Optional[Order]:
@@ -245,6 +246,6 @@ class GenericBot(Bot):
                 self.bot_config,
                 order_id,
             )
-        except Exception as err:
-            self._logger.error(f"Error fetching order: {err}", error=err)
+        except Exception:
+            self._logger.error(f"Error fetching order",  exc_info=1)
             return None
