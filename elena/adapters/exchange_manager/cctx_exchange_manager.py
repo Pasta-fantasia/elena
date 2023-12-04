@@ -391,7 +391,10 @@ class CctxExchangeManager(ExchangeManager):
 
     def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str):
         conn = self._connect(exchange)
-        conn.cancel_order(id=order_id, symbol=str(bot_config.pair))
+        order = conn.cancel_order(id=order_id, symbol=str(bot_config.pair))
+        self._logger.info("Canceled order: %s", order_id)
+        result = self._map_order(exchange, bot_config, bot_config.pair, order)
+        return result
 
     def fetch_order(
         self, exchange: Exchange, bot_config: BotConfig, order_id: str
