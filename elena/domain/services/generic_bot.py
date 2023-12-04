@@ -29,6 +29,71 @@ class GenericBot(Bot):
     status: BotStatus
     _logger: Logger
 
+    def _update_orders_status(self, exchange: Exchange, status: BotStatus, bot_config: BotConfig) -> BotStatus:
+        # orders
+        updated_orders = []
+        for order in status.active_orders:
+            # update status
+            updated_order = self.fetch_order(exchange, bot_config, order.id)
+
+            if (updated_order.status == OrderStatusType.closed or updated_order.status == OrderStatusType.canceled):
+                # notify
+                if updated_order.status == OrderStatusType.closed:
+                    # TODO: [Pere] "self._logger.info(f"Notify!" it's where a notification should be sent to the user.
+                    #  Where we should push or connect to telegram... we can have it read only first.
+                    self._logger.info(
+                        f"Notify! Order {updated_order.id} was closed for {updated_order.amount} {updated_order.pair} "
+                        f"at {updated_order.average}"
+                    )
+                if updated_order.status == OrderStatusType.canceled:
+                    self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
+                    # TODO: [Fran] what should we do if an order is cancelled? Cancel are: manual, something could go
+                    #  wrong in L or the market is stopped.
+
+                # updates trades
+                for trade in status.active_trades:
+                    if trade.exit_order_id == updated_order.id:
+                        status.active_trades.remove(trade)
+                        trade.exit_time = updated_order.timestamp
+                        trade.exit_price = updated_order.average
+                        status.closed_trades.append(trade)
+                # move to archived
+                status.archived_orders.append(updated_order)
+            elif (
+                    updated_order.status == OrderStatusType.open
+                    and updated_order
+                    and updated_order.filled > 0  # type: ignore
+            ):
+                # TODO: [Fran] How to manage partially filled orders? Should we wait and see?
+                #  Should we notify and do nothing waiting for the user to act?
+                self._logger.info(
+                    f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: {updated_order.filled} "
+                    f"of {updated_order.amount} {updated_order.pair} at {updated_order.average}"
+                )
+                self.cancel_order(
+                    exchange=exchange,
+                    bot_config=bot_config,
+                    order_id=order.id,
+                )
+                # TODO: [Pere] I'm using orders and trades as pure lists...
+                #              should we have a layer on top? Not a priority.
+                # TODO: [Fran] is this "update" equal for partials? refactor?
+                # updates trades
+                for trade in status.active_trades:
+                    if trade.exit_order_id == updated_order.id:
+                        status.active_trades.remove(trade)
+                        trade.exit_time = updated_order.timestamp
+                        trade.exit_price = updated_order.average
+                        status.closed_trades.append(trade)
+                # move to archived
+                status.archived_orders.append(updated_order)
+            else:
+                updated_orders.append(updated_order)
+
+        status.active_orders = updated_orders
+
+        return status
+
     def init(self, manager: StrategyManager, logger: Logger, bot_config: BotConfig, bot_status: BotStatus):
         self.id = bot_config.id
         self.name = bot_config.name
