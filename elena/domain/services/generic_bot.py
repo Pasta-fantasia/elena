@@ -7,11 +7,12 @@ from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.exchange import Exchange
 from elena.domain.model.limits import Limits
-from elena.domain.model.order import Order
+from elena.domain.model.order import Order, OrderSide, OrderStatusType, OrderType
 from elena.domain.model.order_book import OrderBook
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.bot import Bot
+from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
 
@@ -25,7 +26,9 @@ class GenericBot(Bot):
     limits: Limits
     config: Dict
     manager: StrategyManager
+    exchange_manager: ExchangeManager
     bot_config: BotConfig
+    initial_status: BotStatus  # for testing/development TODO: delete
     status: BotStatus
     _logger: Logger
 
@@ -34,13 +37,12 @@ class GenericBot(Bot):
         updated_orders = []
         for order in status.active_orders:
             # update status
-            updated_order = self.fetch_order(exchange, bot_config, order.id)
+            updated_order = self.fetch_order(order.id)
 
-            if (updated_order.status == OrderStatusType.closed or updated_order.status == OrderStatusType.canceled):
+            if (updated_order.status == OrderStatusType.closed
+                    or updated_order.status == OrderStatusType.canceled):
                 # notify
                 if updated_order.status == OrderStatusType.closed:
-                    # TODO: [Pere] "self._logger.info(f"Notify!" it's where a notification should be sent to the user.
-                    #  Where we should push or connect to telegram... we can have it read only first.
                     self._logger.info(
                         f"Notify! Order {updated_order.id} was closed for {updated_order.amount} {updated_order.pair} "
                         f"at {updated_order.average}"
@@ -59,34 +61,25 @@ class GenericBot(Bot):
                         status.closed_trades.append(trade)
                 # move to archived
                 status.archived_orders.append(updated_order)
-            elif (
-                    updated_order.status == OrderStatusType.open
-                    and updated_order
-                    and updated_order.filled > 0  # type: ignore
-            ):
+
+            elif (updated_order.status == OrderStatusType.open
+                  and updated_order and updated_order.filled > 0):  # type: ignore
                 # TODO: [Fran] How to manage partially filled orders? Should we wait and see?
                 #  Should we notify and do nothing waiting for the user to act?
+
                 self._logger.info(
-                    f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: {updated_order.filled} "
-                    f"of {updated_order.amount} {updated_order.pair} at {updated_order.average}"
-                )
-                self.cancel_order(
-                    exchange=exchange,
-                    bot_config=bot_config,
-                    order_id=order.id,
-                )
-                # TODO: [Pere] I'm using orders and trades as pure lists...
-                #              should we have a layer on top? Not a priority.
-                # TODO: [Fran] is this "update" equal for partials? refactor?
+                    f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: {updated_order.filled} of {updated_order.amount} {updated_order.pair} at {updated_order.average}")
+                # self.cancel_order(exchange=exchange,bot_config=bot_config,order_id=order.id)
+
                 # updates trades
-                for trade in status.active_trades:
-                    if trade.exit_order_id == updated_order.id:
-                        status.active_trades.remove(trade)
-                        trade.exit_time = updated_order.timestamp
-                        trade.exit_price = updated_order.average
-                        status.closed_trades.append(trade)
+                # for trade in status.active_trades:
+                #    if trade.exit_order_id == updated_order.id:
+                #        status.active_trades.remove(trade)
+                #        trade.exit_time = updated_order.timestamp
+                #        trade.exit_price = updated_order.average
+                #        status.closed_trades.append(trade)
                 # move to archived
-                status.archived_orders.append(updated_order)
+                # status.archived_orders.append(updated_order)
             else:
                 updated_orders.append(updated_order)
 
@@ -94,7 +87,8 @@ class GenericBot(Bot):
 
         return status
 
-    def init(self, manager: StrategyManager, logger: Logger, bot_config: BotConfig, bot_status: BotStatus):
+    def init(self, manager: StrategyManager, logger: Logger, exchange_manager: ExchangeManager, bot_config: BotConfig,
+             bot_status: BotStatus):
         self.id = bot_config.id
         self.name = bot_config.name
         self.pair = bot_config.pair
@@ -102,13 +96,15 @@ class GenericBot(Bot):
         self.config = bot_config.config
         self.manager = manager
         self.bot_config = bot_config
-        self.status = bot_status
+        self.initial_status = bot_status
         self._logger = logger
 
         exchange = manager.get_exchange(bot_config.exchange_id)
         if not exchange:
             raise Exception(f"Cannot get Exchange from {bot_config.exchange_id} ID")
         self.exchange = exchange  # type: ignore
+        self.exchange_manager = exchange_manager
+        self.status = self._update_orders_status(exchange, bot_status, bot_config)
 
     def next(self) -> Optional[BotStatus]:
         ...
@@ -117,32 +113,30 @@ class GenericBot(Bot):
 
     def get_balance(self) -> Optional[Balance]:
         try:
-            return self.exchange.get_balance(self.exchange)
+            return self.exchange_manager.get_balance(self.exchange)
         except Exception as err:
             self._logger.error(f"Error getting balance: {err}", error=err)
             return None
 
     def read_candles(
-        self, page_size: int = 100, time_frame: Optional[TimeFrame] = None
+            self, time_frame: Optional[TimeFrame] = None, page_size: int = 100,
     ) -> pd.DataFrame:
         if not time_frame:
             time_frame = self.time_frame
         try:
-            # TODO User the new parameter page_size ... or remove it
-            return self.exchange.read_candles(
+            return self.exchange_manager.read_candles(
                 self.exchange,
                 self.pair,
-                page_size,
                 time_frame,
+                page_size
             )
         except Exception as err:
             self._logger.error(f"Error reading candles: {err}", error=err)
             return pd.DataFrame()
 
-
     def limit_min_amount(self) -> Optional[float]:
         try:
-            return self.exchange.limit_min_amount(
+            return self.exchange_manager.limit_min_amount(
                 self.exchange,
                 self.pair,
             )
@@ -151,14 +145,14 @@ class GenericBot(Bot):
             return None
 
     def amount_to_precision(self, amount: float) -> float:
-        return self.exchange.amount_to_precision(self.exchange, self.pair, amount)
+        return self.exchange_manager.amount_to_precision(self.exchange, self.pair, amount)
 
     def price_to_precision(self, price: float) -> float:
-        return self.exchange.price_to_precision(self.exchange, self.pair, price)
+        return self.exchange_manager.price_to_precision(self.exchange, self.pair, price)
 
     def get_order_book(self) -> Optional[OrderBook]:
         try:
-            return self.exchange.get_order_book()
+            return self.exchange_manager.get_order_book()
         except Exception as err:
             self._logger.error(f"Error getting order book: {err}", error=err)
             return None
@@ -166,7 +160,7 @@ class GenericBot(Bot):
     #  ---- Orders operations
     def cancel_order(self, order_id: str) -> Optional[Order]:
         try:
-            return self.exchange.cancel_order(self.exchange, self.bot_config, order_id)
+            return self.exchange_manager.cancel_order(self.exchange, self.bot_config, order_id)
         except Exception as err:
             self._logger.error(f"Error cancelling order {order_id}: {err}", error=err)
             return None
@@ -179,7 +173,7 @@ class GenericBot(Bot):
 
             params = {"type": "spot", "triggerPrice": stop_price, "timeInForce": "GTC"}
 
-            order = self.exchange.place_order(
+            order = self.exchange_manager.place_order(
                 exchange=self.exchange,
                 bot_config=self.bot_config,
                 order_type=OrderType.limit,  # type: ignore
@@ -189,12 +183,11 @@ class GenericBot(Bot):
                 params=params,
             )
             self._logger.info("Placed market stop loss: %s", order)
-
+            self.status.active_orders.append(order)
             return order
         except Exception as err:
             self._logger.error(f"Error creating stop loss: {err}", error=err)
             return None
-
 
     def create_limit_buy_order(self, amount, price) -> Optional[Order]:
         """buy (0.01 BTC at 47k USDT)  pair=BTC/UST"""
@@ -207,8 +200,8 @@ class GenericBot(Bot):
         try:
             params = {"type": "spot"}
 
-            amount = self.amount_to_precision(self.exchange, self.pair, amount)
-            order = self.exchange.place_order(
+            amount = self.amount_to_precision(amount)
+            order = self.exchange_manager.place_order(
                 exchange=self.exchange,
                 bot_config=self.bot_config,
                 order_type=OrderType.market,  # type: ignore
@@ -217,7 +210,8 @@ class GenericBot(Bot):
                 params=params,
             )
             self._logger.info("Placed market buy: %s", order)
-
+            # TODO: order_add + trade_start (going long) | trade_stop (going short)
+            self.status.active_orders.append(order)
             return order
         except Exception as err:
             self._logger.error(f"Error creating market buy order: {err}", error=err)
@@ -227,8 +221,8 @@ class GenericBot(Bot):
         try:
             params = {"type": "spot"}
 
-            amount = self.amount_to_precision(self.exchange, self.pair, amount)
-            order = self.exchange.place_order(
+            amount = self.amount_to_precision(amount)
+            order = self.exchange_manager.place_order(
                 exchange=self.exchange,
                 bot_config=self.bot_config,
                 order_type=OrderType.market,  # type: ignore
@@ -236,8 +230,9 @@ class GenericBot(Bot):
                 amount=amount,
                 params=params,
             )
-            self._logger.info("Placed market buy: %s", order)
-
+            self._logger.info("Placed market sell: %s", order)
+            # TODO: order_add + trade_stop (going long) | trade_start (going short)
+            self.status.active_orders.append(order)
             return order
         except Exception as err:
             self._logger.error(f"Error creating market sell order: {err}", error=err)
@@ -245,7 +240,7 @@ class GenericBot(Bot):
 
     def fetch_order(self, order_id: str) -> Optional[Order]:
         try:
-            return self.exchange.fetch_order(
+            return self.exchange_manager.fetch_order(
                 self.exchange,
                 self.bot_config,
                 order_id,

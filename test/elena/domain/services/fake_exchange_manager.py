@@ -44,9 +44,10 @@ class FakeExchangeManager(ExchangeManager):
         exchange: Exchange,
         pair: TradingPair,
         time_frame: TimeFrame = TimeFrame.min_1,  # type: ignore
+        page_size: int = 100,
     ) -> pd.DataFrame:
         if self._save:
-            result = self._cctx.read_candles(exchange, pair, time_frame)
+            result = self._cctx.read_candles(exchange, pair, time_frame, page_size)
             # self.save_to_json(result.dict(), "read_candles")
         else:
             data = self._load_from_json("read_candles")

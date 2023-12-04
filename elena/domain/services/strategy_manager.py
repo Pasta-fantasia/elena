@@ -56,14 +56,12 @@ class StrategyManagerImpl(StrategyManager):
             run, status = self._get_run_status(bot_config, previous_statuses_dict)
             if run:
                 self._logger.info("Running bot %s: %s", bot_config.id, bot_config.name)
-                updated_status = self._run_bot(status, bot_config)
+                updated_status = self._run_bot(self._exchange_manager, bot_config, status)
                 if updated_status:
                     updated_statuses.append(updated_status)
         return updated_statuses
 
-    def _get_run_status(
-            self, bot_config: BotConfig, previous_statuses_dict
-    ) -> Tuple[bool, BotStatus]:
+    def _get_run_status(self, bot_config: BotConfig, previous_statuses_dict) -> Tuple[bool, BotStatus]:
         run = True
         if bot_config.id in previous_statuses_dict:
             status = previous_statuses_dict[bot_config.id]
@@ -101,27 +99,18 @@ class StrategyManagerImpl(StrategyManager):
         now = datetime.now()
         return next_execution <= now
 
-    def _run_bot(self, bot_status: BotStatus, bot_config: BotConfig) -> Optional[BotStatus]:
-        bot = self._get_bot_instance(bot_config, bot_status)
-        exchange = self.get_exchange(bot_config.exchange_id)
-        if not exchange:
-            self._logger.error(
-                "Bot %s: %s has no valid exchange configuration.",
-                bot_config.id,
-                bot_config.name,
-            )
-            return None
-        #updated_order_status = self._update_orders_status(exchange, status, bot_config)
+    def _run_bot(self, exchange_manager: ExchangeManager,  bot_config: BotConfig, bot_status: BotStatus) -> Optional[BotStatus]:
+        bot = self._get_bot_instance(exchange_manager, bot_config, bot_status)
         return bot.next()
 
-    def _get_bot_instance(self, bot_config: BotConfig, bot_status: BotStatus) -> Bot:
+    def _get_bot_instance(self, exchange_manager: ExchangeManager, bot_config: BotConfig, bot_status: BotStatus) -> Bot:
         class_parts = self._config.strategy_class.split(".")
         class_name = class_parts[-1]
         module_path = ".".join(class_parts[0:-1])
         module = importlib.import_module(module_path)
         _class = getattr(module, class_name)
         bot = _class()
-        bot.init(manager=self, logger=self._logger, bot_config=bot_config, bot_status=bot_status)
+        bot.init(manager=self, logger=self._logger, exchange_manager=exchange_manager, bot_config=bot_config, bot_status=bot_status)
         return bot
 
     def get_exchange(self, exchange_id: ExchangeType) -> Optional[Exchange]:
