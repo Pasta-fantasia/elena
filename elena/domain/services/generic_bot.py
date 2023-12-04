@@ -207,7 +207,7 @@ class GenericBot(Bot):
         try:
             params = {"type": "spot"}
 
-            amount = self.amount_to_precision(self.exchange, self..pair, amount)
+            amount = self.amount_to_precision(self.exchange, self.pair, amount)
             order = self.exchange.place_order(
                 exchange=self.exchange,
                 bot_config=self.bot_config,
@@ -227,7 +227,7 @@ class GenericBot(Bot):
         try:
             params = {"type": "spot"}
 
-            amount = self.amount_to_precision(self.exchange, self..pair, amount)
+            amount = self.amount_to_precision(self.exchange, self.pair, amount)
             order = self.exchange.place_order(
                 exchange=self.exchange,
                 bot_config=self.bot_config,

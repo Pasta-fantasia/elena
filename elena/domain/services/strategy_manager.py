@@ -101,8 +101,8 @@ class StrategyManagerImpl(StrategyManager):
         now = datetime.now()
         return next_execution <= now
 
-    def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> Optional[BotStatus]:
-        bot = self._get_bot_instance(bot_config, status)
+    def _run_bot(self, bot_status: BotStatus, bot_config: BotConfig) -> Optional[BotStatus]:
+        bot = self._get_bot_instance(bot_config, bot_status)
         exchange = self.get_exchange(bot_config.exchange_id)
         if not exchange:
             self._logger.error(
@@ -121,7 +121,7 @@ class StrategyManagerImpl(StrategyManager):
         module = importlib.import_module(module_path)
         _class = getattr(module, class_name)
         bot = _class()
-        bot.init(manager=self, logger=self._logger, bot_config=bot_config, bot_status)
+        bot.init(manager=self, logger=self._logger, bot_config=bot_config, bot_status=bot_status)
         return bot
 
     def get_exchange(self, exchange_id: ExchangeType) -> Optional[Exchange]:

@@ -17,8 +17,8 @@ class ExchangeBasicOperationsBot(GenericBot):
     band_length: float
     band_mult: float
 
-    def init(self, manager: StrategyManager, logger: Logger, bot_config: BotConfig):  # type: ignore
-        super().init(manager, logger, bot_config)
+    def init(self, manager: StrategyManager, logger: Logger, bot_config: BotConfig, bot_status: BotStatus):  # type: ignore
+        super().init(manager, logger, bot_config, bot_status)
 
         try:
             self.band_length = bot_config.config["band_length"]
@@ -32,7 +32,7 @@ class ExchangeBasicOperationsBot(GenericBot):
                 "Exchange is not in sandbox mode, this strategy is ment for testing only!"
             )
 
-    def next(self, status: BotStatus) -> BotStatus:
+    def next(self) -> BotStatus:
         self._logger.info("%s strategy: processing next cycle ...", self.name)
 
         # is there any free balance to handle?
