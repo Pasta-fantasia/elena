@@ -113,13 +113,7 @@ class GenericBot(Bot):
     def next(self) -> Optional[BotStatus]:
         ...
 
-    def cancel_order(self, order_id: str) -> Optional[Order]:
-        try:
-            return self.exchange.cancel_order(self.exchange, self.bot_config, order_id)
-        except Exception as err:
-            self._logger.error(f"Error cancelling order {order_id}: {err}", error=err)
-            return None
-
+    #  ---- Information
 
     def get_balance(self) -> Optional[Balance]:
         try:
@@ -128,27 +122,13 @@ class GenericBot(Bot):
             self._logger.error(f"Error getting balance: {err}", error=err)
             return None
 
-    def stop_loss(
-        self, amount: float, stop_price: float, price: float
-    ) -> Optional[Order]:
-        try:
-            return self.exchange.stop_loss_limit(
-                self.exchange,
-                self.bot_config,
-                amount,
-                stop_price,
-                price,
-            )
-        except Exception as err:
-            self._logger.error(f"Error creating stop loss: {err}", error=err)
-            return None
-
     def read_candles(
         self, page_size: int = 100, time_frame: Optional[TimeFrame] = None
     ) -> pd.DataFrame:
         if not time_frame:
             time_frame = self.time_frame
         try:
+            # TODO User the new parameter page_size ... or remove it
             return self.exchange.read_candles(
                 self.exchange,
                 self.pair,
@@ -159,12 +139,6 @@ class GenericBot(Bot):
             self._logger.error(f"Error reading candles: {err}", error=err)
             return pd.DataFrame()
 
-    def get_order_book(self) -> Optional[OrderBook]:
-        try:
-            return self.exchange.get_order_book()
-        except Exception as err:
-            self._logger.error(f"Error getting order book: {err}", error=err)
-            return None
 
     def limit_min_amount(self) -> Optional[float]:
         try:
@@ -182,49 +156,89 @@ class GenericBot(Bot):
     def price_to_precision(self, price: float) -> float:
         return self.exchange.price_to_precision(self.exchange, self.pair, price)
 
-    def create_limit_buy_order(self, amount, price) -> Optional[Order]:
-        """buy (0.01 BTC at 47k USDT)  pair=BTC/UST"""
+    def get_order_book(self) -> Optional[OrderBook]:
         try:
-            return self.exchange.create_limit_buy_order(
-                self.exchange,
-                self.bot_config,
-                amount,
-                price,
-            )
+            return self.exchange.get_order_book()
         except Exception as err:
-            self._logger.error(f"Error creating limit buy order: {err}", error=err)
+            self._logger.error(f"Error getting order book: {err}", error=err)
             return None
 
-    def create_limit_sell_order(self, amount, price) -> Optional[Order]:
+    #  ---- Orders operations
+    def cancel_order(self, order_id: str) -> Optional[Order]:
         try:
-            return self.exchange.create_limit_sell_order(
-                self.exchange,
-                self.bot_config,
-                amount,
-                price,
-            )
+            return self.exchange.cancel_order(self.exchange, self.bot_config, order_id)
         except Exception as err:
-            self._logger.error(f"Error creating limit sell order: {err}", error=err)
+            self._logger.error(f"Error cancelling order {order_id}: {err}", error=err)
             return None
+
+    def stop_loss(self, amount: float, stop_price: float, price: float) -> Optional[Order]:
+        try:
+            amount = self.amount_to_precision(self.exchange, self.pair, amount)
+            stop_price = self.price_to_precision(self.exchange, self.pair, stop_price)
+            price = self.price_to_precision(self.exchange, self.pair, price)
+
+            params = {"type": "spot", "triggerPrice": stop_price, "timeInForce": "GTC"}
+
+            order = self.exchange.place_order(
+                exchange=self.exchange,
+                bot_config=self.bot_config,
+                order_type=OrderType.limit,  # type: ignore
+                side=OrderSide.sell,  # type: ignore
+                amount=amount,
+                price=price,
+                params=params,
+            )
+            self._logger.info("Placed market stop loss: %s", order)
+
+            return order
+        except Exception as err:
+            self._logger.error(f"Error creating stop loss: {err}", error=err)
+            return None
+
+
+    def create_limit_buy_order(self, amount, price) -> Optional[Order]:
+        """buy (0.01 BTC at 47k USDT)  pair=BTC/UST"""
+        raise NotImplementedError
+
+    def create_limit_sell_order(self, amount, price) -> Optional[Order]:
+        raise NotImplementedError
 
     def create_market_buy_order(self, amount) -> Optional[Order]:
         try:
-            return self.exchange.create_market_buy_order(
-                self.exchange,
-                self.bot_config,
-                amount,
+            params = {"type": "spot"}
+
+            amount = self.amount_to_precision(self.exchange, self..pair, amount)
+            order = self.exchange.place_order(
+                exchange=self.exchange,
+                bot_config=self.bot_config,
+                order_type=OrderType.market,  # type: ignore
+                side=OrderSide.buy,  # type: ignore
+                amount=amount,
+                params=params,
             )
+            self._logger.info("Placed market buy: %s", order)
+
+            return order
         except Exception as err:
             self._logger.error(f"Error creating market buy order: {err}", error=err)
             return None
 
     def create_market_sell_order(self, amount) -> Optional[Order]:
         try:
-            return self.exchange.create_market_sell_order(
-                self.exchange,
-                self.bot_config,
-                amount,
+            params = {"type": "spot"}
+
+            amount = self.amount_to_precision(self.exchange, self..pair, amount)
+            order = self.exchange.place_order(
+                exchange=self.exchange,
+                bot_config=self.bot_config,
+                order_type=OrderType.market,  # type: ignore
+                side=OrderSide.sell,  # type: ignore
+                amount=amount,
+                params=params,
             )
+            self._logger.info("Placed market buy: %s", order)
+
+            return order
         except Exception as err:
             self._logger.error(f"Error creating market sell order: {err}", error=err)
             return None
