@@ -23,8 +23,8 @@ class ExchangeBasicOperationsBot(GenericBot):
         try:
             self.band_length = bot_config.config["band_length"]
             self.band_mult = bot_config.config["band_mult"]
-        except Exception as err:
-            self._logger.error(f"Error initializing Bot config: {err}", error=err)
+        except Exception:
+            self._logger.error("Error initializing Bot config", exc_info=1)
 
         # Verify that the exchange is in sandbox mode!!!!
         if not self.exchange.sandbox_mode:
