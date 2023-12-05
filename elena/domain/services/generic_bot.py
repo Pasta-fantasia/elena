@@ -64,22 +64,13 @@ class GenericBot(Bot):
 
             elif (updated_order.status == OrderStatusType.open
                   and updated_order and updated_order.filled > 0):  # type: ignore
-                # TODO: [Fran] How to manage partially filled orders? Should we wait and see?
-                #  Should we notify and do nothing waiting for the user to act?
 
-                self._logger.info(
-                    f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: {updated_order.filled} of {updated_order.amount} {updated_order.pair} at {updated_order.average}")
-                # self.cancel_order(exchange=exchange,bot_config=bot_config,order_id=order.id)
+                self._logger.info(f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: "
+                                  f"{updated_order.filled} of {updated_order.amount} {updated_order.pair} at"
+                                  f" {updated_order.average}")
 
-                # updates trades
-                # for trade in status.active_trades:
-                #    if trade.exit_order_id == updated_order.id:
-                #        status.active_trades.remove(trade)
-                #        trade.exit_time = updated_order.timestamp
-                #        trade.exit_price = updated_order.average
-                #        status.closed_trades.append(trade)
-                # move to archived
-                # status.archived_orders.append(updated_order)
+                # PARTIALLY_FILLED is considered an active order, It's on the strategy to do something.
+                updated_orders.append(updated_order)
             else:
                 updated_orders.append(updated_order)
 
