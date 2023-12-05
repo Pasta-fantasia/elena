@@ -20,11 +20,9 @@ class ExchangeBasicOperationsBot(GenericBot):
     def init(self, manager: StrategyManager, logger: Logger, exchange_manager: ExchangeManager, bot_config: BotConfig, bot_status: BotStatus):  # type: ignore
         super().init(manager, logger, exchange_manager, bot_config, bot_status)
 
-        try:
-            self.band_length = bot_config.config["band_length"]
-            self.band_mult = bot_config.config["band_mult"]
-        except Exception:
-            self._logger.error("Error initializing Bot config", exc_info=1)
+        # without try: if it fails the test fails, and it's OK
+        self.band_length = bot_config.config["band_length"]
+        self.band_mult = bot_config.config["band_mult"]
 
         # Verify that the exchange is in sandbox mode!!!!
         if not self.exchange.sandbox_mode:
@@ -34,11 +32,6 @@ class ExchangeBasicOperationsBot(GenericBot):
 
     def next(self) -> BotStatus:
         self._logger.info("%s strategy: processing next cycle ...", self.name)
-
-        # is there any free balance to handle?
-        balance = self.get_balance()
-        if not balance:
-            raise Exception("Cannot get balance")
 
         min_amount = self.limit_min_amount()
         if not min_amount:
@@ -106,10 +99,7 @@ class ExchangeBasicOperationsBot(GenericBot):
 
             if not (market_sell_order or market_buy_order):
                 # but we may have all balances locked...
-                self._logger.error(
-                    "Can't buy nor sell symbol. Maybe all balances are in open orders."
-                )
-                break
+                raise Exception("Can't buy nor sell symbol. Maybe all balances are in open orders.")
 
         # TODO:
         #  - correct precisions for exchange self._manager.price_to_precision(self._exchange,
