@@ -32,6 +32,14 @@ class GenericBot(Bot):
     status: BotStatus
     _logger: Logger
 
+    def new_order(self, order: Order):
+        # TODO: order_add + trade_stop (going long) | trade_start (going short)
+
+        if order.status == OrderStatusType.closed:
+            self.status.archived_orders.append(order)
+        else:
+            self.status.active_orders.append(order)
+
     def archive_order_close_trades(self, order: Order):
         for trade in self.status.active_trades:
             if trade.exit_order_id == order.id:
@@ -40,6 +48,12 @@ class GenericBot(Bot):
                 trade.exit_price = order.average
                 self.status.closed_trades.append(trade)
         # move to archived
+        self.status.archived_orders.append(order)
+
+    def archive_order(self, order: Order):
+        for loop_order in self.status.active_orders:
+            if loop_order.id == order.id:
+                self.status.active_orders.remove(loop_order)
         self.status.archived_orders.append(order)
 
     def _update_orders_status(self) -> BotStatus:
@@ -90,7 +104,8 @@ class GenericBot(Bot):
         self.config = bot_config.config
         self.manager = manager
         self.bot_config = bot_config
-        self.initial_status = bot_status
+        self.initial_status = bot_status # for testing/development TODO: delete
+        self.status = bot_status
         self._logger = logger
 
         exchange = manager.get_exchange(bot_config.exchange_id)
@@ -155,16 +170,18 @@ class GenericBot(Bot):
     #  ---- Orders operations
     def cancel_order(self, order_id: str) -> Optional[Order]:
         try:
-            return self.exchange_manager.cancel_order(self.exchange, self.bot_config, order_id)
+            order = self.exchange_manager.cancel_order(self.exchange, self.bot_config, order_id)
+            self.archive_order(order)
+            return order
         except Exception:
             self._logger.error(f"Error cancelling order {order_id}", exc_info=1)
             return None
 
     def stop_loss(self, amount: float, stop_price: float, price: float) -> Optional[Order]:
         try:
-            amount = self.amount_to_precision(self.exchange, self.pair, amount)
-            stop_price = self.price_to_precision(self.exchange, self.pair, stop_price)
-            price = self.price_to_precision(self.exchange, self.pair, price)
+            amount = self.amount_to_precision(amount)
+            stop_price = self.price_to_precision(stop_price)
+            price = self.price_to_precision(price)
 
             params = {"type": "spot", "triggerPrice": stop_price, "timeInForce": "GTC"}
 
@@ -178,7 +195,8 @@ class GenericBot(Bot):
                 params=params,
             )
             self._logger.info("Placed market stop loss: %s", order)
-            self.status.active_orders.append(order)
+
+            self.new_order(order)
             return order
         except Exception:
             self._logger.error(f"Error creating stop loss.", exc_info=1)
@@ -205,8 +223,8 @@ class GenericBot(Bot):
                 params=params,
             )
             self._logger.info("Placed market buy: %s", order)
-            # TODO: order_add + trade_start (going long) | trade_stop (going short)
-            self.status.active_orders.append(order)
+
+            self.new_order(order)
             return order
         except Exception:
             self._logger.error(f"Error creating market buy order", exc_info=1)
@@ -226,8 +244,8 @@ class GenericBot(Bot):
                 params=params,
             )
             self._logger.info("Placed market sell: %s", order)
-            # TODO: order_add + trade_stop (going long) | trade_start (going short)
-            self.status.active_orders.append(order)
+
+            self.new_order(order)
             return order
         except Exception:
             self._logger.error(f"Error creating market sell order ", exc_info=1)
