@@ -17,6 +17,7 @@ class ExchangeManager(Protocol):
         exchange: Exchange,
         pair: TradingPair,
         time_frame: TimeFrame = TimeFrame.min_1,  # type: ignore
+        page_size: int = 100,
     ) -> pd.DataFrame:
         """
         Reads market candles from exchange
@@ -78,7 +79,7 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str):
+    def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         """
         Cancels an order on a Exchange
         :param exchange: exchange where to read market data

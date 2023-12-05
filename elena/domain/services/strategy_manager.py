@@ -23,12 +23,12 @@ from elena.domain.ports.strategy_manager import StrategyManager
 
 class StrategyManagerImpl(StrategyManager):
     def __init__(
-        self,
-        strategy_config: StrategyConfig,
-        logger: Logger,
-        bot_manager: BotManager,
-        exchange_manager: ExchangeManager,
-        exchanges: List[Exchange],
+            self,
+            strategy_config: StrategyConfig,
+            logger: Logger,
+            bot_manager: BotManager,
+            exchange_manager: ExchangeManager,
+            exchanges: List[Exchange],
     ):
         self._config = strategy_config
         self._logger = logger
@@ -56,20 +56,18 @@ class StrategyManagerImpl(StrategyManager):
             run, status = self._get_run_status(bot_config, previous_statuses_dict)
             if run:
                 self._logger.info("Running bot %s: %s", bot_config.id, bot_config.name)
-                updated_status = self._run_bot(status, bot_config)
+                updated_status = self._run_bot(self._exchange_manager, bot_config, status)
                 if updated_status:
                     updated_statuses.append(updated_status)
         return updated_statuses
 
-    def _get_run_status(
-        self, bot_config: BotConfig, previous_statuses_dict
-    ) -> Tuple[bool, BotStatus]:
+    def _get_run_status(self, bot_config: BotConfig, previous_statuses_dict) -> Tuple[bool, BotStatus]:
         run = True
         if bot_config.id in previous_statuses_dict:
             status = previous_statuses_dict[bot_config.id]
             last_execution = datetime.fromtimestamp(status.timestamp / 1000)
             if (
-                bot_config.cron_expression
+                    bot_config.cron_expression
             ):  # If there is no cron expression, the bot will run every time
                 run = self._check_if_bot_has_to_run(
                     last_execution, bot_config.cron_expression
@@ -86,7 +84,7 @@ class StrategyManagerImpl(StrategyManager):
 
     @staticmethod
     def _check_if_bot_has_to_run(
-        last_execution: datetime, cron_expression: str
+            last_execution: datetime, cron_expression: str
     ) -> bool:
         """
         Checks if the bot has to run or not comparing with cron expression.
@@ -101,28 +99,18 @@ class StrategyManagerImpl(StrategyManager):
         now = datetime.now()
         return next_execution <= now
 
-    def _run_bot(self, status: BotStatus, bot_config: BotConfig) -> Optional[BotStatus]:
+    def _run_bot(self, exchange_manager: ExchangeManager,  bot_config: BotConfig, bot_status: BotStatus) -> Optional[BotStatus]:
+        bot = self._get_bot_instance(exchange_manager, bot_config, bot_status)
+        return bot.next()
 
-        bot = self._get_bot_instance(bot_config)
-        exchange = self.get_exchange(bot_config.exchange_id)
-        if not exchange:
-            self._logger.error(
-                "Bot %s: %s has no valid exchange configuration.",
-                bot_config.id,
-                bot_config.name,
-            )
-            return None
-        updated_order_status = self._update_orders_status(exchange, status, bot_config)
-        return bot.next(updated_order_status)
-
-    def _get_bot_instance(self, bot_config: BotConfig) -> Bot:
+    def _get_bot_instance(self, exchange_manager: ExchangeManager, bot_config: BotConfig, bot_status: BotStatus) -> Bot:
         class_parts = self._config.strategy_class.split(".")
         class_name = class_parts[-1]
         module_path = ".".join(class_parts[0:-1])
         module = importlib.import_module(module_path)
         _class = getattr(module, class_name)
         bot = _class()
-        bot.init(manager=self, logger=self._logger, bot_config=bot_config)
+        bot.init(manager=self, logger=self._logger, exchange_manager=exchange_manager, bot_config=bot_config, bot_status=bot_status)
         return bot
 
     def get_exchange(self, exchange_id: ExchangeType) -> Optional[Exchange]:
@@ -131,193 +119,3 @@ class StrategyManagerImpl(StrategyManager):
                 return exchange
         return None
 
-    def cancel_order(
-        self, exchange: Exchange, bot_config: BotConfig, order_id: str
-    ) -> Order:
-        order = self._exchange_manager.cancel_order(
-            exchange=exchange, bot_config=bot_config, order_id=order_id
-        )
-        self._logger.info("Canceled order: %s", order_id)
-        return order
-
-    def stop_loss_limit(
-        self,
-        exchange: Exchange,
-        bot_config: BotConfig,
-        amount: float,
-        stop_price: float,
-        price: float,
-    ) -> Order:
-        # https://docs.ccxt.com/#/README?id=stop-loss-orders
-        # binance only accept stop_loss_limit for BTC/USDT
-
-        amount = self.amount_to_precision(exchange, bot_config.pair, amount)
-        stop_price = self.price_to_precision(exchange, bot_config.pair, stop_price)
-        price = self.price_to_precision(exchange, bot_config.pair, price)
-
-        params = {"type": "spot", "triggerPrice": stop_price, "timeInForce": "GTC"}
-
-        order = self._exchange_manager.place_order(
-            exchange=exchange,
-            bot_config=bot_config,
-            order_type=OrderType.limit,  # type: ignore
-            side=OrderSide.sell,  # type: ignore
-            amount=amount,
-            price=price,
-            params=params,
-        )
-        self._logger.info("Placed market stop loss: %s", order)
-
-        return order
-
-    def get_balance(self, exchange: Exchange) -> pd.DataFrame:
-        return self._exchange_manager.get_balance(exchange)
-
-    def read_candles(
-        self,
-        exchange: Exchange,
-        pair: TradingPair,
-        page_size: int,
-        time_frame: TimeFrame = TimeFrame.min_1,  # type: ignore
-    ) -> pd.DataFrame:
-        # TODO User the new parameter page_size ... or remove it
-        return self._exchange_manager.read_candles(exchange, pair, time_frame)
-
-    def get_order_book(self) -> OrderBook:
-        raise NotImplementedError
-
-    def _update_orders_status(
-        self, exchange: Exchange, status: BotStatus, bot_config: BotConfig
-    ) -> BotStatus:
-        # orders
-        updated_orders = []
-        for order in status.active_orders:
-            # update status
-            updated_order = self._exchange_manager.fetch_order(
-                exchange, bot_config, order.id
-            )
-            if (
-                updated_order.status == OrderStatusType.closed
-                or updated_order.status == OrderStatusType.canceled
-            ):
-                # notify
-                if updated_order.status == OrderStatusType.closed:
-                    # TODO: [Pere] "self._logger.info(f"Notify!" it's where a notification should be sent to the user.
-                    #  Where we should push or connect to telegram... we can have it read only first.
-                    self._logger.info(
-                        f"Notify! Order {updated_order.id} was closed for {updated_order.amount} {updated_order.pair} "
-                        f"at {updated_order.average}"
-                    )
-                if updated_order.status == OrderStatusType.canceled:
-                    self._logger.info(
-                        f"Notify! Order {updated_order.id} was cancelled!-"
-                    )
-                    # TODO: [Fran] what should we do if an order is cancelled? Cancel are: manual, something could go
-                    #  wrong in L or the market is stopped.
-                # updates trades
-                for trade in status.active_trades:
-                    if trade.exit_order_id == updated_order.id:
-                        status.active_trades.remove(trade)
-                        trade.exit_time = updated_order.timestamp
-                        trade.exit_price = updated_order.average
-                        status.closed_trades.append(trade)
-                # move to archived
-                status.archived_orders.append(updated_order)
-            elif (
-                updated_order.status == OrderStatusType.open
-                and updated_order
-                and updated_order.filled > 0  # type: ignore
-            ):
-                # TODO: [Fran] How to manage partially filled orders? Should we wait and see?
-                #  Should we notify and do nothing waiting for the user to act?
-                self._logger.info(
-                    f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: {updated_order.filled} "
-                    f"of {updated_order.amount} {updated_order.pair} at {updated_order.average}"
-                )
-                self.cancel_order(
-                    exchange=exchange,
-                    bot_config=bot_config,
-                    order_id=order.id,
-                )
-                # TODO: [Pere] I'm using orders and trades as pure lists...
-                #              should we have a layer on top? Not a priority.
-                # TODO: [Fran] is this "update" equal for partials? refactor?
-                # updates trades
-                for trade in status.active_trades:
-                    if trade.exit_order_id == updated_order.id:
-                        status.active_trades.remove(trade)
-                        trade.exit_time = updated_order.timestamp
-                        trade.exit_price = updated_order.average
-                        status.closed_trades.append(trade)
-                # move to archived
-                status.archived_orders.append(updated_order)
-            else:
-                updated_orders.append(updated_order)
-
-        status.active_orders = updated_orders
-
-        return status
-
-    def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
-        return self._exchange_manager.limit_min_amount(exchange, pair)
-
-    def create_limit_buy_order(
-        self, exchange: Exchange, bot_config: BotConfig, amount, price
-    ) -> Order:
-        raise NotImplementedError
-
-    def create_limit_sell_order(
-        self, exchange: Exchange, bot_config: BotConfig, amount, price
-    ) -> Order:
-        raise NotImplementedError
-
-    def create_market_buy_order(
-        self, exchange: Exchange, bot_config: BotConfig, amount: float
-    ) -> Order:
-        params = {"type": "spot"}
-
-        amount = self.amount_to_precision(exchange, bot_config.pair, amount)
-        order = self._exchange_manager.place_order(
-            exchange=exchange,
-            bot_config=bot_config,
-            order_type=OrderType.market,  # type: ignore
-            side=OrderSide.buy,  # type: ignore
-            amount=amount,
-            params=params,
-        )
-        self._logger.info("Placed market buy: %s", order)
-
-        return order
-
-    def create_market_sell_order(
-        self, exchange: Exchange, bot_config: BotConfig, amount: float
-    ) -> Order:
-        params = {"type": "spot"}
-
-        amount = self.amount_to_precision(exchange, bot_config.pair, amount)
-        order = self._exchange_manager.place_order(
-            exchange=exchange,
-            bot_config=bot_config,
-            order_type=OrderType.market,  # type: ignore
-            side=OrderSide.sell,  # type: ignore
-            amount=amount,
-            params=params,
-        )
-        self._logger.info("Placed market buy: %s", order)
-
-        return order
-
-    def fetch_order(
-        self, exchange: Exchange, pair: TradingPair, order_id: str
-    ) -> Order:
-        raise NotImplementedError
-
-    def amount_to_precision(
-        self, exchange: Exchange, pair: TradingPair, amount: float
-    ) -> float:
-        return self._exchange_manager.amount_to_precision(exchange, pair, amount)
-
-    def price_to_precision(
-        self, exchange: Exchange, pair: TradingPair, price: float
-    ) -> float:
-        return self._exchange_manager.price_to_precision(exchange, pair, price)

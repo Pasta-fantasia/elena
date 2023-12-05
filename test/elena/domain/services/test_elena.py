@@ -1,7 +1,6 @@
 import pathlib
 from test.elena.domain.services.fake_exchange_manager import \
     FakeExchangeManager
-
 from elena.adapters.bot_manager.local_bot_manager import LocalBotManager
 from elena.adapters.config.local_config_reader import LocalConfigReader
 from elena.adapters.logger.local_logger import LocalLogger
@@ -11,14 +10,15 @@ from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.services.elena import Elena
 from elena.domain.services.generic_bot import GenericBot
+from elena.domain.ports.exchange_manager import ExchangeManager
 
 
 class ExchangeBasicOperationsBot(GenericBot):
     band_length: float
     band_mult: float
 
-    def init(self, manager: StrategyManager, logger: Logger, bot_config: BotConfig):  # type: ignore
-        super().init(manager, logger, bot_config)
+    def init(self, manager: StrategyManager, logger: Logger, exchange_manager: ExchangeManager, bot_config: BotConfig, bot_status: BotStatus):  # type: ignore
+        super().init(manager, logger, exchange_manager, bot_config, bot_status)
 
         try:
             self.band_length = bot_config.config["band_length"]
@@ -32,7 +32,7 @@ class ExchangeBasicOperationsBot(GenericBot):
                 "Exchange is not in sandbox mode, this strategy is ment for testing only!"
             )
 
-    def next(self, status: BotStatus) -> BotStatus:
+    def next(self) -> BotStatus:
         self._logger.info("%s strategy: processing next cycle ...", self.name)
 
         # is there any free balance to handle?
@@ -116,7 +116,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         #           self._bot_config.pair, new_stop_loss)
         #  - create some stop_loss and cancel it
 
-        return status
+        return self.status
 
 
 def test_elena():

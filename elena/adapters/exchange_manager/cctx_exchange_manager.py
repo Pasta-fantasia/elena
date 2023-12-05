@@ -155,6 +155,7 @@ class CctxExchangeManager(ExchangeManager):
         exchange: Exchange,
         pair: TradingPair,
         time_frame: TimeFrame = TimeFrame.min_1,  # type: ignore
+        page_size: int = 100
     ) -> pd.DataFrame:
         self._logger.debug(
             "Reading exchange candles from %s with CCTX for pair %s ...",
@@ -169,9 +170,9 @@ class CctxExchangeManager(ExchangeManager):
         return candles
 
     def _fetch_candles(
-        self, connection, pair: TradingPair, time_frame: TimeFrame
+        self, connection, pair: TradingPair, time_frame: TimeFrame, page_size: int = 100
     ) -> pd.DataFrame:
-        candles_list = self._fetch_candles_with_retry(connection, pair, time_frame)
+        candles_list = self._fetch_candles_with_retry(connection, pair, time_frame, page_size)
         candles_df = pd.DataFrame(candles_list)
         if candles_df.shape == (0, 0):
             return pd.DataFrame(columns=self._candles_columns)
@@ -188,17 +189,20 @@ class CctxExchangeManager(ExchangeManager):
         return candles_df
 
     def _fetch_candles_with_retry(
-        self, connection, pair: TradingPair, time_frame: TimeFrame
+        self, connection, pair: TradingPair, time_frame: TimeFrame, page_size: int = 100
     ) -> List[List]:
         # https://github.com/ccxt/ccxt/issues/10273
         # from https://github.com/ccxt/ccxt/blob/master/examples/py/kucoin-rate-limit.py
+
+        # TODO: page_size: int = 100 & limit=self._config["fetch_ohlcv_limit"]
+        limit = max(page_size, self._config["fetch_ohlcv_limit"])
         i = 0
         retry = True
         candles = pd.DataFrame()
         while retry:
             try:
                 candles = connection.fetch_ohlcv(
-                    str(pair), time_frame.value, limit=self._config["fetch_ohlcv_limit"]
+                    str(pair), time_frame.value, limit=limit
                 )
                 retry = False
             except ccxt.RateLimitExceeded as e:
@@ -391,7 +395,10 @@ class CctxExchangeManager(ExchangeManager):
 
     def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str):
         conn = self._connect(exchange)
-        conn.cancel_order(id=order_id, symbol=str(bot_config.pair))
+        order = conn.cancel_order(id=order_id, symbol=str(bot_config.pair))
+        self._logger.info("Canceled order: %s", order_id)
+        result = self._map_order(exchange, bot_config, bot_config.pair, order)
+        return result
 
     def fetch_order(
         self, exchange: Exchange, bot_config: BotConfig, order_id: str
