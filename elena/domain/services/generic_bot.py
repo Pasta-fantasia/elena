@@ -32,10 +32,20 @@ class GenericBot(Bot):
     status: BotStatus
     _logger: Logger
 
-    def _update_orders_status(self, exchange: Exchange, status: BotStatus, bot_config: BotConfig) -> BotStatus:
+    def archive_order_close_trades(self, order: Order):
+        for trade in self.status.active_trades:
+            if trade.exit_order_id == order.id:
+                self.status.active_trades.remove(trade)
+                trade.exit_time = order.timestamp
+                trade.exit_price = order.average
+                self.status.closed_trades.append(trade)
+        # move to archived
+        self.status.archived_orders.append(order)
+
+    def _update_orders_status(self) -> BotStatus:
         # orders
         updated_orders = []
-        for order in status.active_orders:
+        for order in self.status.active_orders:
             # update status
             updated_order = self.fetch_order(order.id)
 
@@ -53,14 +63,7 @@ class GenericBot(Bot):
                     #  wrong in L or the market is stopped.
 
                 # updates trades
-                for trade in status.active_trades:
-                    if trade.exit_order_id == updated_order.id:
-                        status.active_trades.remove(trade)
-                        trade.exit_time = updated_order.timestamp
-                        trade.exit_price = updated_order.average
-                        status.closed_trades.append(trade)
-                # move to archived
-                status.archived_orders.append(updated_order)
+                self.archive_order_close_trades(updated_order)
 
             elif (updated_order.status == OrderStatusType.open
                   and updated_order and updated_order.filled > 0):  # type: ignore
@@ -74,12 +77,12 @@ class GenericBot(Bot):
             else:
                 updated_orders.append(updated_order)
 
-        status.active_orders = updated_orders
+        self.status.active_orders = updated_orders
 
-        return status
+        return
 
-    def init(self, manager: StrategyManager, logger: Logger, exchange_manager: ExchangeManager, bot_config: BotConfig,
-             bot_status: BotStatus):
+    def init(self, manager: StrategyManager, logger: Logger,
+             exchange_manager: ExchangeManager, bot_config: BotConfig, bot_status: BotStatus):
         self.id = bot_config.id
         self.name = bot_config.name
         self.pair = bot_config.pair
@@ -95,7 +98,7 @@ class GenericBot(Bot):
             raise Exception(f"Cannot get Exchange from {bot_config.exchange_id} ID")
         self.exchange = exchange  # type: ignore
         self.exchange_manager = exchange_manager
-        self.status = self._update_orders_status(exchange, bot_status, bot_config)
+        self._update_orders_status()
 
     def next(self) -> Optional[BotStatus]:
         ...
