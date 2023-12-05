@@ -92,6 +92,7 @@ Create a virtual environment, for example at `$HOME/VEs`:
 ```shell
 python3 -m venv elena
 source elena/bin/activate
+pip install -U setuptools wheel
 pip install git+https://github.com/Pasta-fantasia/elena.git@main#egg=elena
 ```
 
