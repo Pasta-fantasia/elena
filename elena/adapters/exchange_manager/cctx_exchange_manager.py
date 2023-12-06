@@ -143,11 +143,15 @@ class CctxExchangeManager(ExchangeManager):
             )
             conn.set_sandbox_mode(exchange.sandbox_mode)
             self._logger.debug("Loading markets from %s ...", exchange.id.value)
-            conn.load_markets()
-            self._logger.info(
-                "Connected to %s at %s", exchange.id.value, conn.urls["api"]["public"]
-            )
-            self._conn = conn
+            try:
+                conn.load_markets()
+                self._logger.info(
+                    "Connected to %s at %s", exchange.id.value, conn.urls["api"]["public"]
+                )
+                self._conn = conn
+            except Exception:
+                self._logger.error("Connection error", exc_info=1)
+                self._conn = None
         return self._conn
 
     def read_candles(
@@ -416,7 +420,8 @@ class CctxExchangeManager(ExchangeManager):
         self, exchange: Exchange, pair: TradingPair, amount: float
     ) -> float:
         conn = self._connect(exchange)
-        if amount > 0:
+        min_amount = float(conn.markets[str(pair)]["limits"]["amount"]["min"])
+        if amount > min_amount:
             return float(conn.amount_to_precision(str(pair), amount))
         else:
             return 0.0
