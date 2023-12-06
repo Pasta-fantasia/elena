@@ -20,11 +20,9 @@ class ExchangeBasicOperationsBot(GenericBot):
     def init(self, manager: StrategyManager, logger: Logger, exchange_manager: ExchangeManager, bot_config: BotConfig, bot_status: BotStatus):  # type: ignore
         super().init(manager, logger, exchange_manager, bot_config, bot_status)
 
-        try:
-            self.band_length = bot_config.config["band_length"]
-            self.band_mult = bot_config.config["band_mult"]
-        except Exception:
-            self._logger.error("Error initializing Bot config", exc_info=1)
+        # without try: if it fails the test fails, and it's OK
+        self.band_length = bot_config.config["band_length"]
+        self.band_mult = bot_config.config["band_mult"]
 
         # Verify that the exchange is in sandbox mode!!!!
         if not self.exchange.sandbox_mode:
@@ -35,17 +33,18 @@ class ExchangeBasicOperationsBot(GenericBot):
     def next(self) -> BotStatus:
         self._logger.info("%s strategy: processing next cycle ...", self.name)
 
-        # is there any free balance to handle?
-        balance = self.get_balance()
-        if not balance:
-            raise Exception("Cannot get balance")
-
         min_amount = self.limit_min_amount()
         if not min_amount:
             raise Exception("Cannot get min_amount")
 
         # get candles
         candles = self.read_candles()
+        if candles.empty:
+            raise Exception("Cannot get candles")
+
+        estimated_close_price = self.get_estimated_last_close()
+        if not estimated_close_price:
+            raise Exception("Cannot get_estimated_last_close")
 
         market_sell_order = None
         market_buy_order = None
@@ -93,10 +92,9 @@ class ExchangeBasicOperationsBot(GenericBot):
                     amount_to_buy = market_sell_order.amount
                 else:
                     # if we couldn't sell we use the free USDT to buy
-                    # TODO: Implement exchange.fetch_ticker(symbol) or OrderBook to have a better price reference.
-                    yesterday_close_price = float(candles["Close"][-2:-1].iloc[0])
+                    estimated_close_price = self.get_estimated_last_close()
                     amount_to_spend = quote_free / 2
-                    amount_to_buy = amount_to_spend / yesterday_close_price
+                    amount_to_buy = amount_to_spend / estimated_close_price
 
                 amount_to_buy = self.amount_to_precision(amount_to_buy)
                 if amount_to_buy > min_amount:
@@ -106,10 +104,7 @@ class ExchangeBasicOperationsBot(GenericBot):
 
             if not (market_sell_order or market_buy_order):
                 # but we may have all balances locked...
-                self._logger.error(
-                    "Can't buy nor sell symbol. Maybe all balances are in open orders."
-                )
-                break
+                raise Exception("Can't buy nor sell symbol. Maybe all balances are in open orders.")
 
         # TODO:
         #  - correct precisions for exchange self._manager.price_to_precision(self._exchange,
