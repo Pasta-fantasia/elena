@@ -63,33 +63,35 @@ class GenericBot(Bot):
             # update status
             updated_order = self.fetch_order(order.id)
 
-            if (updated_order.status == OrderStatusType.closed
-                    or updated_order.status == OrderStatusType.canceled):
-                # notify
-                if updated_order.status == OrderStatusType.closed:
-                    self._logger.info(
-                        f"Notify! Order {updated_order.id} was closed for {updated_order.amount} {updated_order.pair} "
-                        f"at {updated_order.average}"
-                    )
-                if updated_order.status == OrderStatusType.canceled:
-                    self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
-                    # TODO: [Fran] what should we do if an order is cancelled? Cancel are: manual, something could go
-                    #  wrong in L or the market is stopped.
+            if updated_order:
+                if (updated_order.status == OrderStatusType.closed
+                        or updated_order.status == OrderStatusType.canceled):
+                    # notify
+                    if updated_order.status == OrderStatusType.closed:
+                        self._logger.info(
+                            f"Notify! Order {updated_order.id} was closed for {updated_order.amount} {updated_order.pair} "
+                            f"at {updated_order.average}"
+                        )
+                    if updated_order.status == OrderStatusType.canceled:
+                        self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
+                        # TODO: [Fran] what should we do if an order is cancelled? Cancel are: manual, something could go
+                        #  wrong in L or the market is stopped.
 
-                # updates trades
-                self.archive_order_close_trades(updated_order)
+                    # updates trades
+                    self.archive_order_close_trades(updated_order)
 
-            elif (updated_order.status == OrderStatusType.open
-                  and updated_order and updated_order.filled > 0):  # type: ignore
+                elif (updated_order.status == OrderStatusType.open and updated_order.filled > 0):  # type: ignore
 
-                self._logger.info(f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: "
-                                  f"{updated_order.filled} of {updated_order.amount} {updated_order.pair} at"
-                                  f" {updated_order.average}")
+                    self._logger.info(f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: "
+                                      f"{updated_order.filled} of {updated_order.amount} {updated_order.pair} at"
+                                      f" {updated_order.average}")
 
-                # PARTIALLY_FILLED is considered an active order, It's on the strategy to do something.
-                updated_orders.append(updated_order)
+                    # PARTIALLY_FILLED is considered an active order, It's on the strategy to do something.
+                    updated_orders.append(updated_order)
+                else:
+                    updated_orders.append(updated_order)
             else:
-                updated_orders.append(updated_order)
+                self._logger.error(f"The order {order.id} has desapear! This should only happend on test environments")
 
         self.status.active_orders = updated_orders
 
@@ -260,4 +262,23 @@ class GenericBot(Bot):
             )
         except Exception:
             self._logger.error(f"Error fetching order",  exc_info=1)
+            return None
+
+    def get_estimated_last_close(self) -> float:
+        # https://docs.ccxt.com/#/?id=ticker-structure
+        # Although some exchanges do mix-in orderbook's top bid/ask prices into their tickers
+        # (and some exchanges even serve top bid/ask volumes) you should not treat a ticker as a fetchOrderBook
+        # replacement. The main purpose of a ticker is to serve statistical data, as such,
+        # treat it as "live 24h OHLCV". It is known that exchanges discourage frequent fetchTicker requests by
+        # imposing stricter rate limits on these queries. If you need a unified way to access bids and asks you
+        # should use fetchL[123]OrderBook family instead.
+        # The idea was to use fetch_ticker[close]
+        try:
+            order_book = self.exchange_manager.read_order_book(self.exchange, self.pair)
+            last_bid = order_book.bids[0].price
+            last_ask = order_book.asks[0].price
+            estimated_last_close = (last_bid + last_ask) / 2
+            return estimated_last_close
+        except Exception:
+            self._logger.error(f"Error fetching order", exc_info=1)
             return None

@@ -39,6 +39,12 @@ class ExchangeBasicOperationsBot(GenericBot):
 
         # get candles
         candles = self.read_candles()
+        if candles.empty:
+            raise Exception("Cannot get candles")
+
+        estimated_close_price = self.get_estimated_last_close()
+        if not estimated_close_price:
+            raise Exception("Cannot get_estimated_last_close")
 
         market_sell_order = None
         market_buy_order = None
@@ -86,10 +92,9 @@ class ExchangeBasicOperationsBot(GenericBot):
                     amount_to_buy = market_sell_order.amount
                 else:
                     # if we couldn't sell we use the free USDT to buy
-                    # TODO: Implement exchange.fetch_ticker(symbol) or OrderBook to have a better price reference.
-                    yesterday_close_price = float(candles["Close"][-2:-1].iloc[0])
+                    estimated_close_price = self.get_estimated_last_close()
                     amount_to_spend = quote_free / 2
-                    amount_to_buy = amount_to_spend / yesterday_close_price
+                    amount_to_buy = amount_to_spend / estimated_close_price
 
                 amount_to_buy = self.amount_to_precision(amount_to_buy)
                 if amount_to_buy > min_amount:
