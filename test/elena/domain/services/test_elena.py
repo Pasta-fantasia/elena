@@ -110,6 +110,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         #  - correct precisions for exchange self._manager.price_to_precision(self._exchange,
         #           self._bot_config.pair, new_stop_loss)
         #  - create some stop_loss and cancel it
+        #  - check the orders are added to the status.active & status.archive(market sell and buy should go to archived)
 
         return self.status
 
