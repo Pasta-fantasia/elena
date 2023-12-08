@@ -1,7 +1,9 @@
 import json
+import pathlib
 import time
 
 import pandas as pd
+import pydantic
 
 
 def get_time():
@@ -9,45 +11,80 @@ def get_time():
 
 
 class Record:
-    prefix: int = 0
 
-    @staticmethod
-    def enable():
-        Record.prefix = get_time()
-
-    @staticmethod
-    def disable():
-        Record.prefix = 0
+    def __init__(self, enabled=True):
+        self.enabled = enabled
 
     def __call__(self, func):
         def wrapper(*args, **kwargs):
-            _output = func(*args, **kwargs)
-            if self._is_enabled():
-                self._record(kwargs, _output, func.__name__)
-            return _output
+            output = func(*args, **kwargs)
+            if self.enabled:
+                self._record(kwargs, output, func.__name__)
+            return output
 
         return wrapper
 
-    def _is_enabled(self) -> bool:
-        return self.prefix > 0
-
     def _record(self, kwargs, output, function_name):
-        _time = get_time()
-        _data = {
-            "time": _time,
-            "function": function_name,
-            "input": kwargs,
-            "output": self._serialize_output(output),
-        }
-        self._save(_data, _time, function_name)
+        try:
+            now = get_time()
+            output_type, serialized_output = self._serialize(output)
+            data = {
+                "time": now,
+                "function": function_name,
+                "input": kwargs,
+                "output": serialized_output,
+                "output_type": output_type,
+            }
+            self._save(data, now, function_name)
+        except Exception as e:
+            print(f"Error recording function {function_name}: {e}")
 
     @staticmethod
-    def _serialize_output(output):
-        if isinstance(output, pd.DataFrame):
-            return output.to_json()
-        return output
+    def _serialize(output):
 
-    def _save(self, data, time, function):
-        _fp = open(f"../test_data/{self.prefix}-{time}-{function}.json", "w")
-        json.dump(data, _fp, indent=4)
-        _fp.close()
+        if isinstance(output, pd.DataFrame):
+            return "DataFrame", output.to_json()
+        elif isinstance(output, pydantic.BaseModel):
+            return "BaseModel", output.dict()
+        elif isinstance(output, float):
+            return "float", output
+        elif isinstance(output, int):
+            return "int", output
+        elif isinstance(output, str):
+            return "str", output
+        elif not output:
+            return "None", None
+        else:
+            raise Exception(f"Un-implemented serialization for type {type(output)}")
+
+    @staticmethod
+    def _save(data, now, function):
+        directory = pathlib.Path(__file__).parent.__str__()
+        prefix = time.strftime("%y%m%d")
+        filepath = f"{directory}/data/{prefix}-{now}-{function}.json"
+        with open(filepath, "w") as fp:
+            json.dump(data, fp, indent=4)
+
+    @staticmethod
+    def deserialize_from_json(filepath):
+        with open(filepath, "r") as fp:
+            data = json.load(fp)
+
+        return Record._deserialize(data)
+
+    @classmethod
+    def _deserialize(self, data):
+        if data["output_type"] == "DataFrame":
+            return pd.DataFrame.from_dict(data["output"])
+        elif data["output_type"] == "BaseModel":
+            return pydantic.BaseModel(**data["output"])
+        elif data["output_type"] == "float":
+            return float(data["output"])
+        elif data["output_type"] == "int":
+            return int(data["output"])
+        elif data["output_type"] == "str":
+            return str(data["output"])
+        elif data["output_type"] == "None":
+            return None
+        else:
+            raise Exception(f"Un-implemented deserialization for type {data['output_type']}")

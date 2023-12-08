@@ -18,27 +18,17 @@ from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
+from test.elena.domain.services.record import Record
+
+recording = True
 
 
 class FakeExchangeManager(ExchangeManager):
     def __init__(self, config: Dict, logger: Logger):
         self._cctx = CctxExchangeManager(config, logger)
         self._logger = logger
-        # Record.enable()
-        self._save = True
 
-    @staticmethod
-    def _load_from_json(filename: str) -> Dict:
-        _filename = join(dirname(realpath(__file__)), "data", f"{filename}.json")
-        with open(_filename, "r") as f:
-            return json.load(f)
-
-    @staticmethod
-    def save_to_json(cache: Dict, filename: str):
-        _filename = join(dirname(realpath(__file__)), "data", f"{filename}.json")
-        with open(_filename, "w") as f:
-            json.dump(cache, f)
-
+    @Record(enabled=recording)
     def read_candles(
         self,
         exchange: Exchange,
@@ -46,54 +36,44 @@ class FakeExchangeManager(ExchangeManager):
         time_frame: TimeFrame = TimeFrame.min_1,  # type: ignore
         page_size: int = 100,
     ) -> pd.DataFrame:
-        if self._save:
-            result = self._cctx.read_candles(exchange, pair, time_frame, page_size)
-            # self.save_to_json(result.dict(), "read_candles")
+        if recording:
+            return self._cctx.read_candles(exchange, pair, time_frame, page_size)
         else:
-            data = self._load_from_json("read_candles")
-            result = pd.DataFrame.from_dict(data)
-        return result
+            return Record.deserialize_from_json("231208-1702060797568-read_candles.json")
 
+    @Record(enabled=recording)
     def amount_to_precision(
         self, exchange: Exchange, pair: TradingPair, amount: float
     ) -> float:
-        if self._save:
+        if recording:
             result = self._cctx.amount_to_precision(exchange, pair, amount)
-            # TODO self.save_to_json(result.dict(), "amount_to_precision")
         else:
-            pass  # TODO
-        return result
+            return Record.deserialize_from_json("231208-1702060471629-amount_to_precision.json")
 
+    @Record(enabled=recording)
     def price_to_precision(
         self, exchange: Exchange, pair: TradingPair, price: float
     ) -> float:
-        if self._save:
+        if recording:
             result = self._cctx.price_to_precision(exchange, pair, price)
-            self.save_to_json(
-                {"price_to_precision": result},
-                "price_to_precision",
-            )
         else:
-            pass  # TODO
-        return result
+            return Record.deserialize_from_json("231208-1702060548188-price_to_precision.json")
 
+    @Record(enabled=recording)
     def read_order_book(self, exchange: Exchange, pair: TradingPair) -> OrderBook:
-        if self._save:
+        if recording:
             result = self._cctx.read_order_book(exchange, pair)
-            self.save_to_json(result.dict(), "read_order_book")
         else:
-            pass  # TODO
-        return result
+            return Record.deserialize_from_json("231208-1702060668178-read_order_book.json")
 
+    @Record(enabled=recording)
     def get_balance(self, exchange: Exchange) -> Balance:
-        if self._save:
+        if recording:
             result = self._cctx.get_balance(exchange)
-            self.save_to_json(result.dict(), "get_balance")
         else:
-            data = self._load_from_json("get_balance")
-            result = Balance.parse_obj(data)
-        return result
+            return Record.deserialize_from_json("231208-1702061654266-get_balance.json")
 
+    @Record(enabled=recording)
     def place_order(
         self,
         exchange: Exchange,
@@ -104,40 +84,32 @@ class FakeExchangeManager(ExchangeManager):
         price: Optional[float] = None,
         params: Optional[Dict] = {},
     ) -> Order:
-        if self._save:
-            result = self._cctx.place_order(
+        if recording:
+            return self._cctx.place_order(
                 exchange, bot_config, order_type, side, amount, price, params
             )
-            self.save_to_json(result.dict(), "place_order")
         else:
-            pass  # TODO
-        return result
+            return Record.deserialize_from_json("231208-1702061654266-place_order.json")
 
+    @Record(enabled=recording)
     def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str):
-        if self._save:
-            result = self._cctx.cancel_order(exchange, bot_config, order_id)
-            self.save_to_json(result.dict(), "cancel_order")
+        if recording:
+            return self._cctx.cancel_order(exchange, bot_config, order_id)
         else:
-            pass  # TODO
-        return result
+            return Record.deserialize_from_json("231208-1702061654266-cancel_order.json")
 
+    @Record(enabled=recording)
     def fetch_order(
         self, exchange: Exchange, bot_config: BotConfig, order_id: str
     ) -> Order:
-        if self._save:
-            result = self._cctx.fetch_order(exchange, bot_config, order_id)
-            self.save_to_json(result.dict(), "fetch_order")
+        if recording:
+            return self._cctx.fetch_order(exchange, bot_config, order_id)
         else:
-            pass  # TODO
-        return result
+            return Record.deserialize_from_json("231208-1702061654266-fetch_order.json")
 
+    @Record(enabled=recording)
     def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
-        if self._save:
-            result = self._cctx.limit_min_amount(exchange, pair)
-            self.save_to_json(
-                {"limit_min_amount": result},
-                "limit_min_amount",
-            )
+        if recording:
+            return self._cctx.limit_min_amount(exchange, pair)
         else:
-            pass  # TODO
-        return result
+            return Record.deserialize_from_json("231208-1702061654266-limit_min_amount.json")
