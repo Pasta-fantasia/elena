@@ -195,6 +195,8 @@ class GenericBot(Bot):
             return None
 
     def stop_loss(self, amount: float, stop_price: float, price: float) -> Optional[Order]:
+        # TODO: https://dev.binance.vision/t/code-1013-msg-filter-failure-percent-price/1592 PERCENT_PRICE filter
+        #   while testing we got "'binance {"code":-1013,"msg":"Filter failure: PERCENT_PRICE_BY_SIDE"}'"
         try:
             amount = self.amount_to_precision(amount)
             stop_price = self.price_to_precision(stop_price)
