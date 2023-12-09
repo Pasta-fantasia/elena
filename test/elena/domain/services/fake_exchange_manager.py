@@ -47,6 +47,7 @@ class FakeExchangeManager(ExchangeManager):
     ) -> float:
         if recording:
             result = self._cctx.amount_to_precision(exchange, pair, amount)
+            return result
         else:
             return Record.deserialize_from_json("231208-1702060471629-amount_to_precision.json")
 
@@ -56,6 +57,7 @@ class FakeExchangeManager(ExchangeManager):
     ) -> float:
         if recording:
             result = self._cctx.price_to_precision(exchange, pair, price)
+            return result
         else:
             return Record.deserialize_from_json("231208-1702060548188-price_to_precision.json")
 
@@ -63,6 +65,7 @@ class FakeExchangeManager(ExchangeManager):
     def read_order_book(self, exchange: Exchange, pair: TradingPair) -> OrderBook:
         if recording:
             result = self._cctx.read_order_book(exchange, pair)
+            return result
         else:
             return Record.deserialize_from_json("231208-1702060668178-read_order_book.json")
 
@@ -70,6 +73,7 @@ class FakeExchangeManager(ExchangeManager):
     def get_balance(self, exchange: Exchange) -> Balance:
         if recording:
             result = self._cctx.get_balance(exchange)
+            return result
         else:
             return Record.deserialize_from_json("231208-1702061654266-get_balance.json")
 
