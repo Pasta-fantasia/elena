@@ -1,4 +1,5 @@
 import importlib
+import time
 from datetime import datetime
 from typing import List, Optional, Tuple
 
@@ -100,6 +101,7 @@ class StrategyManagerImpl(StrategyManager):
         return next_execution <= now
 
     def _run_bot(self, exchange_manager: ExchangeManager,  bot_config: BotConfig, bot_status: BotStatus) -> Optional[BotStatus]:
+        bot_status.timestamp = int(time.time() * 1000)
         bot = self._get_bot_instance(exchange_manager, bot_config, bot_status)
         return bot.next()
 
