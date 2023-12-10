@@ -95,7 +95,6 @@ class StrategyManagerImpl(StrategyManager):
         """
         cron_instance = Cron(cron_expression)
         schedule = cron_instance.schedule(last_execution)
-        schedule.next()
         next_execution = schedule.next()
         now = datetime.now()
         return next_execution <= now
