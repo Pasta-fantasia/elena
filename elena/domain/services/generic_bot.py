@@ -11,6 +11,7 @@ from elena.domain.model.order import Order, OrderSide, OrderStatusType, OrderTyp
 from elena.domain.model.order_book import OrderBook
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
+from elena.domain.model.trade import Trade
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
@@ -32,6 +33,29 @@ class GenericBot(Bot):
     status: BotStatus
     _logger: Logger
 
+    def new_trade(self, order: Order):
+        # All Trades start/"born" here...
+        new_trade = Trade(exchange_id=self.exchange.id,
+                          bot_id=self.id,
+                          strategy_id=self.bot_config.strategy_id,
+                          pair=self.pair,
+                          size=order.amount,
+                          entry_order_id=order.id, entry_price=order.average,
+                          exit_order_id=0, exit_price=0,
+                          )
+        self.status.active_trades.append(new_trade)
+
+    def new_trade_manual(self, size: float, entry_price:float, exit_order_id, exit_price:float):
+        new_trade = Trade(exchange_id=self.exchange.id,
+                          bot_id=self.id,
+                          strategy_id=self.bot_config.strategy_id,
+                          pair=self.pair,
+                          size=size,
+                          entry_order_id='manual', entry_price=entry_price,
+                          exit_order_id=exit_order_id, exit_price=exit_price,
+                          )
+        self.status.active_trades.append(new_trade)
+
     def new_order(self, order: Order):
         # TODO: order_add + trade_stop (going long) | trade_start (going short)
 
@@ -39,6 +63,9 @@ class GenericBot(Bot):
             self.status.archived_orders.append(order)
         else:
             self.status.active_orders.append(order)
+
+        if order.side == OrderSide.buy:
+            self.new_trade(order)
 
     def archive_order_close_trades(self, order: Order):
         for trade in self.status.active_trades:
@@ -106,7 +133,7 @@ class GenericBot(Bot):
         self.config = bot_config.config
         self.manager = manager
         self.bot_config = bot_config
-        self.initial_status = bot_status # for testing/development TODO: delete
+        self.initial_status = bot_status  # for testing/development TODO: delete
         self.status = bot_status
         self._logger = logger
 
@@ -182,7 +209,6 @@ class GenericBot(Bot):
             self._logger.error("Error getting order book", exc_info=1)
             return None
 
-
     #  ---- Orders operations
     def cancel_order(self, order_id: str) -> Optional[Order]:
         try:
@@ -213,13 +239,13 @@ class GenericBot(Bot):
                 price=price,
                 params=params,
             )
-            self._logger.info("Placed market stop loss: %s", order)
+            self._logger.info("Placed stop loss: %s", order)
 
             self.new_order(order)
             return order
         except Exception as err:
-            print(f"Error creating stop loss: {err}")
-            self._logger.error(f"Error creating stop loss.", exc_info=1)
+            self._logger.error(f"Error creating stop loss. amount={amount}, price={price}, stop_price={stop_price}",
+                               exc_info=1)
             return None
 
     def create_limit_buy_order(self, amount, price) -> Optional[Order]:
@@ -282,7 +308,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error fetching order: {err}")
-            self._logger.error(f"Error fetching order",  exc_info=1)
+            self._logger.error(f"Error fetching order", exc_info=1)
             return None
 
     def get_estimated_last_close(self) -> float:
