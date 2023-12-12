@@ -21,6 +21,7 @@ from elena.domain.ports.logger import Logger
 from test.elena.domain.services.record import Record
 
 recording = True
+excluded = ["Exchange", "FakeExchangeManager"]
 
 
 class FakeExchangeManager(ExchangeManager):
@@ -28,7 +29,7 @@ class FakeExchangeManager(ExchangeManager):
         self._cctx = CctxExchangeManager(config, logger)
         self._logger = logger
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_args=excluded)
     def read_candles(
         self,
         exchange: Exchange,
@@ -41,7 +42,7 @@ class FakeExchangeManager(ExchangeManager):
         else:
             return Record.deserialize_from_json("231208-1702060797568-read_candles.json")
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_args=excluded)
     def amount_to_precision(
         self, exchange: Exchange, pair: TradingPair, amount: float
     ) -> float:
@@ -51,7 +52,7 @@ class FakeExchangeManager(ExchangeManager):
         else:
             return Record.deserialize_from_json("231208-1702060471629-amount_to_precision.json")
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_args=excluded)
     def price_to_precision(
         self, exchange: Exchange, pair: TradingPair, price: float
     ) -> float:
@@ -61,7 +62,7 @@ class FakeExchangeManager(ExchangeManager):
         else:
             return Record.deserialize_from_json("231208-1702060548188-price_to_precision.json")
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_args=excluded)
     def read_order_book(self, exchange: Exchange, pair: TradingPair) -> OrderBook:
         if recording:
             result = self._cctx.read_order_book(exchange, pair)
@@ -69,7 +70,7 @@ class FakeExchangeManager(ExchangeManager):
         else:
             return Record.deserialize_from_json("231208-1702060668178-read_order_book.json")
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_args=excluded)
     def get_balance(self, exchange: Exchange) -> Balance:
         if recording:
             result = self._cctx.get_balance(exchange)
@@ -77,7 +78,7 @@ class FakeExchangeManager(ExchangeManager):
         else:
             return Record.deserialize_from_json("231208-1702061654266-get_balance.json")
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_args=excluded)
     def place_order(
         self,
         exchange: Exchange,
@@ -95,14 +96,14 @@ class FakeExchangeManager(ExchangeManager):
         else:
             return Record.deserialize_from_json("231208-1702061654266-place_order.json")
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_args=excluded)
     def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str):
         if recording:
             return self._cctx.cancel_order(exchange, bot_config, order_id)
         else:
             return Record.deserialize_from_json("231208-1702061654266-cancel_order.json")
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_args=excluded)
     def fetch_order(
         self, exchange: Exchange, bot_config: BotConfig, order_id: str
     ) -> Order:
@@ -111,7 +112,7 @@ class FakeExchangeManager(ExchangeManager):
         else:
             return Record.deserialize_from_json("231208-1702061654266-fetch_order.json")
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_args=excluded)
     def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
         if recording:
             return self._cctx.limit_min_amount(exchange, pair)
