@@ -18,10 +18,11 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 
-recording = True
+recording = False
 excluded_kwargs = ["exchange"]
-recorded_data = {}
-if not recording:
+if recording:
+    recorded_data = {}
+else:
     recorded_data = Record.load_all_recorded_data()
 
 
@@ -41,8 +42,12 @@ class FakeExchangeManager(ExchangeManager):
         if recording:
             return self._cctx.read_candles(exchange, pair, time_frame, page_size)
         else:
-            return Record._deserialize_from_json(
-                "231208-1702060797568-read_candles.json"
+            return Record.load_recorded_output(
+                function_name="read_candles",
+                all_recorded_data=recorded_data,
+                pair=pair,
+                time_frame=time_frame,
+                page_size=page_size,
             )
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
@@ -53,8 +58,11 @@ class FakeExchangeManager(ExchangeManager):
             result = self._cctx.amount_to_precision(exchange, pair, amount)
             return result
         else:
-            return Record._deserialize_from_json(
-                "231208-1702060471629-amount_to_precision.json"
+            return Record.load_recorded_output(
+                function_name="amount_to_precision",
+                all_recorded_data=recorded_data,
+                pair=pair,
+                amount=amount,
             )
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
@@ -65,8 +73,11 @@ class FakeExchangeManager(ExchangeManager):
             result = self._cctx.price_to_precision(exchange, pair, price)
             return result
         else:
-            return Record._deserialize_from_json(
-                "231208-1702060548188-price_to_precision.json"
+            return Record.load_recorded_output(
+                function_name="price_to_precision",
+                all_recorded_data=recorded_data,
+                pair=pair,
+                price=price,
             )
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
@@ -75,8 +86,10 @@ class FakeExchangeManager(ExchangeManager):
             result = self._cctx.read_order_book(exchange, pair)
             return result
         else:
-            return Record._deserialize_from_json(
-                "231208-1702060668178-read_order_book.json"
+            return Record.load_recorded_output(
+                function_name="read_order_book",
+                all_recorded_data=recorded_data,
+                pair=pair,
             )
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
@@ -85,8 +98,9 @@ class FakeExchangeManager(ExchangeManager):
             result = self._cctx.get_balance(exchange)
             return result
         else:
-            return Record._deserialize_from_json(
-                "231208-1702061654266-get_balance.json"
+            return Record.load_recorded_output(
+                function_name="get_balance",
+                all_recorded_data=recorded_data,
             )
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
@@ -105,8 +119,15 @@ class FakeExchangeManager(ExchangeManager):
                 exchange, bot_config, order_type, side, amount, price, params
             )
         else:
-            return Record._deserialize_from_json(
-                "231208-1702061654266-place_order.json"
+            return Record.load_recorded_output(
+                function_name="place_order",
+                all_recorded_data=recorded_data,
+                bot_config=bot_config,
+                order_type=order_type,
+                side=side,
+                amount=amount,
+                price=price,
+                params=params,
             )
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
@@ -114,8 +135,11 @@ class FakeExchangeManager(ExchangeManager):
         if recording:
             return self._cctx.cancel_order(exchange, bot_config, order_id)
         else:
-            return Record._deserialize_from_json(
-                "231208-1702061654266-cancel_order.json"
+            return Record.load_recorded_output(
+                function_name="cancel_order",
+                all_recorded_data=recorded_data,
+                bot_config=bot_config,
+                order_id=order_id,
             )
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
@@ -125,8 +149,11 @@ class FakeExchangeManager(ExchangeManager):
         if recording:
             return self._cctx.fetch_order(exchange, bot_config, order_id)
         else:
-            return Record._deserialize_from_json(
-                "231208-1702061654266-fetch_order.json"
+            return Record.load_recorded_output(
+                function_name="fetch_order",
+                all_recorded_data=recorded_data,
+                bot_config=bot_config,
+                order_id=order_id,
             )
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
@@ -134,6 +161,8 @@ class FakeExchangeManager(ExchangeManager):
         if recording:
             return self._cctx.limit_min_amount(exchange, pair)
         else:
-            return Record._deserialize_from_json(
-                "231208-1702061654266-limit_min_amount.json"
+            return Record.load_recorded_output(
+                function_name="limit_min_amount",
+                all_recorded_data=recorded_data,
+                pair=pair,
             )

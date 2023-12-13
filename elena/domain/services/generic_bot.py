@@ -340,4 +340,4 @@ class GenericBot(Bot):
         except Exception as err:
             print(f"Error getting estimated last close: {err}")
             self._logger.error("Error fetching order", exc_info=1)
-            return None
+            raise err

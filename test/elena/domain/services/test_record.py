@@ -8,7 +8,6 @@ expected_limit_min_amount = {
         "pair": TradingPair(base="BTC", quote="USDT"),
     },
     "output": 1e-05,
-    "time": 1702468422999,
 }
 
 
@@ -28,3 +27,14 @@ def test_load_all_recorded_data():
     raise AssertionError(
         "Cannot find expected `limit_min_amount` in loaded recorded data."
     )
+
+
+def test_load_recorded_output():
+    all_recorded_data = Record().load_all_recorded_data()
+    actual = Record().load_recorded_output(
+        "amount_to_precision",
+        all_recorded_data,
+        pair=TradingPair(base="BTC", quote="USDT"),
+        amount=0.00959816984173546,
+    )
+    assert actual == 0.00959816984173546
