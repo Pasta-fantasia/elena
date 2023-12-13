@@ -146,7 +146,9 @@ class CctxExchangeManager(ExchangeManager):
             try:
                 conn.load_markets()
                 self._logger.info(
-                    "Connected to %s at %s", exchange.id.value, conn.urls["api"]["public"]
+                    "Connected to %s at %s",
+                    exchange.id.value,
+                    conn.urls["api"]["public"],
                 )
                 self._conn = conn
             except Exception:
@@ -159,7 +161,7 @@ class CctxExchangeManager(ExchangeManager):
         exchange: Exchange,
         pair: TradingPair,
         time_frame: TimeFrame = TimeFrame.min_1,  # type: ignore
-        page_size: int = 100
+        page_size: int = 100,
     ) -> pd.DataFrame:
         self._logger.debug(
             "Reading exchange candles from %s with CCTX for pair %s ...",
@@ -176,7 +178,9 @@ class CctxExchangeManager(ExchangeManager):
     def _fetch_candles(
         self, connection, pair: TradingPair, time_frame: TimeFrame, page_size: int = 100
     ) -> pd.DataFrame:
-        candles_list = self._fetch_candles_with_retry(connection, pair, time_frame, page_size)
+        candles_list = self._fetch_candles_with_retry(
+            connection, pair, time_frame, page_size
+        )
         candles_df = pd.DataFrame(candles_list)
         if candles_df.shape == (0, 0):
             return pd.DataFrame(columns=self._candles_columns)

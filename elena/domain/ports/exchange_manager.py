@@ -79,7 +79,9 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
+    def cancel_order(
+        self, exchange: Exchange, bot_config: BotConfig, order_id: str
+    ) -> Order:
         """
         Cancels an order on a Exchange
         :param exchange: exchange where to read market data

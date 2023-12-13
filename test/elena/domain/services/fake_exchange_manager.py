@@ -1,8 +1,7 @@
-import json
-from os.path import dirname, join, realpath
 # TODO: jsons should look like Binance_read_candles_BTC_USDT_min_1.
 #  Record class was doing something like that. But the time parameter is not relevant anymore.
 #       Not sure if that would be possible with amount_to_precision and price_to_precision
+from test.elena.domain.services.record import Record
 from typing import Dict, Optional
 
 import pandas as pd
@@ -18,10 +17,9 @@ from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from test.elena.domain.services.record import Record
 
 recording = True
-excluded = ["Exchange", "FakeExchangeManager"]
+excluded_args = ["Exchange", "FakeExchangeManager"]
 
 
 class FakeExchangeManager(ExchangeManager):
@@ -29,7 +27,7 @@ class FakeExchangeManager(ExchangeManager):
         self._cctx = CctxExchangeManager(config, logger)
         self._logger = logger
 
-    @Record(enabled=recording, excluded_args=excluded)
+    @Record(enabled=recording, excluded_args=excluded_args)
     def read_candles(
         self,
         exchange: Exchange,
@@ -40,9 +38,11 @@ class FakeExchangeManager(ExchangeManager):
         if recording:
             return self._cctx.read_candles(exchange, pair, time_frame, page_size)
         else:
-            return Record.deserialize_from_json("231208-1702060797568-read_candles.json")
+            return Record.deserialize_from_json(
+                "231208-1702060797568-read_candles.json"
+            )
 
-    @Record(enabled=recording, excluded_args=excluded)
+    @Record(enabled=recording, excluded_args=excluded_args)
     def amount_to_precision(
         self, exchange: Exchange, pair: TradingPair, amount: float
     ) -> float:
@@ -50,9 +50,11 @@ class FakeExchangeManager(ExchangeManager):
             result = self._cctx.amount_to_precision(exchange, pair, amount)
             return result
         else:
-            return Record.deserialize_from_json("231208-1702060471629-amount_to_precision.json")
+            return Record.deserialize_from_json(
+                "231208-1702060471629-amount_to_precision.json"
+            )
 
-    @Record(enabled=recording, excluded_args=excluded)
+    @Record(enabled=recording, excluded_args=excluded_args)
     def price_to_precision(
         self, exchange: Exchange, pair: TradingPair, price: float
     ) -> float:
@@ -60,17 +62,21 @@ class FakeExchangeManager(ExchangeManager):
             result = self._cctx.price_to_precision(exchange, pair, price)
             return result
         else:
-            return Record.deserialize_from_json("231208-1702060548188-price_to_precision.json")
+            return Record.deserialize_from_json(
+                "231208-1702060548188-price_to_precision.json"
+            )
 
-    @Record(enabled=recording, excluded_args=excluded)
+    @Record(enabled=recording, excluded_args=excluded_args)
     def read_order_book(self, exchange: Exchange, pair: TradingPair) -> OrderBook:
         if recording:
             result = self._cctx.read_order_book(exchange, pair)
             return result
         else:
-            return Record.deserialize_from_json("231208-1702060668178-read_order_book.json")
+            return Record.deserialize_from_json(
+                "231208-1702060668178-read_order_book.json"
+            )
 
-    @Record(enabled=recording, excluded_args=excluded)
+    @Record(enabled=recording, excluded_args=excluded_args)
     def get_balance(self, exchange: Exchange) -> Balance:
         if recording:
             result = self._cctx.get_balance(exchange)
@@ -78,7 +84,7 @@ class FakeExchangeManager(ExchangeManager):
         else:
             return Record.deserialize_from_json("231208-1702061654266-get_balance.json")
 
-    @Record(enabled=recording, excluded_args=excluded)
+    @Record(enabled=recording, excluded_args=excluded_args)
     def place_order(
         self,
         exchange: Exchange,
@@ -96,14 +102,16 @@ class FakeExchangeManager(ExchangeManager):
         else:
             return Record.deserialize_from_json("231208-1702061654266-place_order.json")
 
-    @Record(enabled=recording, excluded_args=excluded)
+    @Record(enabled=recording, excluded_args=excluded_args)
     def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str):
         if recording:
             return self._cctx.cancel_order(exchange, bot_config, order_id)
         else:
-            return Record.deserialize_from_json("231208-1702061654266-cancel_order.json")
+            return Record.deserialize_from_json(
+                "231208-1702061654266-cancel_order.json"
+            )
 
-    @Record(enabled=recording, excluded_args=excluded)
+    @Record(enabled=recording, excluded_args=excluded_args)
     def fetch_order(
         self, exchange: Exchange, bot_config: BotConfig, order_id: str
     ) -> Order:
@@ -112,9 +120,11 @@ class FakeExchangeManager(ExchangeManager):
         else:
             return Record.deserialize_from_json("231208-1702061654266-fetch_order.json")
 
-    @Record(enabled=recording, excluded_args=excluded)
+    @Record(enabled=recording, excluded_args=excluded_args)
     def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
         if recording:
             return self._cctx.limit_min_amount(exchange, pair)
         else:
-            return Record.deserialize_from_json("231208-1702061654266-limit_min_amount.json")
+            return Record.deserialize_from_json(
+                "231208-1702061654266-limit_min_amount.json"
+            )

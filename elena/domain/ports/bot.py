@@ -10,7 +10,14 @@ from elena.domain.ports.strategy_manager import StrategyManager
 class Bot(Protocol):
     """A Bot runs a strategy with a certain pair and configuration"""
 
-    def init(self, manager: StrategyManager, logger: Logger, exchange_manager: ExchangeManager, bot_config: BotConfig, bot_status: BotStatus):
+    def init(
+        self,
+        manager: StrategyManager,
+        logger: Logger,
+        exchange_manager: ExchangeManager,
+        bot_config: BotConfig,
+        bot_status: BotStatus,
+    ):
         ...
 
     def next(self) -> Optional[BotStatus]:
