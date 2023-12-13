@@ -55,8 +55,7 @@ class FakeExchangeManager(ExchangeManager):
         self, exchange: Exchange, pair: TradingPair, amount: float
     ) -> float:
         if recording:
-            result = self._cctx.amount_to_precision(exchange, pair, amount)
-            return result
+            return self._cctx.amount_to_precision(exchange, pair, amount)
         else:
             return Record.load_recorded_output(
                 function_name="amount_to_precision",
@@ -70,8 +69,7 @@ class FakeExchangeManager(ExchangeManager):
         self, exchange: Exchange, pair: TradingPair, price: float
     ) -> float:
         if recording:
-            result = self._cctx.price_to_precision(exchange, pair, price)
-            return result
+            return self._cctx.price_to_precision(exchange, pair, price)
         else:
             return Record.load_recorded_output(
                 function_name="price_to_precision",
@@ -95,8 +93,7 @@ class FakeExchangeManager(ExchangeManager):
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def get_balance(self, exchange: Exchange) -> Balance:
         if recording:
-            result = self._cctx.get_balance(exchange)
-            return result
+            return self._cctx.get_balance(exchange)
         else:
             return Record.load_recorded_output(
                 function_name="get_balance",

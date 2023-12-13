@@ -88,10 +88,9 @@ class Record:
 
     @staticmethod
     def _save(data, function):
-        prefix = time.strftime("%y%m%d")
         now = get_time()
         filepath = path.join(
-            pathlib.Path(__file__).parent, "data", f"{prefix}-{now}-{function}.json"
+            pathlib.Path(__file__).parent, "data", f"{function}-{now}.json"
         )
         with open(filepath, "w") as fp:
             json.dump(data, fp, indent=4)
@@ -214,6 +213,7 @@ class Record:
             )
         records = all_recorded_data[function_name]
 
+        errors: t.List[str] = []
         for record in records:
             match = True
             errors = []

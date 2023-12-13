@@ -69,14 +69,18 @@ class ExchangeBasicOperationsBot(GenericBot):
         # 2 - BUY Market
         amount_to_spend = quote_free / 2
         amount_to_buy = amount_to_spend / estimated_close_price
-        amount_to_buy = self.amount_to_precision(amount_to_buy)
+        precision_to_buy = self.amount_to_precision(amount_to_buy)
+        if not precision_to_buy:
+            raise Exception(
+                f"Cannot get precision_to_buy for amount_to_buy {amount_to_buy}"
+            )
 
-        if amount_to_buy < min_amount:
+        if precision_to_buy < min_amount:
             raise Exception(
                 "Not enough balance to run the tests. {self.pair.base} = {base_free} / {quote_free}"
             )
 
-        market_buy_order = self.create_market_buy_order(amount_to_buy)
+        market_buy_order = self.create_market_buy_order(precision_to_buy)
 
         if not market_buy_order:
             raise Exception("Buy test failed")

@@ -1,0 +1,63 @@
+{
+    "function": "cancel_order",
+    "input": {
+        "bot_config": {
+            "type": "BaseModel",
+            "model_class": "elena.domain.model.bot_config.BotConfig",
+            "value": {
+                "id": "Exchange_Test_Ops_BTC_USDT",
+                "strategy_id": "ExchangeBasicOperationsTest-1",
+                "name": "Exchange Basic Operations Test 1 on BTC/USDT",
+                "enabled": true,
+                "pair": {
+                    "base": "BTC",
+                    "quote": "USDT"
+                },
+                "exchange_id": "binance",
+                "time_frame": "1m",
+                "cron_expression": "*/5 * * * *",
+                "tags": [
+                    "ranging",
+                    "bear"
+                ],
+                "config": {
+                    "band_length": 13,
+                    "band_mult": 1
+                }
+            }
+        },
+        "order_id": {
+            "type": "str",
+            "value": "3448098"
+        }
+    },
+    "output": {
+        "type": "BaseModel",
+        "model_class": "elena.domain.model.order.Order",
+        "value": {
+            "id": "3448098",
+            "exchange_id": "binance",
+            "bot_id": "Exchange_Test_Ops_BTC_USDT",
+            "strategy_id": "ExchangeBasicOperationsTest-1",
+            "pair": {
+                "base": "BTC",
+                "quote": "USDT"
+            },
+            "timestamp": 1702485175960,
+            "type": "stop_loss_limit",
+            "side": "sell",
+            "price": 31972.77,
+            "amount": 0.00945,
+            "cost": 0.0,
+            "average": null,
+            "filled": 0.0,
+            "remaining": 0.00945,
+            "status": "canceled",
+            "fee": null,
+            "trigger_price": 33655.54,
+            "stop_price": 33655.54,
+            "take_profit_price": null,
+            "stop_loss_price": null
+        }
+    }
+}

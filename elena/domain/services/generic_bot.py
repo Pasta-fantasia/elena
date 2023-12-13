@@ -176,7 +176,7 @@ class GenericBot(Bot):
             self._logger.error("Error getting limit min amount", exc_info=1)
             return None
 
-    def amount_to_precision(self, amount: float) -> float:
+    def amount_to_precision(self, amount: float) -> Optional[float]:
         try:
             return self.exchange_manager.amount_to_precision(
                 self.exchange,
@@ -186,9 +186,9 @@ class GenericBot(Bot):
         except Exception as err:
             print(f"Error getting amount to precision: {err}")
             self._logger.error("Error getting amount to precision", exc_info=1)
-            return amount
+            return None
 
-    def price_to_precision(self, price: float) -> float:
+    def price_to_precision(self, price: float) -> Optional[float]:
         try:
             return self.exchange_manager.price_to_precision(
                 self.exchange,
@@ -198,7 +198,7 @@ class GenericBot(Bot):
         except Exception as err:
             print(f"Error getting price to precision: {err}")
             self._logger.error("Error getting price to precision", exc_info=1)
-            return price
+            return None
 
     def get_order_book(self) -> Optional[OrderBook]:
         try:
@@ -232,19 +232,29 @@ class GenericBot(Bot):
         # TODO: https://dev.binance.vision/t/code-1013-msg-filter-failure-percent-price/1592 PERCENT_PRICE filter
         #   while testing we got "'binance {"code":-1013,"msg":"Filter failure: PERCENT_PRICE_BY_SIDE"}'"
         try:
-            amount = self.amount_to_precision(amount)
-            stop_price = self.price_to_precision(stop_price)
-            price = self.price_to_precision(price)
+            precision_amount = self.amount_to_precision(amount)
+            if not precision_amount:
+                raise Exception(f"Cannot get amount to precision for {amount}")
+            precision_stop_price = self.price_to_precision(stop_price)
+            if not precision_stop_price:
+                raise Exception(f"Cannot get stop_price to precision for {stop_price}")
+            precision_price = self.price_to_precision(price)
+            if not precision_price:
+                raise Exception(f"Cannot get price to precision for {price}")
 
-            params = {"type": "spot", "triggerPrice": stop_price, "timeInForce": "GTC"}
+            params = {
+                "type": "spot",
+                "triggerPrice": precision_stop_price,
+                "timeInForce": "GTC",
+            }
 
             order = self.exchange_manager.place_order(
                 self.exchange,
                 bot_config=self.bot_config,
                 order_type=OrderType.limit,  # type: ignore
                 side=OrderSide.sell,  # type: ignore
-                amount=amount,
-                price=price,
+                amount=precision_amount,
+                price=precision_price,
                 params=params,
             )
             self._logger.info("Placed market stop loss: %s", order)
