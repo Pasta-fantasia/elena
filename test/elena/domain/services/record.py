@@ -1,7 +1,9 @@
+import importlib
 import json
 import pathlib
 import time
 import typing as t
+from os import path
 
 import pandas as pd
 import pydantic
@@ -12,7 +14,6 @@ def get_time():
 
 
 class Record:
-
     def __init__(self, enabled=True, excluded_args: t.Optional[t.List[str]] = None):
         self.enabled = enabled
         self.excluded_args = excluded_args or []
@@ -55,7 +56,11 @@ class Record:
         if isinstance(output, pd.DataFrame):
             return {"type": "DataFrame", "value": output.to_json()}
         elif isinstance(output, pydantic.BaseModel):
-            return {"type": "BaseModel", "class": f"{output.__class__.__module__}.{output.__class__.__qualname__}", "value": output.dict(),}
+            return {
+                "type": "BaseModel",
+                "model_class": f"{output.__class__.__module__}.{output.__class__.__qualname__}",
+                "value": output.dict(),
+            }
         elif isinstance(output, float):
             return {"type": "float", "value": output}
         elif isinstance(output, int):
@@ -76,25 +81,55 @@ class Record:
             json.dump(data, fp, indent=4)
 
     @staticmethod
-    def deserialize_from_json(filepath):
+    def deserialize_from_json(filename):
+        filepath = path.join(pathlib.Path(__file__).parent, "data", filename)
         with open(filepath, "r") as fp:
             data = json.load(fp)
 
-        return Record._deserialize(data)
+        input_args = []
+        for input_arg in data["input"]["args"]:
+            _input_arg = Record._deserialize(input_arg)
+            input_args.append(_input_arg)
+        data["input"]["args"] = input_args
+
+        input_kwargs = []
+        for input_kwarg in data["input"]["kwargs"]:
+            _input_kwarg = Record._deserialize(input_kwarg)
+            input_kwarg.append(_input_kwarg)
+        data["input"]["kwargs"] = input_kwargs
+
+        output = Record._deserialize(data["output"])
+        data["output"] = output
+        return data
 
     @classmethod
     def _deserialize(self, data):
-        if data["output_type"] == "DataFrame":
-            return pd.DataFrame.from_dict(data["output"])
-        elif data["output_type"] == "BaseModel":
-            return pydantic.BaseModel(**data["output"])
-        elif data["output_type"] == "float":
-            return float(data["output"])
-        elif data["output_type"] == "int":
-            return int(data["output"])
-        elif data["output_type"] == "str":
-            return str(data["output"])
-        elif data["output_type"] == "None":
+        if data["type"] == "DataFrame":
+            return pd.DataFrame.from_dict(data.output)
+        elif data["type"] == "BaseModel":
+            return self._get_base_model_instance(
+                model_class=data["model_class"],
+                value=data["value"],
+            )
+        elif data["type"] == "float":
+            return float(data["value"])
+        elif data["type"] == "int":
+            return int(data["value"])
+        elif data["type"] == "str":
+            return str(data["value"])
+        elif data["type"] == "None":
             return None
         else:
-            raise Exception(f"Un-implemented deserialization for type {data['output_type']}")
+            raise Exception(f"Un-implemented deserialization for type {data['type']}")
+
+    @staticmethod
+    def _get_base_model_instance(
+        model_class: str, value: t.Dict[str, t.Any]
+    ) -> pydantic.BaseModel:
+        class_parts = model_class.split(".")
+        class_name = class_parts[-1]
+        module_path = ".".join(class_parts[0:-1])
+        module = importlib.import_module(module_path)
+        _class = getattr(module, class_name)
+        instance = _class.parse_obj(value)
+        return instance
