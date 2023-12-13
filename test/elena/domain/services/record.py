@@ -1,5 +1,6 @@
 import importlib
 import json
+import os
 import pathlib
 import time
 import typing as t
@@ -14,24 +15,30 @@ def get_time():
 
 
 class Record:
-    def __init__(self, enabled=True, excluded_args: t.Optional[t.List[str]] = None):
+    """
+    Records the input and output of the decorated function.
+    Only stores the inputs with named args (kwargs).
+    The kwargs can be excluded from recording adding the kwarg name to the excluded_kwargs list
+    """
+
+    def __init__(self, enabled=True, excluded_kwargs: t.Optional[t.List[str]] = None):
         self.enabled = enabled
-        self.excluded_args = excluded_args or []
+        self.excluded_kwargs = excluded_kwargs or []
 
     def __call__(self, func):
         def wrapper(*args, **kwargs):
             output = func(*args, **kwargs)
             if self.enabled:
-                self._record(args, kwargs, output, func.__name__)
+                self._record(kwargs, output, func.__name__)
             return output
 
         return wrapper
 
-    def _record(self, args, kwargs, output, function_name):
+    def _record(self, kwargs, output, function_name):
         try:
             now = get_time()
+            input_dict = self._build_input_dict(kwargs)
             output_dict = self._serialize(output)
-            input_dict = self._build_input_dict(args, kwargs)
             data = {
                 "time": now,
                 "function": function_name,
@@ -42,12 +49,12 @@ class Record:
         except Exception as e:
             print(f"Error recording function {function_name}: {e}")
 
-    def _build_input_dict(self, args, kwargs) -> t.Dict[str, t.Any]:
-        input_dict = {"args": [], "kwargs": kwargs}
-        for arg in args:
-            if arg.__class__.__name__ in self.excluded_args:
+    def _build_input_dict(self, kwargs) -> t.Dict[str, t.Any]:
+        input_dict = {}
+        for kwarg_name, kwarg_value in kwargs.items():
+            if kwarg_name in self.excluded_kwargs:
                 continue
-            input_dict["args"].append(self._serialize(arg))
+            input_dict[kwarg_name] = self._serialize(kwarg_value)
         return input_dict
 
     @staticmethod
@@ -74,50 +81,50 @@ class Record:
 
     @staticmethod
     def _save(data, now, function):
-        directory = pathlib.Path(__file__).parent.__str__()
         prefix = time.strftime("%y%m%d")
-        filepath = f"{directory}/data/{prefix}-{now}-{function}.json"
+        filepath = path.join(
+            pathlib.Path(__file__).parent, "data", f"{prefix}-{now}-{function}.json"
+        )
         with open(filepath, "w") as fp:
             json.dump(data, fp, indent=4)
 
     @staticmethod
-    def deserialize_from_json(filename):
-        filepath = path.join(pathlib.Path(__file__).parent, "data", filename)
-        with open(filepath, "r") as fp:
-            data = json.load(fp)
+    def _deserialize_from_json(filename):
 
-        input_args = []
-        for input_arg in data["input"]["args"]:
-            _input_arg = Record._deserialize(input_arg)
-            input_args.append(_input_arg)
-        data["input"]["args"] = input_args
+        try:
+            filepath = path.join(pathlib.Path(__file__).parent, "data", filename)
+            with open(filepath, "r") as fp:
+                data = json.load(fp)
 
-        input_kwargs = []
-        for input_kwarg in data["input"]["kwargs"]:
-            _input_kwarg = Record._deserialize(input_kwarg)
-            input_kwarg.append(_input_kwarg)
-        data["input"]["kwargs"] = input_kwargs
+            for kwarg_name, kwarg_value in data["input"].items():
+                value = Record._deserialize(kwarg_value)
+                data["input"][kwarg_name] = value
 
-        output = Record._deserialize(data["output"])
-        data["output"] = output
-        return data
+            output = Record._deserialize(data["output"])
+            data["output"] = output
+            return data
+        except Exception as err:
+            print(f"Error deserializing from {filename}: {err}")
+            raise err
 
     @classmethod
-    def _deserialize(self, data):
-        if data["type"] == "DataFrame":
-            return pd.DataFrame.from_dict(data.output)
-        elif data["type"] == "BaseModel":
+    def _deserialize(self, data: t.Dict[str, t.Any]):
+        data_type = data["type"]
+        data_value = data["value"]
+        if data_type == "DataFrame":
+            return pd.read_json(data_value)
+        elif data_type == "BaseModel":
             return self._get_base_model_instance(
                 model_class=data["model_class"],
-                value=data["value"],
+                value=data_value,
             )
-        elif data["type"] == "float":
-            return float(data["value"])
-        elif data["type"] == "int":
-            return int(data["value"])
-        elif data["type"] == "str":
-            return str(data["value"])
-        elif data["type"] == "None":
+        elif data_type == "float":
+            return float(data_value)
+        elif data_type == "int":
+            return int(data_value)
+        elif data_type == "str":
+            return str(data_value)
+        elif data_type == "None":
             return None
         else:
             raise Exception(f"Un-implemented deserialization for type {data['type']}")
@@ -133,3 +140,24 @@ class Record:
         _class = getattr(module, class_name)
         instance = _class.parse_obj(value)
         return instance
+
+    @staticmethod
+    def load_all_recorded_data():
+        """
+        Traverse the data directory, deserialize all json files in it,
+        and stores the result in dict indexed by function name,
+        inside every function there is a list with all recorded inputs and outputs
+        """
+
+        dir_path = path.join(pathlib.Path(__file__).parent, "data").__str__()
+        recorded_data = {}
+        for filename in os.listdir(dir_path):
+            print(f"Loading recorded data from {filename} ...")
+            if filename.endswith(".json"):
+                data = Record._deserialize_from_json(filename)
+                function_name = data["function"]
+                if function_name in recorded_data:
+                    recorded_data[function_name].append(data)
+                else:
+                    recorded_data[function_name] = [data]
+        return recorded_data

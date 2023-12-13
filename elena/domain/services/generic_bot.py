@@ -155,7 +155,10 @@ class GenericBot(Bot):
             time_frame = self.time_frame
         try:
             return self.exchange_manager.read_candles(
-                self.exchange, self.pair, time_frame, page_size
+                self.exchange,
+                pair=self.pair,
+                time_frame=time_frame,
+                page_size=page_size,
             )
         except Exception as err:
             print(f"Error reading candles: {err}")
@@ -166,7 +169,7 @@ class GenericBot(Bot):
         try:
             return self.exchange_manager.limit_min_amount(
                 self.exchange,
-                self.pair,
+                pair=self.pair,
             )
         except Exception as err:
             print(f"Error getting limit min amount: {err}")
@@ -176,7 +179,9 @@ class GenericBot(Bot):
     def amount_to_precision(self, amount: float) -> float:
         try:
             return self.exchange_manager.amount_to_precision(
-                self.exchange, self.pair, amount
+                self.exchange,
+                pair=self.pair,
+                amount=amount,
             )
         except Exception as err:
             print(f"Error getting amount to precision: {err}")
@@ -186,7 +191,9 @@ class GenericBot(Bot):
     def price_to_precision(self, price: float) -> float:
         try:
             return self.exchange_manager.price_to_precision(
-                self.exchange, self.pair, price
+                self.exchange,
+                pair=self.pair,
+                price=price,
             )
         except Exception as err:
             print(f"Error getting price to precision: {err}")
@@ -195,7 +202,10 @@ class GenericBot(Bot):
 
     def get_order_book(self) -> Optional[OrderBook]:
         try:
-            return self.exchange_manager.read_order_book(self.exchange, self.pair)
+            return self.exchange_manager.read_order_book(
+                self.exchange,
+                pair=self.pair,
+            )
         except Exception as err:
             print(f"Error getting order book: {err}")
             self._logger.error("Error getting order book", exc_info=1)
@@ -205,7 +215,9 @@ class GenericBot(Bot):
     def cancel_order(self, order_id: str) -> Optional[Order]:
         try:
             order = self.exchange_manager.cancel_order(
-                self.exchange, self.bot_config, order_id
+                self.exchange,
+                bot_config=self.bot_config,
+                order_id=order_id,
             )
             self.archive_order(order)
             return order
@@ -227,7 +239,7 @@ class GenericBot(Bot):
             params = {"type": "spot", "triggerPrice": stop_price, "timeInForce": "GTC"}
 
             order = self.exchange_manager.place_order(
-                exchange=self.exchange,
+                self.exchange,
                 bot_config=self.bot_config,
                 order_type=OrderType.limit,  # type: ignore
                 side=OrderSide.sell,  # type: ignore
@@ -257,7 +269,7 @@ class GenericBot(Bot):
 
             amount = self.amount_to_precision(amount)
             order = self.exchange_manager.place_order(
-                exchange=self.exchange,
+                self.exchange,
                 bot_config=self.bot_config,
                 order_type=OrderType.market,  # type: ignore
                 side=OrderSide.buy,  # type: ignore
@@ -279,7 +291,7 @@ class GenericBot(Bot):
 
             amount = self.amount_to_precision(amount)
             order = self.exchange_manager.place_order(
-                exchange=self.exchange,
+                self.exchange,
                 bot_config=self.bot_config,
                 order_type=OrderType.market,  # type: ignore
                 side=OrderSide.sell,  # type: ignore
@@ -299,8 +311,8 @@ class GenericBot(Bot):
         try:
             return self.exchange_manager.fetch_order(
                 self.exchange,
-                self.bot_config,
-                order_id,
+                bot_config=self.bot_config,
+                order_id=order_id,
             )
         except Exception as err:
             print(f"Error fetching order: {err}")
@@ -317,7 +329,10 @@ class GenericBot(Bot):
         # should use fetchL[123]OrderBook family instead.
         # The idea was to use fetch_ticker[close]
         try:
-            order_book = self.exchange_manager.read_order_book(self.exchange, self.pair)
+            order_book = self.exchange_manager.read_order_book(
+                self.exchange,
+                pair=self.pair,
+            )
             last_bid = order_book.bids[0].price
             last_ask = order_book.asks[0].price
             estimated_last_close = (last_bid + last_ask) / 2
