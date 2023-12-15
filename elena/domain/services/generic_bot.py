@@ -7,7 +7,8 @@ from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.exchange import Exchange
 from elena.domain.model.limits import Limits
-from elena.domain.model.order import Order, OrderSide, OrderStatusType, OrderType
+from elena.domain.model.order import (Order, OrderSide, OrderStatusType,
+                                      OrderType)
 from elena.domain.model.order_book import OrderBook
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
@@ -64,41 +65,56 @@ class GenericBot(Bot):
             updated_order = self.fetch_order(order.id)
 
             if updated_order:
-                if (updated_order.status == OrderStatusType.closed
-                        or updated_order.status == OrderStatusType.canceled):
+                if (
+                    updated_order.status == OrderStatusType.closed
+                    or updated_order.status == OrderStatusType.canceled
+                ):
                     # notify
                     if updated_order.status == OrderStatusType.closed:
                         self._logger.info(
-                            f"Notify! Order {updated_order.id} was closed for {updated_order.amount} {updated_order.pair} "
+                            f"Notify! Order {updated_order.id} "
+                            f"was closed for {updated_order.amount} {updated_order.pair} "
                             f"at {updated_order.average}"
                         )
                     if updated_order.status == OrderStatusType.canceled:
-                        self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
-                        # TODO: [Fran] what should we do if an order is cancelled? Cancel are: manual, something could go
+                        self._logger.info(
+                            f"Notify! Order {updated_order.id} was cancelled!-"
+                        )
+                        # TODO: [Fran] what should we do if an order is cancelled?
+                        #  Cancel are: manual, something could go
                         #  wrong in L or the market is stopped.
 
                     # updates trades
                     self.archive_order_close_trades(updated_order)
 
-                elif (updated_order.status == OrderStatusType.open and updated_order.filled > 0):  # type: ignore
+                elif updated_order.status == OrderStatusType.open and updated_order.filled > 0:  # type: ignore
 
-                    self._logger.info(f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: "
-                                      f"{updated_order.filled} of {updated_order.amount} {updated_order.pair} at"
-                                      f" {updated_order.average}")
+                    self._logger.info(
+                        f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: "
+                        f"{updated_order.filled} of {updated_order.amount} {updated_order.pair} at"
+                        f" {updated_order.average}"
+                    )
 
                     # PARTIALLY_FILLED is considered an active order, It's on the strategy to do something.
                     updated_orders.append(updated_order)
                 else:
                     updated_orders.append(updated_order)
             else:
-                self._logger.error(f"The order {order.id} has desapear! This should only happend on test environments")
+                self._logger.error(
+                    f"The order {order.id} has desapear! This should only happend on test environments"
+                )
 
         self.status.active_orders = updated_orders
+        return self.status
 
-        return
-
-    def init(self, manager: StrategyManager, logger: Logger,
-             exchange_manager: ExchangeManager, bot_config: BotConfig, bot_status: BotStatus):
+    def init(
+        self,
+        manager: StrategyManager,
+        logger: Logger,
+        exchange_manager: ExchangeManager,
+        bot_config: BotConfig,
+        bot_status: BotStatus,
+    ):
         self.id = bot_config.id
         self.name = bot_config.name
         self.pair = bot_config.pair
@@ -106,7 +122,7 @@ class GenericBot(Bot):
         self.config = bot_config.config
         self.manager = manager
         self.bot_config = bot_config
-        self.initial_status = bot_status # for testing/development TODO: delete
+        self.initial_status = bot_status  # for testing/development TODO: delete
         self.status = bot_status
         self._logger = logger
 
@@ -125,23 +141,27 @@ class GenericBot(Bot):
     def get_balance(self) -> Optional[Balance]:
         try:
             return self.exchange_manager.get_balance(self.exchange)
-        except Exception:
+        except Exception as err:
+            print(f"Error getting balance: {err}")
             self._logger.error("Error creating stop loss", exc_info=1)
             return None
 
     def read_candles(
-            self, time_frame: Optional[TimeFrame] = None, page_size: int = 100,
+        self,
+        time_frame: Optional[TimeFrame] = None,
+        page_size: int = 100,
     ) -> pd.DataFrame:
         if not time_frame:
             time_frame = self.time_frame
         try:
             return self.exchange_manager.read_candles(
                 self.exchange,
-                self.pair,
-                time_frame,
-                page_size
+                pair=self.pair,
+                time_frame=time_frame,
+                page_size=page_size,
             )
-        except Exception:
+        except Exception as err:
+            print(f"Error reading candles: {err}")
             self._logger.error("Error reading candles", exc_info=1)
             return pd.DataFrame()
 
@@ -149,59 +169,101 @@ class GenericBot(Bot):
         try:
             return self.exchange_manager.limit_min_amount(
                 self.exchange,
-                self.pair,
+                pair=self.pair,
             )
-        except Exception:
+        except Exception as err:
+            print(f"Error getting limit min amount: {err}")
             self._logger.error("Error getting limit min amount", exc_info=1)
             return None
 
-    def amount_to_precision(self, amount: float) -> float:
-        return self.exchange_manager.amount_to_precision(self.exchange, self.pair, amount)
+    def amount_to_precision(self, amount: float) -> Optional[float]:
+        try:
+            return self.exchange_manager.amount_to_precision(
+                self.exchange,
+                pair=self.pair,
+                amount=amount,
+            )
+        except Exception as err:
+            print(f"Error getting amount to precision: {err}")
+            self._logger.error("Error getting amount to precision", exc_info=1)
+            return None
 
-    def price_to_precision(self, price: float) -> float:
-        return self.exchange_manager.price_to_precision(self.exchange, self.pair, price)
+    def price_to_precision(self, price: float) -> Optional[float]:
+        try:
+            return self.exchange_manager.price_to_precision(
+                self.exchange,
+                pair=self.pair,
+                price=price,
+            )
+        except Exception as err:
+            print(f"Error getting price to precision: {err}")
+            self._logger.error("Error getting price to precision", exc_info=1)
+            return None
 
     def get_order_book(self) -> Optional[OrderBook]:
         try:
-            return self.exchange_manager.get_order_book()
-        except Exception:
+            return self.exchange_manager.read_order_book(
+                self.exchange,
+                pair=self.pair,
+            )
+        except Exception as err:
+            print(f"Error getting order book: {err}")
             self._logger.error("Error getting order book", exc_info=1)
             return None
-
 
     #  ---- Orders operations
     def cancel_order(self, order_id: str) -> Optional[Order]:
         try:
-            order = self.exchange_manager.cancel_order(self.exchange, self.bot_config, order_id)
+            order = self.exchange_manager.cancel_order(
+                self.exchange,
+                bot_config=self.bot_config,
+                order_id=order_id,
+            )
             self.archive_order(order)
             return order
-        except Exception:
+        except Exception as err:
+            print(f"Error cancelling order: {err}")
             self._logger.error(f"Error cancelling order {order_id}", exc_info=1)
             return None
 
-    def stop_loss(self, amount: float, stop_price: float, price: float) -> Optional[Order]:
+    def stop_loss(
+        self, amount: float, stop_price: float, price: float
+    ) -> Optional[Order]:
+        # TODO: https://dev.binance.vision/t/code-1013-msg-filter-failure-percent-price/1592 PERCENT_PRICE filter
+        #   while testing we got "'binance {"code":-1013,"msg":"Filter failure: PERCENT_PRICE_BY_SIDE"}'"
         try:
-            amount = self.amount_to_precision(amount)
-            stop_price = self.price_to_precision(stop_price)
-            price = self.price_to_precision(price)
+            precision_amount = self.amount_to_precision(amount)
+            if not precision_amount:
+                raise Exception(f"Cannot get amount to precision for {amount}")
+            precision_stop_price = self.price_to_precision(stop_price)
+            if not precision_stop_price:
+                raise Exception(f"Cannot get stop_price to precision for {stop_price}")
+            precision_price = self.price_to_precision(price)
+            if not precision_price:
+                raise Exception(f"Cannot get price to precision for {price}")
 
-            params = {"type": "spot", "triggerPrice": stop_price, "timeInForce": "GTC"}
+            params = {
+                "type": "spot",
+                "triggerPrice": precision_stop_price,
+                "timeInForce": "GTC",
+            }
 
             order = self.exchange_manager.place_order(
-                exchange=self.exchange,
+                self.exchange,
                 bot_config=self.bot_config,
                 order_type=OrderType.limit,  # type: ignore
                 side=OrderSide.sell,  # type: ignore
-                amount=amount,
-                price=price,
+                amount=precision_amount,
+                price=precision_price,
                 params=params,
             )
             self._logger.info("Placed market stop loss: %s", order)
 
             self.new_order(order)
             return order
-        except Exception:
-            self._logger.error(f"Error creating stop loss.", exc_info=1)
+        except Exception as err:
+            print(f"Error creating stop loss: {err}")
+            self._logger.error("Error creating stop loss.", exc_info=1)
             return None
 
     def create_limit_buy_order(self, amount, price) -> Optional[Order]:
@@ -217,7 +279,7 @@ class GenericBot(Bot):
 
             amount = self.amount_to_precision(amount)
             order = self.exchange_manager.place_order(
-                exchange=self.exchange,
+                self.exchange,
                 bot_config=self.bot_config,
                 order_type=OrderType.market,  # type: ignore
                 side=OrderSide.buy,  # type: ignore
@@ -228,8 +290,9 @@ class GenericBot(Bot):
 
             self.new_order(order)
             return order
-        except Exception:
-            self._logger.error(f"Error creating market buy order", exc_info=1)
+        except Exception as err:
+            print(f"Error creating market buy order: {err}")
+            self._logger.error("Error creating market buy order", exc_info=1)
             return None
 
     def create_market_sell_order(self, amount) -> Optional[Order]:
@@ -238,7 +301,7 @@ class GenericBot(Bot):
 
             amount = self.amount_to_precision(amount)
             order = self.exchange_manager.place_order(
-                exchange=self.exchange,
+                self.exchange,
                 bot_config=self.bot_config,
                 order_type=OrderType.market,  # type: ignore
                 side=OrderSide.sell,  # type: ignore
@@ -249,19 +312,21 @@ class GenericBot(Bot):
 
             self.new_order(order)
             return order
-        except Exception:
-            self._logger.error(f"Error creating market sell order ", exc_info=1)
+        except Exception as err:
+            print(f"Error creating market sell order: {err}")
+            self._logger.error("Error creating market sell order ", exc_info=1)
             return None
 
     def fetch_order(self, order_id: str) -> Optional[Order]:
         try:
             return self.exchange_manager.fetch_order(
                 self.exchange,
-                self.bot_config,
-                order_id,
+                bot_config=self.bot_config,
+                order_id=order_id,
             )
-        except Exception:
-            self._logger.error(f"Error fetching order",  exc_info=1)
+        except Exception as err:
+            print(f"Error fetching order: {err}")
+            self._logger.error("Error fetching order", exc_info=1)
             return None
 
     def get_estimated_last_close(self) -> float:
@@ -274,11 +339,15 @@ class GenericBot(Bot):
         # should use fetchL[123]OrderBook family instead.
         # The idea was to use fetch_ticker[close]
         try:
-            order_book = self.exchange_manager.read_order_book(self.exchange, self.pair)
+            order_book = self.exchange_manager.read_order_book(
+                self.exchange,
+                pair=self.pair,
+            )
             last_bid = order_book.bids[0].price
             last_ask = order_book.asks[0].price
             estimated_last_close = (last_bid + last_ask) / 2
             return estimated_last_close
-        except Exception:
-            self._logger.error(f"Error fetching order", exc_info=1)
-            return None
+        except Exception as err:
+            print(f"Error getting estimated last close: {err}")
+            self._logger.error("Error fetching order", exc_info=1)
+            raise err

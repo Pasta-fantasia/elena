@@ -1,8 +1,7 @@
-import json
-from os.path import dirname, join, realpath
 # TODO: jsons should look like Binance_read_candles_BTC_USDT_min_1.
 #  Record class was doing something like that. But the time parameter is not relevant anymore.
 #       Not sure if that would be possible with amount_to_precision and price_to_precision
+from test.elena.domain.services.record import Record
 from typing import Dict, Optional
 
 import pandas as pd
@@ -19,26 +18,20 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 
+recording = False
+excluded_kwargs = ["exchange"]
+if recording:
+    recorded_data = {}
+else:
+    recorded_data = Record.load_all_recorded_data()
+
 
 class FakeExchangeManager(ExchangeManager):
     def __init__(self, config: Dict, logger: Logger):
         self._cctx = CctxExchangeManager(config, logger)
         self._logger = logger
-        # Record.enable()
-        self._save = True
 
-    @staticmethod
-    def _load_from_json(filename: str) -> Dict:
-        _filename = join(dirname(realpath(__file__)), "data", f"{filename}.json")
-        with open(_filename, "r") as f:
-            return json.load(f)
-
-    @staticmethod
-    def save_to_json(cache: Dict, filename: str):
-        _filename = join(dirname(realpath(__file__)), "data", f"{filename}.json")
-        with open(_filename, "w") as f:
-            json.dump(cache, f)
-
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def read_candles(
         self,
         exchange: Exchange,
@@ -46,54 +39,68 @@ class FakeExchangeManager(ExchangeManager):
         time_frame: TimeFrame = TimeFrame.min_1,  # type: ignore
         page_size: int = 100,
     ) -> pd.DataFrame:
-        if self._save:
-            result = self._cctx.read_candles(exchange, pair, time_frame, page_size)
-            # self.save_to_json(result.dict(), "read_candles")
+        if recording:
+            return self._cctx.read_candles(exchange, pair, time_frame, page_size)
         else:
-            data = self._load_from_json("read_candles")
-            result = pd.DataFrame.from_dict(data)
-        return result
+            return Record.load_recorded_output(
+                function_name="read_candles",
+                all_recorded_data=recorded_data,
+                pair=pair,
+                time_frame=time_frame,
+                page_size=page_size,
+            )
 
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def amount_to_precision(
         self, exchange: Exchange, pair: TradingPair, amount: float
     ) -> float:
-        if self._save:
-            result = self._cctx.amount_to_precision(exchange, pair, amount)
-            # TODO self.save_to_json(result.dict(), "amount_to_precision")
+        if recording:
+            return self._cctx.amount_to_precision(exchange, pair, amount)
         else:
-            pass  # TODO
-        return result
+            return Record.load_recorded_output(
+                function_name="amount_to_precision",
+                all_recorded_data=recorded_data,
+                pair=pair,
+                amount=amount,
+            )
 
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def price_to_precision(
         self, exchange: Exchange, pair: TradingPair, price: float
     ) -> float:
-        if self._save:
-            result = self._cctx.price_to_precision(exchange, pair, price)
-            self.save_to_json(
-                {"price_to_precision": result},
-                "price_to_precision",
+        if recording:
+            return self._cctx.price_to_precision(exchange, pair, price)
+        else:
+            return Record.load_recorded_output(
+                function_name="price_to_precision",
+                all_recorded_data=recorded_data,
+                pair=pair,
+                price=price,
             )
-        else:
-            pass  # TODO
-        return result
 
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def read_order_book(self, exchange: Exchange, pair: TradingPair) -> OrderBook:
-        if self._save:
+        if recording:
             result = self._cctx.read_order_book(exchange, pair)
-            self.save_to_json(result.dict(), "read_order_book")
+            return result
         else:
-            pass  # TODO
-        return result
+            return Record.load_recorded_output(
+                function_name="read_order_book",
+                all_recorded_data=recorded_data,
+                pair=pair,
+            )
 
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def get_balance(self, exchange: Exchange) -> Balance:
-        if self._save:
-            result = self._cctx.get_balance(exchange)
-            self.save_to_json(result.dict(), "get_balance")
+        if recording:
+            return self._cctx.get_balance(exchange)
         else:
-            data = self._load_from_json("get_balance")
-            result = Balance.parse_obj(data)
-        return result
+            return Record.load_recorded_output(
+                function_name="get_balance",
+                all_recorded_data=recorded_data,
+            )
 
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def place_order(
         self,
         exchange: Exchange,
@@ -104,40 +111,55 @@ class FakeExchangeManager(ExchangeManager):
         price: Optional[float] = None,
         params: Optional[Dict] = {},
     ) -> Order:
-        if self._save:
-            result = self._cctx.place_order(
+        if recording:
+            return self._cctx.place_order(
                 exchange, bot_config, order_type, side, amount, price, params
             )
-            self.save_to_json(result.dict(), "place_order")
         else:
-            pass  # TODO
-        return result
+            return Record.load_recorded_output(
+                function_name="place_order",
+                all_recorded_data=recorded_data,
+                bot_config=bot_config,
+                order_type=order_type,
+                side=side,
+                amount=amount,
+                price=price,
+                params=params,
+            )
 
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str):
-        if self._save:
-            result = self._cctx.cancel_order(exchange, bot_config, order_id)
-            self.save_to_json(result.dict(), "cancel_order")
+        if recording:
+            return self._cctx.cancel_order(exchange, bot_config, order_id)
         else:
-            pass  # TODO
-        return result
+            return Record.load_recorded_output(
+                function_name="cancel_order",
+                all_recorded_data=recorded_data,
+                bot_config=bot_config,
+                order_id=order_id,
+            )
 
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def fetch_order(
         self, exchange: Exchange, bot_config: BotConfig, order_id: str
     ) -> Order:
-        if self._save:
-            result = self._cctx.fetch_order(exchange, bot_config, order_id)
-            self.save_to_json(result.dict(), "fetch_order")
+        if recording:
+            return self._cctx.fetch_order(exchange, bot_config, order_id)
         else:
-            pass  # TODO
-        return result
-
-    def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
-        if self._save:
-            result = self._cctx.limit_min_amount(exchange, pair)
-            self.save_to_json(
-                {"limit_min_amount": result},
-                "limit_min_amount",
+            return Record.load_recorded_output(
+                function_name="fetch_order",
+                all_recorded_data=recorded_data,
+                bot_config=bot_config,
+                order_id=order_id,
             )
+
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
+    def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
+        if recording:
+            return self._cctx.limit_min_amount(exchange, pair)
         else:
-            pass  # TODO
-        return result
+            return Record.load_recorded_output(
+                function_name="limit_min_amount",
+                all_recorded_data=recorded_data,
+                pair=pair,
+            )

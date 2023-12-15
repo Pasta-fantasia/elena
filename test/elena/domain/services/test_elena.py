@@ -1,23 +1,31 @@
 import pathlib
 from test.elena.domain.services.fake_exchange_manager import \
     FakeExchangeManager
+
 from elena.adapters.bot_manager.local_bot_manager import LocalBotManager
 from elena.adapters.config.local_config_reader import LocalConfigReader
 from elena.adapters.logger.local_logger import LocalLogger
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
+from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.services.elena import Elena
 from elena.domain.services.generic_bot import GenericBot
-from elena.domain.ports.exchange_manager import ExchangeManager
 
 
 class ExchangeBasicOperationsBot(GenericBot):
     band_length: float
     band_mult: float
 
-    def init(self, manager: StrategyManager, logger: Logger, exchange_manager: ExchangeManager, bot_config: BotConfig, bot_status: BotStatus):  # type: ignore
+    def init(
+        self,
+        manager: StrategyManager,
+        logger: Logger,
+        exchange_manager: ExchangeManager,
+        bot_config: BotConfig,
+        bot_status: BotStatus,
+    ):  # type: ignore
         super().init(manager, logger, exchange_manager, bot_config, bot_status)
 
         # without try: if it fails the test fails, and it's OK
@@ -33,11 +41,11 @@ class ExchangeBasicOperationsBot(GenericBot):
     def next(self) -> BotStatus:
         self._logger.info("%s strategy: processing next cycle ...", self.name)
 
+        # 1 - INFO
         min_amount = self.limit_min_amount()
         if not min_amount:
             raise Exception("Cannot get min_amount")
 
-        # get candles
         candles = self.read_candles()
         if candles.empty:
             raise Exception("Cannot get candles")
@@ -46,70 +54,62 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not estimated_close_price:
             raise Exception("Cannot get_estimated_last_close")
 
-        market_sell_order = None
-        market_buy_order = None
+        balance = self.get_balance()
+        if not balance:
+            raise Exception("Cannot get balance")
 
-        while not (market_sell_order or market_buy_order):
-            # we can't know if we have balances, so we'll try to buy or sell depending on the balances
-            # is there any free balance to handle?
-            balance = self.get_balance()
-            if not balance:
-                raise Exception("Cannot get balance")
+        base_symbol = self.pair.base
+        base_total = balance.currencies[base_symbol].total
+        base_free = balance.currencies[base_symbol].free
 
-            base_symbol = self.pair.base
-            base_total = balance.currencies[base_symbol].total
-            base_free = balance.currencies[base_symbol].free
+        quote_symbol = self.pair.quote
+        quote_total = balance.currencies[quote_symbol].total
+        quote_free = balance.currencies[quote_symbol].free
 
-            # if we have base_symbol_free => market order sell
-            # BTC/USDT: if we have BTC we sell it for USDT
-            if base_free > 0:
-                if market_buy_order:
-                    # if we bought before we sell that amount
-                    amount_to_sell = market_buy_order.amount
-                else:
-                    amount_to_sell = base_free / 2
-                amount_to_sell = self.amount_to_precision(amount_to_sell)
-                if amount_to_sell > min_amount:
-                    market_sell_order = self.create_market_sell_order(amount_to_sell)
-                else:
-                    market_sell_order = None
+        # 2 - BUY Market
+        amount_to_spend = quote_free / 2
+        amount_to_buy = amount_to_spend / estimated_close_price
+        precision_to_buy = self.amount_to_precision(amount_to_buy)
+        if not precision_to_buy:
+            raise Exception(
+                f"Cannot get precision_to_buy for amount_to_buy {amount_to_buy}"
+            )
 
-            # is there any free balance to handle?
-            balance = self.get_balance()
-            if not balance:
-                raise Exception("Cannot get balance")
+        if precision_to_buy < min_amount:
+            raise Exception(
+                "Not enough balance to run the tests. {self.pair.base} = {base_free} / {quote_free}"
+            )
 
-            quote_symbol = self.pair.quote
-            quote_total = balance.currencies[quote_symbol].total
-            quote_free = balance.currencies[quote_symbol].free
+        market_buy_order = self.create_market_buy_order(precision_to_buy)
 
-            # if we have quote_free => market order buy
-            # BTC/USDT: if we have USDT we buy USDT
+        if not market_buy_order:
+            raise Exception("Buy test failed")
+        # TODO: check orders & trades
 
-            if quote_free > 0:
-                # if we could sell some BTC we buy the same again
-                if market_sell_order:
-                    amount_to_buy = market_sell_order.amount
-                else:
-                    # if we couldn't sell we use the free USDT to buy
-                    estimated_close_price = self.get_estimated_last_close()
-                    amount_to_spend = quote_free / 2
-                    amount_to_buy = amount_to_spend / estimated_close_price
+        # 3 - STOP LOSS Create
+        amount_for_stop_loss = market_buy_order.amount
+        stop_loss_stop_price = candles["Close"][-1:].iloc[0] * 0.8  # last close - 20%
+        stop_loss_price = stop_loss_stop_price * 0.95  # stop_price - 5%
+        stop_loss_order = self.stop_loss(
+            amount_for_stop_loss, stop_loss_stop_price, stop_loss_price
+        )
+        if not stop_loss_order:
+            raise Exception("Stop loss creation failed.")
+        # TODO: check orders & trades
 
-                amount_to_buy = self.amount_to_precision(amount_to_buy)
-                if amount_to_buy > min_amount:
-                    market_buy_order = self.create_market_buy_order(amount_to_sell)
-                else:
-                    pass
+        # 4 - STOP LOSS Cancel
+        canceled_order = self.cancel_order(stop_loss_order.id)
+        if not canceled_order:
+            raise Exception("Stop loss cancel failed.")
+        # TODO: check orders & trades
 
-            if not (market_sell_order or market_buy_order):
-                # but we may have all balances locked...
-                raise Exception("Can't buy nor sell symbol. Maybe all balances are in open orders.")
+        # 5 - SELL Market
+        amount_to_sell = market_buy_order.amount
+        market_sell_order = self.create_market_sell_order(amount_to_sell)
 
-        # TODO:
-        #  - correct precisions for exchange self._manager.price_to_precision(self._exchange,
-        #           self._bot_config.pair, new_stop_loss)
-        #  - create some stop_loss and cancel it
+        if not market_sell_order:
+            raise Exception("Sell test failed")
+        # TODO: check orders & trades
 
         return self.status
 
