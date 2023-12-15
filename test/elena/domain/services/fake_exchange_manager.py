@@ -18,7 +18,7 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 
-recording = True
+recording = False
 excluded_kwargs = ["exchange"]
 if recording:
     recorded_data = {}
