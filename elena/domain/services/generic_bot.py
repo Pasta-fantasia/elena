@@ -290,7 +290,7 @@ class GenericBot(Bot):
             return order
         except Exception as err:
             print(f"Error creating stop loss: {err}")
-            self._logger.error(f"Error creating stop loss.", exc_info=1)
+            self._logger.error("Error creating stop loss.", exc_info=1)
             return None
 
     def create_limit_buy_order(self, amount, price) -> Optional[Order]:
