@@ -1,23 +1,31 @@
 import pathlib
 from test.elena.domain.services.fake_exchange_manager import \
     FakeExchangeManager
+
 from elena.adapters.bot_manager.local_bot_manager import LocalBotManager
 from elena.adapters.config.local_config_reader import LocalConfigReader
 from elena.adapters.logger.local_logger import LocalLogger
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
+from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.services.elena import Elena
 from elena.domain.services.generic_bot import GenericBot
-from elena.domain.ports.exchange_manager import ExchangeManager
 
 
 class ExchangeBasicOperationsBot(GenericBot):
     band_length: float
     band_mult: float
 
-    def init(self, manager: StrategyManager, logger: Logger, exchange_manager: ExchangeManager, bot_config: BotConfig, bot_status: BotStatus):  # type: ignore
+    def init(
+        self,
+        manager: StrategyManager,
+        logger: Logger,
+        exchange_manager: ExchangeManager,
+        bot_config: BotConfig,
+        bot_status: BotStatus,
+    ):  # type: ignore
         super().init(manager, logger, exchange_manager, bot_config, bot_status)
 
         # without try: if it fails the test fails, and it's OK
@@ -61,12 +69,18 @@ class ExchangeBasicOperationsBot(GenericBot):
         # 2 - BUY Market
         amount_to_spend = quote_free / 2
         amount_to_buy = amount_to_spend / estimated_close_price
-        amount_to_buy = self.amount_to_precision(amount_to_buy)
+        precision_to_buy = self.amount_to_precision(amount_to_buy)
+        if not precision_to_buy:
+            raise Exception(
+                f"Cannot get precision_to_buy for amount_to_buy {amount_to_buy}"
+            )
 
-        if amount_to_buy < min_amount:
-            raise Exception("Not enough balance to run the tests. {self.pair.base} = {base_free} / {quote_free}")
+        if precision_to_buy < min_amount:
+            raise Exception(
+                "Not enough balance to run the tests. {self.pair.base} = {base_free} / {quote_free}"
+            )
 
-        market_buy_order = self.create_market_buy_order(amount_to_buy)
+        market_buy_order = self.create_market_buy_order(precision_to_buy)
 
         if not market_buy_order:
             raise Exception("Buy test failed")
@@ -76,7 +90,9 @@ class ExchangeBasicOperationsBot(GenericBot):
         amount_for_stop_loss = market_buy_order.amount
         stop_loss_stop_price = candles["Close"][-1:].iloc[0] * 0.8  # last close - 20%
         stop_loss_price = stop_loss_stop_price * 0.95  # stop_price - 5%
-        stop_loss_order = self.stop_loss(amount_for_stop_loss, stop_loss_stop_price, stop_loss_price)
+        stop_loss_order = self.stop_loss(
+            amount_for_stop_loss, stop_loss_stop_price, stop_loss_price
+        )
         if not stop_loss_order:
             raise Exception("Stop loss creation failed.")
         # TODO: check orders & trades

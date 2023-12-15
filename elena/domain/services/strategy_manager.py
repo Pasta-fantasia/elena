@@ -4,7 +4,6 @@ import time
 from datetime import datetime
 from typing import List, Optional, Tuple
 
-import pandas as pd
 from cron_converter import Cron
 
 from elena.domain.model.bot_config import BotConfig
@@ -25,12 +24,12 @@ from elena.domain.ports.strategy_manager import StrategyManager
 
 class StrategyManagerImpl(StrategyManager):
     def __init__(
-            self,
-            strategy_config: StrategyConfig,
-            logger: Logger,
-            bot_manager: BotManager,
-            exchange_manager: ExchangeManager,
-            exchanges: List[Exchange],
+        self,
+        strategy_config: StrategyConfig,
+        logger: Logger,
+        bot_manager: BotManager,
+        exchange_manager: ExchangeManager,
+        exchanges: List[Exchange],
     ):
         self._config = strategy_config
         self._logger = logger
@@ -58,6 +57,11 @@ class StrategyManagerImpl(StrategyManager):
             run, status = self._get_run_status(bot_config, previous_statuses_dict)
             if run:
                 self._logger.info("Running bot %s: %s", bot_config.id, bot_config.name)
+                updated_status = self._run_bot(
+                    self._exchange_manager, bot_config, status
+                )
+                if updated_status:
+                    updated_statuses.append(updated_status)
                 try:
                     updated_status = self._run_bot(self._exchange_manager, bot_config, status)
                     if updated_status:
@@ -71,13 +75,16 @@ class StrategyManagerImpl(StrategyManager):
                         raise err
         return updated_statuses
 
-    def _get_run_status(self, bot_config: BotConfig, previous_statuses_dict) -> Tuple[bool, BotStatus]:
+    def _get_run_status(
+        self, bot_config: BotConfig, previous_statuses_dict
+    ) -> Tuple[bool, BotStatus]:
         run = True
         if bot_config.id in previous_statuses_dict:
             status = previous_statuses_dict[bot_config.id]
             last_execution = datetime.fromtimestamp(status.timestamp / 1000)
-            if ( bot_config.cron_expression ):
-                # If there is no cron expression, the bot will run every time
+            if (
+                bot_config.cron_expression
+            ):  # If there is no cron expression, the bot will run every time
                 run = self._check_if_bot_has_to_run(
                     last_execution, bot_config.cron_expression
                 )
@@ -93,7 +100,7 @@ class StrategyManagerImpl(StrategyManager):
 
     @staticmethod
     def _check_if_bot_has_to_run(
-            last_execution: datetime, cron_expression: str
+        last_execution: datetime, cron_expression: str
     ) -> bool:
         """
         Checks if the bot has to run or not comparing with cron expression.
@@ -107,19 +114,35 @@ class StrategyManagerImpl(StrategyManager):
         now = datetime.now()
         return next_execution <= now
 
-    def _run_bot(self, exchange_manager: ExchangeManager,  bot_config: BotConfig, bot_status: BotStatus) -> Optional[BotStatus]:
+    def _run_bot(
+        self,
+        exchange_manager: ExchangeManager,
+        bot_config: BotConfig,
+        bot_status: BotStatus,
+    ) -> Optional[BotStatus]:
         bot_status.timestamp = int(time.time() * 1000)
         bot = self._get_bot_instance(exchange_manager, bot_config, bot_status)
         return bot.next()
 
-    def _get_bot_instance(self, exchange_manager: ExchangeManager, bot_config: BotConfig, bot_status: BotStatus) -> Bot:
+    def _get_bot_instance(
+        self,
+        exchange_manager: ExchangeManager,
+        bot_config: BotConfig,
+        bot_status: BotStatus,
+    ) -> Bot:
         class_parts = self._config.strategy_class.split(".")
         class_name = class_parts[-1]
         module_path = ".".join(class_parts[0:-1])
         module = importlib.import_module(module_path)
         _class = getattr(module, class_name)
         bot = _class()
-        bot.init(manager=self, logger=self._logger, exchange_manager=exchange_manager, bot_config=bot_config, bot_status=bot_status)
+        bot.init(
+            manager=self,
+            logger=self._logger,
+            exchange_manager=exchange_manager,
+            bot_config=bot_config,
+            bot_status=bot_status,
+        )
         return bot
 
     def get_exchange(self, exchange_id: ExchangeType) -> Optional[Exchange]:

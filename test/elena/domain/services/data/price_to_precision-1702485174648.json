@@ -1,0 +1,22 @@
+{
+    "function": "price_to_precision",
+    "input": {
+        "pair": {
+            "type": "BaseModel",
+            "model_class": "elena.domain.model.trading_pair.TradingPair",
+            "value": {
+                "base": "BTC",
+                "quote": "USDT"
+            }
+        },
+        "price": {
+            "type": "OtherModel",
+            "model_class": "numpy.float64",
+            "value": 31972.7668
+        }
+    },
+    "output": {
+        "type": "float",
+        "value": 31972.77
+    }
+}

@@ -6,7 +6,7 @@ class TradingPair(BaseModel):
     quote: str
 
     @staticmethod
-    def build(pair):
+    def build(pair: str):
         base, _quote = pair.split("/")
         return TradingPair(base=base, quote=_quote)
 

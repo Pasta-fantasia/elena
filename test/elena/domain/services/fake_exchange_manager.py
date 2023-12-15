@@ -1,8 +1,7 @@
-import json
-from os.path import dirname, join, realpath
 # TODO: jsons should look like Binance_read_candles_BTC_USDT_min_1.
 #  Record class was doing something like that. But the time parameter is not relevant anymore.
 #       Not sure if that would be possible with amount_to_precision and price_to_precision
+from test.elena.domain.services.record import Record
 from typing import Dict, Optional
 
 import pandas as pd
@@ -18,9 +17,13 @@ from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from test.elena.domain.services.record import Record
 
-recording = True
+recording = False
+excluded_kwargs = ["exchange"]
+if recording:
+    recorded_data = {}
+else:
+    recorded_data = Record.load_all_recorded_data()
 
 
 class FakeExchangeManager(ExchangeManager):
@@ -28,7 +31,7 @@ class FakeExchangeManager(ExchangeManager):
         self._cctx = CctxExchangeManager(config, logger)
         self._logger = logger
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def read_candles(
         self,
         exchange: Exchange,
@@ -39,45 +42,65 @@ class FakeExchangeManager(ExchangeManager):
         if recording:
             return self._cctx.read_candles(exchange, pair, time_frame, page_size)
         else:
-            return Record.deserialize_from_json("231208-1702060797568-read_candles.json")
+            return Record.load_recorded_output(
+                function_name="read_candles",
+                all_recorded_data=recorded_data,
+                pair=pair,
+                time_frame=time_frame,
+                page_size=page_size,
+            )
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def amount_to_precision(
         self, exchange: Exchange, pair: TradingPair, amount: float
     ) -> float:
         if recording:
-            result = self._cctx.amount_to_precision(exchange, pair, amount)
-            return result
+            return self._cctx.amount_to_precision(exchange, pair, amount)
         else:
-            return Record.deserialize_from_json("231208-1702060471629-amount_to_precision.json")
+            return Record.load_recorded_output(
+                function_name="amount_to_precision",
+                all_recorded_data=recorded_data,
+                pair=pair,
+                amount=amount,
+            )
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def price_to_precision(
         self, exchange: Exchange, pair: TradingPair, price: float
     ) -> float:
         if recording:
-            result = self._cctx.price_to_precision(exchange, pair, price)
-            return result
+            return self._cctx.price_to_precision(exchange, pair, price)
         else:
-            return Record.deserialize_from_json("231208-1702060548188-price_to_precision.json")
+            return Record.load_recorded_output(
+                function_name="price_to_precision",
+                all_recorded_data=recorded_data,
+                pair=pair,
+                price=price,
+            )
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def read_order_book(self, exchange: Exchange, pair: TradingPair) -> OrderBook:
         if recording:
             result = self._cctx.read_order_book(exchange, pair)
             return result
         else:
-            return Record.deserialize_from_json("231208-1702060668178-read_order_book.json")
+            return Record.load_recorded_output(
+                function_name="read_order_book",
+                all_recorded_data=recorded_data,
+                pair=pair,
+            )
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def get_balance(self, exchange: Exchange) -> Balance:
         if recording:
-            result = self._cctx.get_balance(exchange)
-            return result
+            return self._cctx.get_balance(exchange)
         else:
-            return Record.deserialize_from_json("231208-1702061654266-get_balance.json")
+            return Record.load_recorded_output(
+                function_name="get_balance",
+                all_recorded_data=recorded_data,
+            )
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def place_order(
         self,
         exchange: Exchange,
@@ -93,27 +116,50 @@ class FakeExchangeManager(ExchangeManager):
                 exchange, bot_config, order_type, side, amount, price, params
             )
         else:
-            return Record.deserialize_from_json("231208-1702061654266-place_order.json")
+            return Record.load_recorded_output(
+                function_name="place_order",
+                all_recorded_data=recorded_data,
+                bot_config=bot_config,
+                order_type=order_type,
+                side=side,
+                amount=amount,
+                price=price,
+                params=params,
+            )
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str):
         if recording:
             return self._cctx.cancel_order(exchange, bot_config, order_id)
         else:
-            return Record.deserialize_from_json("231208-1702061654266-cancel_order.json")
+            return Record.load_recorded_output(
+                function_name="cancel_order",
+                all_recorded_data=recorded_data,
+                bot_config=bot_config,
+                order_id=order_id,
+            )
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def fetch_order(
         self, exchange: Exchange, bot_config: BotConfig, order_id: str
     ) -> Order:
         if recording:
             return self._cctx.fetch_order(exchange, bot_config, order_id)
         else:
-            return Record.deserialize_from_json("231208-1702061654266-fetch_order.json")
+            return Record.load_recorded_output(
+                function_name="fetch_order",
+                all_recorded_data=recorded_data,
+                bot_config=bot_config,
+                order_id=order_id,
+            )
 
-    @Record(enabled=recording)
+    @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
     def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
         if recording:
             return self._cctx.limit_min_amount(exchange, pair)
         else:
-            return Record.deserialize_from_json("231208-1702061654266-limit_min_amount.json")
+            return Record.load_recorded_output(
+                function_name="limit_min_amount",
+                all_recorded_data=recorded_data,
+                pair=pair,
+            )
