@@ -11,7 +11,7 @@ from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.services.elena import Elena
 from elena.domain.services.generic_bot import GenericBot
-from elena.shared.dynamic_loading import get_class
+from elena.shared.dynamic_loading import get_instance
 
 
 class ExchangeBasicOperationsBot(GenericBot):
@@ -58,12 +58,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not balance:
             raise Exception("Cannot get balance")
 
-        base_symbol = self.pair.base
-        base_total = balance.currencies[base_symbol].total
-        base_free = balance.currencies[base_symbol].free
-
         quote_symbol = self.pair.quote
-        quote_total = balance.currencies[quote_symbol].total
         quote_free = balance.currencies[quote_symbol].free
 
         # 2 - BUY Market
@@ -117,8 +112,10 @@ class ExchangeBasicOperationsBot(GenericBot):
 def test_elena():
     home = pathlib.Path(__file__).parent.parent.parent.__str__()
     config = LocalConfigReader(home).config
-    logger_class = get_class(config["Logger"]["class"])
-    logger = logger_class(config)
+
+    logger = get_instance(config["Logger"]["class"])
+    logger.init(config)
+
     bot_manager = LocalBotManager(config, logger)
     exchange_manager = FakeExchangeManager(config, logger)
 

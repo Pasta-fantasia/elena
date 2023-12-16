@@ -12,3 +12,8 @@ def get_class(class_path: str):
     except Exception as err:
         raise Exception(f"Error loading class '{class_path}': {err}")
     return _class
+
+
+def get_instance(class_path: str):
+    _class = get_class(class_path)
+    return _class()

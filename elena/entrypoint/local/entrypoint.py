@@ -5,14 +5,14 @@ from elena.adapters.config.local_config_reader import LocalConfigReader
 from elena.adapters.exchange_manager.cctx_exchange_manager import \
     CctxExchangeManager
 from elena.domain.services.elena import Elena
-from elena.shared.dynamic_loading import get_class
+from elena.shared.dynamic_loading import get_instance
 
 
 def main(home: Optional[str] = None):
     config = LocalConfigReader(home).config
 
-    logger_class = get_class(config["Logger"]["class"])
-    logger = logger_class(config)
+    logger = get_instance(config["Logger"]["class"])
+    logger.init(config)
 
     bot_manager = LocalBotManager(config=config, logger=logger)
     exchange_manager = CctxExchangeManager(config=config, logger=logger)

@@ -2,6 +2,9 @@ from typing import Protocol
 
 
 class Logger(Protocol):
+    def init(self, config: dict):
+        ...
+
     def critical(self, msg, *args, **kwargs):
         ...
 
