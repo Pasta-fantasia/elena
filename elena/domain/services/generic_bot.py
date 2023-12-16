@@ -16,6 +16,7 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
+from elena.domain.ports.metrics_manager import MetricsManager
 from elena.domain.ports.strategy_manager import StrategyManager
 
 
@@ -33,6 +34,35 @@ class GenericBot(Bot):
     initial_status: BotStatus  # for testing/development TODO: delete
     status: BotStatus
     _logger: Logger
+    _metrics_manager: MetricsManager
+
+    def init(
+        self,
+        manager: StrategyManager,
+        logger: Logger,
+        metrics_manager: MetricsManager,
+        exchange_manager: ExchangeManager,
+        bot_config: BotConfig,
+        bot_status: BotStatus,
+    ):
+        self.id = bot_config.id
+        self.name = bot_config.name
+        self.pair = bot_config.pair
+        self.time_frame = bot_config.time_frame
+        self.config = bot_config.config
+        self.manager = manager
+        self.bot_config = bot_config
+        self.initial_status = bot_status  # for testing/development TODO: delete
+        self.status = bot_status
+        self._logger = logger
+        self._metrics_manager = metrics_manager
+
+        exchange = manager.get_exchange(bot_config.exchange_id)
+        if not exchange:
+            raise Exception(f"Cannot get Exchange from {bot_config.exchange_id} ID")
+        self.exchange = exchange  # type: ignore
+        self.exchange_manager = exchange_manager
+        self._update_orders_status()
 
     def new_trade(self, order: Order):
         # All Trades start/"born" here...
@@ -142,32 +172,6 @@ class GenericBot(Bot):
         self.status.active_orders = updated_orders
         return self.status
 
-    def init(
-        self,
-        manager: StrategyManager,
-        logger: Logger,
-        exchange_manager: ExchangeManager,
-        bot_config: BotConfig,
-        bot_status: BotStatus,
-    ):
-        self.id = bot_config.id
-        self.name = bot_config.name
-        self.pair = bot_config.pair
-        self.time_frame = bot_config.time_frame
-        self.config = bot_config.config
-        self.manager = manager
-        self.bot_config = bot_config
-        self.initial_status = bot_status  # for testing/development TODO: delete
-        self.status = bot_status
-        self._logger = logger
-
-        exchange = manager.get_exchange(bot_config.exchange_id)
-        if not exchange:
-            raise Exception(f"Cannot get Exchange from {bot_config.exchange_id} ID")
-        self.exchange = exchange  # type: ignore
-        self.exchange_manager = exchange_manager
-        self._update_orders_status()
-
     def next(self) -> Optional[BotStatus]:
         ...
 
@@ -254,6 +258,7 @@ class GenericBot(Bot):
                 bot_config=self.bot_config,
                 order_id=order_id,
             )
+            self._metrics_manager.counter(name="cancel_order", value=1, order=order)
             self.archive_order(order)
             return order
         except Exception as err:
