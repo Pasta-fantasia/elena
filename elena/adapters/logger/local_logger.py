@@ -12,7 +12,7 @@ from elena.domain.ports.logger import Logger
 class LocalLogger(Logger):
     def __init__(self, config: Dict):
         level = logging.getLevelName(config["LocalLogger"]["level"])
-        file_path = pathlib.Path(config["LocalLogger"]["path"])
+        file_path = path.join(config["home"], config["LocalLogger"]["path"])
         Path(file_path).mkdir(parents=True, exist_ok=True)
         file = path.join(pathlib.Path(file_path), "elena.log")
         logging.basicConfig(
