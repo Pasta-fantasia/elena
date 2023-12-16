@@ -1,4 +1,3 @@
-import pathlib
 import pickle
 from os import path
 from pathlib import Path
@@ -12,7 +11,7 @@ from elena.domain.ports.logger import Logger
 
 class LocalBotManager(BotManager):
     def __init__(self, config: Dict, logger: Logger):
-        self._path = pathlib.Path(config["LocalBotManager"]["path"])
+        self._path = path.join(config["home"], config["LocalBotManager"]["path"])
         self._logger = logger
         Path(self._path).mkdir(parents=True, exist_ok=True)
         logger.info("LocalBotManager working at %s", self._path)

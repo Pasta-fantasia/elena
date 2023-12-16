@@ -10,11 +10,11 @@ class LocalConfigReader:
     def __init__(self, home: Optional[str] = None):
         if not home:
             home = self._get_home()
+        home_config = {"home": home}
         base_config = self._load_base_config(home)
         strategies = self._load_strategies(home)
         secrets = self._load_secrets(home)
-        config = {**base_config, **strategies, **secrets}
-        self._config = self._update_config_with_home(config, home)
+        self._config = {**home_config, **base_config, **strategies, **secrets}
 
     @property
     def config(self) -> Dict:
@@ -58,7 +58,7 @@ class LocalConfigReader:
         default_config = self._load_default_config()
         config = self._load_config(home, "config.yaml")
         config = self._filter_entries(
-            config, ["LocalLogger", "LocalBotManager", "CctxExchangeManager"]
+            config, ["Logger", "LocalBotManager", "CctxExchangeManager"]
         )
         base_config = {**default_config, **config}
         return base_config
@@ -72,11 +72,3 @@ class LocalConfigReader:
         strategies = self._load_config(home, "secrets.yaml")
         strategies = self._filter_entries(strategies, ["Exchanges"])
         return strategies
-
-    @staticmethod
-    def _update_config_with_home(config: Dict, home: str) -> Dict:
-        config["LocalLogger"]["path"] = path.join(home, config["LocalLogger"]["path"])
-        config["LocalBotManager"]["path"] = path.join(
-            home, config["LocalBotManager"]["path"]
-        )
-        return config

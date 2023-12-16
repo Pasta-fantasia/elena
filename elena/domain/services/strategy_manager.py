@@ -1,4 +1,3 @@
-import importlib
 import os
 import time
 from datetime import datetime
@@ -15,6 +14,7 @@ from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
+from elena.shared.dynamic_loading import get_class
 
 
 class StrategyManagerImpl(StrategyManager):
@@ -127,11 +127,7 @@ class StrategyManagerImpl(StrategyManager):
         bot_config: BotConfig,
         bot_status: BotStatus,
     ) -> Bot:
-        class_parts = self._config.strategy_class.split(".")
-        class_name = class_parts[-1]
-        module_path = ".".join(class_parts[0:-1])
-        module = importlib.import_module(module_path)
-        _class = getattr(module, class_name)
+        _class = get_class(self._config.strategy_class)
         bot = _class()
         bot.init(
             manager=self,

@@ -1,4 +1,3 @@
-import importlib
 import json
 import os
 import pathlib
@@ -8,6 +7,8 @@ from os import path
 
 import pandas as pd
 import pydantic
+
+from elena.shared.dynamic_loading import get_class
 
 
 def get_time():
@@ -146,20 +147,11 @@ class Record:
             raise Exception(f"Un-implemented deserialization for type {data['type']}")
 
     @staticmethod
-    def _get_class(model_class: str):
-        class_parts = model_class.split(".")
-        class_name = class_parts[-1]
-        module_path = ".".join(class_parts[0:-1])
-        module = importlib.import_module(module_path)
-        _class = getattr(module, class_name)
-        return _class
-
-    @staticmethod
     def _get_base_model_instance(
         model_class: str, value: t.Dict[str, t.Any]
     ) -> pydantic.BaseModel:
         try:
-            _class = Record._get_class(model_class)
+            _class = get_class(model_class)
             instance = _class.parse_obj(value)
             return instance
         except Exception as err:
@@ -173,7 +165,7 @@ class Record:
         model_class: str, value: t.Dict[str, t.Any]
     ) -> pydantic.BaseModel:
         try:
-            _class = Record._get_class(model_class)
+            _class = get_class(model_class)
             instance = _class(value)
             return instance
         except Exception as err:
