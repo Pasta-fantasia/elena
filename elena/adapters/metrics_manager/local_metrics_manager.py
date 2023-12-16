@@ -1,5 +1,5 @@
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.metrics_manager import MetricsManager
+from elena.domain.ports.metrics_manager import Metric, MetricsManager
 
 
 class LocalMetricsManager(MetricsManager):
@@ -10,8 +10,8 @@ class LocalMetricsManager(MetricsManager):
         self._config = config
         self._logger = logger
 
-    def counter(self, name, value, **kwargs):
-        self._logger.info("Counter %s: %s", name, value, **kwargs)
+    def counter(self, metric: Metric, value, **kwargs):
+        self._logger.info("'Counter '%s': %s", metric.value, value, **kwargs)
 
-    def histogram(self, name, value, **kwargs):
-        self._logger.info("Histogram %s: %s", name, value, **kwargs)
+    def histogram(self, metric: Metric, value, **kwargs):
+        self._logger.info("Histogram '%s': %s", metric.value, value, **kwargs)

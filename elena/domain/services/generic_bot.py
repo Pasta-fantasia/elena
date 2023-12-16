@@ -16,7 +16,7 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.metrics_manager import MetricsManager
+from elena.domain.ports.metrics_manager import Metric, MetricsManager
 from elena.domain.ports.strategy_manager import StrategyManager
 
 
@@ -258,7 +258,7 @@ class GenericBot(Bot):
                 bot_config=self.bot_config,
                 order_id=order_id,
             )
-            self._metrics_manager.counter(name="cancel_order", value=1, order=order)
+            self._metrics_manager.counter(Metric.ORDER_CANCELLED, value=1, order=order)
             self.archive_order(order)
             return order
         except Exception as err:
