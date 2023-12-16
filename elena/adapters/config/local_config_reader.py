@@ -58,7 +58,7 @@ class LocalConfigReader:
         default_config = self._load_default_config()
         config = self._load_config(home, "config.yaml")
         config = self._filter_entries(
-            config, ["LocalLogger", "LocalBotManager", "CctxExchangeManager"]
+            config, ["Logger", "LocalBotManager", "CctxExchangeManager"]
         )
         base_config = {**default_config, **config}
         return base_config

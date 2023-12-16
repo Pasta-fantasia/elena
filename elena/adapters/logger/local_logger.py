@@ -11,8 +11,8 @@ from elena.domain.ports.logger import Logger
 
 class LocalLogger(Logger):
     def __init__(self, config: Dict):
-        level = logging.getLevelName(config["LocalLogger"]["level"])
-        file_path = path.join(config["home"], config["LocalLogger"]["path"])
+        level = logging.getLevelName(config["Logger"]["level"])
+        file_path = path.join(config["home"], config["Logger"]["path"])
         Path(file_path).mkdir(parents=True, exist_ok=True)
         file = path.join(pathlib.Path(file_path), "elena.log")
         logging.basicConfig(
@@ -21,13 +21,13 @@ class LocalLogger(Logger):
             handlers=[
                 logging.handlers.RotatingFileHandler(
                     file,
-                    maxBytes=config["LocalLogger"]["max_bytes"],
-                    backupCount=config["LocalLogger"]["backup_count"],
+                    maxBytes=config["Logger"]["max_bytes"],
+                    backupCount=config["Logger"]["backup_count"],
                 ),
                 logging.StreamHandler(sys.stdout),
             ],
         )
-        print(f"Logging {config['LocalLogger']['level']} level to file `{file}`")
+        print(f"Logging {config['Logger']['level']} level to file `{file}`")
 
     def critical(self, msg, *args, **kwargs):
         logging.critical(msg, *args, **kwargs)

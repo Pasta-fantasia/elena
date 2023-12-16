@@ -4,7 +4,6 @@ from test.elena.domain.services.fake_exchange_manager import \
 
 from elena.adapters.bot_manager.local_bot_manager import LocalBotManager
 from elena.adapters.config.local_config_reader import LocalConfigReader
-from elena.adapters.logger.local_logger import LocalLogger
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.ports.exchange_manager import ExchangeManager
@@ -12,6 +11,7 @@ from elena.domain.ports.logger import Logger
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.services.elena import Elena
 from elena.domain.services.generic_bot import GenericBot
+from elena.shared.dynamic_loading import get_class
 
 
 class ExchangeBasicOperationsBot(GenericBot):
@@ -117,7 +117,8 @@ class ExchangeBasicOperationsBot(GenericBot):
 def test_elena():
     home = pathlib.Path(__file__).parent.parent.parent.__str__()
     config = LocalConfigReader(home).config
-    logger = LocalLogger(config)
+    logger_class = get_class(config["Logger"]["class"])
+    logger = logger_class(config)
     bot_manager = LocalBotManager(config, logger)
     exchange_manager = FakeExchangeManager(config, logger)
 
