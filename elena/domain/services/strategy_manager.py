@@ -58,13 +58,15 @@ class StrategyManagerImpl(StrategyManager):
                 if updated_status:
                     updated_statuses.append(updated_status)
                 try:
-                    updated_status = self._run_bot(self._exchange_manager, bot_config, status)
+                    updated_status = self._run_bot(
+                        self._exchange_manager, bot_config, status
+                    )
                     if updated_status:
                         updated_statuses.append(updated_status)
                 except Exception as err:
                     # A bad implemented bot should never crash Elena.
                     # The other bot may work and may need to do operations
-                    self._logger.error(f"Unhandled exception", exc_info=1)
+                    self._logger.error("Unhandled exception", exc_info=1)
                     # Except we are on a test session.
                     if "PYTEST_CURRENT_TEST" in os.environ:
                         raise err
@@ -145,4 +147,3 @@ class StrategyManagerImpl(StrategyManager):
             if exchange.id == exchange_id.value:
                 return exchange
         return None
-

@@ -144,4 +144,4 @@ dmypy.json
 /TODO.md
 /test/elena/bots/
 /test/elena/logs/
-/test/elena/elena_config.yaml
+/test/elena/secrets.yaml
