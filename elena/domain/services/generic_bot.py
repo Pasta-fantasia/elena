@@ -12,6 +12,7 @@ from elena.domain.model.order import (Order, OrderSide, OrderStatusType,
 from elena.domain.model.order_book import OrderBook
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
+from elena.domain.model.trade import Trade
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
@@ -33,6 +34,29 @@ class GenericBot(Bot):
     status: BotStatus
     _logger: Logger
 
+    def new_trade(self, order: Order):
+        # All Trades start/"born" here...
+        new_trade = Trade(exchange_id=self.exchange.id,
+                          bot_id=self.id,
+                          strategy_id=self.bot_config.strategy_id,
+                          pair=self.pair,
+                          size=order.amount,
+                          entry_order_id=order.id, entry_price=order.average,
+                          exit_order_id=0, exit_price=0,
+                          )
+        self.status.active_trades.append(new_trade)
+
+    def new_trade_manual(self, size: float, entry_price:float, exit_order_id, exit_price:float):
+        new_trade = Trade(exchange_id=self.exchange.id,
+                          bot_id=self.id,
+                          strategy_id=self.bot_config.strategy_id,
+                          pair=self.pair,
+                          size=size,
+                          entry_order_id='manual', entry_price=entry_price,
+                          exit_order_id=exit_order_id, exit_price=exit_price,
+                          )
+        self.status.active_trades.append(new_trade)
+
     def new_order(self, order: Order):
         # TODO: order_add + trade_stop (going long) | trade_start (going short)
 
@@ -40,6 +64,9 @@ class GenericBot(Bot):
             self.status.archived_orders.append(order)
         else:
             self.status.active_orders.append(order)
+
+        if order.side == OrderSide.buy:
+            self.new_trade(order)
 
     def archive_order_close_trades(self, order: Order):
         for trade in self.status.active_trades:

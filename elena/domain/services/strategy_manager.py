@@ -1,4 +1,6 @@
 import importlib
+import os
+import time
 from datetime import datetime
 from typing import List, Optional, Tuple
 
@@ -55,6 +57,17 @@ class StrategyManagerImpl(StrategyManager):
                 )
                 if updated_status:
                     updated_statuses.append(updated_status)
+                try:
+                    updated_status = self._run_bot(self._exchange_manager, bot_config, status)
+                    if updated_status:
+                        updated_statuses.append(updated_status)
+                except Exception as err:
+                    # A bad implemented bot should never crash Elena.
+                    # The other bot may work and may need to do operations
+                    self._logger.error(f"Unhandled exception", exc_info=1)
+                    # Except we are on a test session.
+                    if "PYTEST_CURRENT_TEST" in os.environ:
+                        raise err
         return updated_statuses
 
     def _get_run_status(
@@ -92,7 +105,6 @@ class StrategyManagerImpl(StrategyManager):
         """
         cron_instance = Cron(cron_expression)
         schedule = cron_instance.schedule(last_execution)
-        schedule.next()
         next_execution = schedule.next()
         now = datetime.now()
         return next_execution <= now
@@ -103,6 +115,7 @@ class StrategyManagerImpl(StrategyManager):
         bot_config: BotConfig,
         bot_status: BotStatus,
     ) -> Optional[BotStatus]:
+        bot_status.timestamp = int(time.time() * 1000)
         bot = self._get_bot_instance(exchange_manager, bot_config, bot_status)
         return bot.next()
 
@@ -132,3 +145,4 @@ class StrategyManagerImpl(StrategyManager):
             if exchange.id == exchange_id.value:
                 return exchange
         return None
+
