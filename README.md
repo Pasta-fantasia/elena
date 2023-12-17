@@ -23,7 +23,8 @@ Used to override the default configuration for adaptors (logs, paths to bots fil
 - Be aware that if you override any adaptor configuration (i.e. LocalLogger), you need to define all values, not only the one you want to change.
 - You can define your own Logger or MetricsManager by defining its class in the configuration file:
   - The logger class must implement the [Logger](./elena/domain/ports/logger.py) interface.
-  - The logger class must implement the [MetricsManager](./elena/domain/ports/metrics_manager.py) interface.
+  - The metrics manager class must implement the [MetricsManager](./elena/domain/ports/metrics_manager.py) interface.
+  - The notifications manager class must implement the [NotificationsManager](./elena/domain/ports/notifications_manager.py) interface.
 
 A typical `config.yaml` file content, showing the default values:
 
@@ -36,6 +37,8 @@ Logger:
   backup_count: 5  # Number of log backup files
 MetricsManager:
   class: elena.adapters.metrics_manager.local_metrics_manager.LocalMetricsManager
+NotificationsManager:
+  class: elena.adapters.notifications_manager.local_notifications_manager.LocalNotificationsManager
 LocalBotManager:
   path: bots # relative path under home directory
 CctxExchangeManager:
