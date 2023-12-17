@@ -14,12 +14,18 @@ def main(home: Optional[str] = None):
     logger = get_instance(config["Logger"]["class"])
     logger.init(config)
 
-    bot_manager = LocalBotManager(config=config, logger=logger)
+    metrics_manager = get_instance(config["MetricsManager"]["class"])
+    metrics_manager.init(config, logger)
+
+    bot_manager = LocalBotManager(
+        config=config, logger=logger, metrics_manager=metrics_manager
+    )
     exchange_manager = CctxExchangeManager(config=config, logger=logger)
 
     elena = Elena(
         config=config,
         logger=logger,
+        metrics_manager=metrics_manager,
         bot_manager=bot_manager,
         exchange_manager=exchange_manager,
     )

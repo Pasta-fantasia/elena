@@ -21,7 +21,9 @@ An optional configuration file (default values are used if not present).
 Used to override the default configuration for adaptors (logs, paths to bots files and CCTX).
 
 - Be aware that if you override any adaptor configuration (i.e. LocalLogger), you need to define all values, not only the one you want to change.
-- You can define your own logger class, and use it in the configuration file. The logger class must implement the [Logger](./elena/domain/ports/logger.py) interface.
+- You can define your own Logger or MetricsManager by defining its class in the configuration file:
+  - The logger class must implement the [Logger](./elena/domain/ports/logger.py) interface.
+  - The logger class must implement the [MetricsManager](./elena/domain/ports/metrics_manager.py) interface.
 
 A typical `config.yaml` file content, showing the default values:
 
@@ -32,6 +34,8 @@ Logger:
   path: logs  # relative path under home directory
   max_bytes: 1000000 # 1 MB max log files size
   backup_count: 5  # Number of log backup files
+MetricsManager:
+  class: elena.adapters.metrics_manager.local_metrics_manager.LocalMetricsManager
 LocalBotManager:
   path: bots # relative path under home directory
 CctxExchangeManager:

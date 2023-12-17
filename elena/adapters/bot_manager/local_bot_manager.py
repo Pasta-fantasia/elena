@@ -7,12 +7,19 @@ from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.logger import Logger
+from elena.domain.ports.metrics_manager import MetricsManager
 
 
 class LocalBotManager(BotManager):
-    def __init__(self, config: Dict, logger: Logger):
+    def __init__(
+        self,
+        config: Dict,
+        logger: Logger,
+        metrics_manager: MetricsManager,
+    ):
         self._path = path.join(config["home"], config["LocalBotManager"]["path"])
         self._logger = logger
+        self._metrics_manager = metrics_manager
         Path(self._path).mkdir(parents=True, exist_ok=True)
         logger.info("LocalBotManager working at %s", self._path)
 
