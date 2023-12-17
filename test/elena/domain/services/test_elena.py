@@ -1,4 +1,5 @@
 import pathlib
+from os import path
 from test.elena.domain.services.fake_exchange_manager import \
     FakeExchangeManager
 
@@ -122,8 +123,8 @@ class ExchangeBasicOperationsBot(GenericBot):
 
 
 def test_elena():
-    home = pathlib.Path(__file__).parent.parent.parent.__str__()
-    config = LocalConfigReader(home).config
+    test_home_dir = path.join(pathlib.Path(__file__).parent, "test_home")
+    config = LocalConfigReader(test_home_dir).config
 
     logger = get_instance(config["Logger"]["class"])
     logger.init(config)
