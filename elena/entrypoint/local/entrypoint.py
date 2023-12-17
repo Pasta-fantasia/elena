@@ -17,8 +17,14 @@ def main(home: Optional[str] = None):
     metrics_manager = get_instance(config["MetricsManager"]["class"])
     metrics_manager.init(config, logger)
 
+    notifications_manager = get_instance(config["NotificationsManager"]["class"])
+    notifications_manager.init(config, logger)
+
     bot_manager = LocalBotManager(
-        config=config, logger=logger, metrics_manager=metrics_manager
+        config=config,
+        logger=logger,
+        metrics_manager=metrics_manager,
+        notifications_manager=notifications_manager,
     )
     exchange_manager = CctxExchangeManager(config=config, logger=logger)
 
@@ -26,6 +32,7 @@ def main(home: Optional[str] = None):
         config=config,
         logger=logger,
         metrics_manager=metrics_manager,
+        notifications_manager=notifications_manager,
         bot_manager=bot_manager,
         exchange_manager=exchange_manager,
     )

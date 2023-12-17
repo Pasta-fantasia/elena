@@ -59,7 +59,13 @@ class LocalConfigReader:
         config = self._load_config(home, "config.yaml")
         config = self._filter_entries(
             config,
-            ["Logger", "MetricsManager", "LocalBotManager", "CctxExchangeManager"],
+            [
+                "Logger",
+                "MetricsManager",
+                "NotificationsManager",
+                "LocalBotManager",
+                "CctxExchangeManager",
+            ],
         )
         base_config = {**default_config, **config}
         return base_config

@@ -9,6 +9,7 @@ from elena.domain.model.bot_status import BotStatus
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.metrics_manager import MetricsManager
+from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.services.elena import Elena
 from elena.domain.services.generic_bot import GenericBot
@@ -24,12 +25,19 @@ class ExchangeBasicOperationsBot(GenericBot):
         manager: StrategyManager,
         logger: Logger,
         metrics_manager: MetricsManager,
+        notifications_manager: NotificationsManager,
         exchange_manager: ExchangeManager,
         bot_config: BotConfig,
         bot_status: BotStatus,
     ):  # type: ignore
         super().init(
-            manager, logger, metrics_manager, exchange_manager, bot_config, bot_status
+            manager,
+            logger,
+            metrics_manager,
+            notifications_manager,
+            exchange_manager,
+            bot_config,
+            bot_status,
         )
 
         # without try: if it fails the test fails, and it's OK
@@ -123,13 +131,19 @@ def test_elena():
     metrics_manager = get_instance(config["MetricsManager"]["class"])
     metrics_manager.init(config, logger)
 
-    bot_manager = LocalBotManager(config, logger, metrics_manager)
+    notifications_manager = get_instance(config["NotificationsManager"]["class"])
+    notifications_manager.init(config, logger)
+
+    bot_manager = LocalBotManager(
+        config, logger, metrics_manager, notifications_manager
+    )
     exchange_manager = FakeExchangeManager(config, logger)
 
     sut = Elena(
         config=config,
         logger=logger,
         metrics_manager=metrics_manager,
+        notifications_manager=notifications_manager,
         bot_manager=bot_manager,
         exchange_manager=exchange_manager,
     )

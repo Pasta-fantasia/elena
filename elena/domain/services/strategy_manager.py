@@ -14,6 +14,7 @@ from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.metrics_manager import MetricsManager
+from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.shared.dynamic_loading import get_class
 
@@ -24,6 +25,7 @@ class StrategyManagerImpl(StrategyManager):
         strategy_config: StrategyConfig,
         logger: Logger,
         metrics_manager: MetricsManager,
+        notifications_manager: NotificationsManager,
         bot_manager: BotManager,
         exchange_manager: ExchangeManager,
         exchanges: List[Exchange],
@@ -31,6 +33,7 @@ class StrategyManagerImpl(StrategyManager):
         self._config = strategy_config
         self._logger = logger
         self._metrics_manager = metrics_manager
+        self._notifications_manager = notifications_manager
         self._bot_manager = bot_manager
         self._exchange_manager = exchange_manager
         self._exchanges = exchanges
@@ -136,6 +139,7 @@ class StrategyManagerImpl(StrategyManager):
             manager=self,
             logger=self._logger,
             metrics_manager=self._metrics_manager,
+            notifications_manager=self._notifications_manager,
             exchange_manager=exchange_manager,
             bot_config=bot_config,
             bot_status=bot_status,

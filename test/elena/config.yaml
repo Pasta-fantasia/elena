@@ -6,6 +6,8 @@ Logger:
   backup_count: 1  # Number of log backup files
 MetricsManager:
   class: elena.adapters.metrics_manager.local_metrics_manager.LocalMetricsManager
+NotificationsManager:
+  class: elena.adapters.notifications_manager.local_notifications_manager.LocalNotificationsManager
 LocalBotManager:
   path: bots # relative path under home directory
 CctxExchangeManager:

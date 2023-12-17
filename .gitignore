@@ -142,6 +142,8 @@ dmypy.json
 /.github/
 
 /TODO.md
+/test/elena/secrets.yaml
+/test/elena/bots/
 /test/elena/bots/
 /test/elena/logs/
 /test/elena/secrets.yaml

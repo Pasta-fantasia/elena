@@ -5,6 +5,7 @@ from elena.domain.model.bot_status import BotStatus
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.metrics_manager import MetricsManager
+from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
 
 
@@ -16,6 +17,7 @@ class Bot(Protocol):
         manager: StrategyManager,
         logger: Logger,
         metrics_manager: MetricsManager,
+        notifications_manager: NotificationsManager,
         exchange_manager: ExchangeManager,
         bot_config: BotConfig,
         bot_status: BotStatus,
