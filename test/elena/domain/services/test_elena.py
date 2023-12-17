@@ -123,7 +123,6 @@ class ExchangeBasicOperationsBot(GenericBot):
 
 
 def test_elena():
-    _dir = pathlib.Path(__file__).parent
     test_home_dir = path.join(pathlib.Path(__file__).parent, "test_home")
     config = LocalConfigReader(test_home_dir).config
 

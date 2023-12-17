@@ -13,5 +13,8 @@ class LocalMetricsManager(MetricsManager):
     def counter(self, metric: Metric, value, **kwargs):
         self._logger.info("'Counter '%s': %s", metric.value, value, **kwargs)
 
+    def gauge(self, metric: Metric, value, **kwargs):
+        self._logger.info("Gauge '%s': %s", metric.value, value, **kwargs)
+
     def histogram(self, metric: Metric, value, **kwargs):
         self._logger.info("Histogram '%s': %s", metric.value, value, **kwargs)
