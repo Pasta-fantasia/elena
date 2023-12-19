@@ -22,14 +22,14 @@ class ExchangeBasicOperationsBot(GenericBot):
     band_mult: float
 
     def init(
-        self,
-        manager: StrategyManager,
-        logger: Logger,
-        metrics_manager: MetricsManager,
-        notifications_manager: NotificationsManager,
-        exchange_manager: ExchangeManager,
-        bot_config: BotConfig,
-        bot_status: BotStatus,
+            self,
+            manager: StrategyManager,
+            logger: Logger,
+            metrics_manager: MetricsManager,
+            notifications_manager: NotificationsManager,
+            exchange_manager: ExchangeManager,
+            bot_config: BotConfig,
+            bot_status: BotStatus,
     ):  # type: ignore
         super().init(
             manager,
@@ -50,6 +50,10 @@ class ExchangeBasicOperationsBot(GenericBot):
             raise Exception(
                 "Exchange is not in sandbox mode, this strategy is ment for testing only!"
             )
+
+    def _orders_trades_status(self):
+        return len(self.status.active_orders), len(self.status.archived_orders), len(self.status.active_trades), len(
+            self.status.closed_trades)
 
     def next(self) -> BotStatus:
         self._logger.info("%s strategy: processing next cycle ...", self.name)
@@ -88,13 +92,26 @@ class ExchangeBasicOperationsBot(GenericBot):
                 "Not enough balance to run the tests. {self.pair.base} = {base_free} / {quote_free}"
             )
 
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
+
         market_buy_order = self.create_market_buy_order(precision_to_buy)
 
         if not market_buy_order:
             raise Exception("Buy test failed")
-        # TODO: check orders & trades
+
+        # TODO: wait order status without recording
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+
+        assert active_orders_before_order == active_orders_after_order
+        assert archived_orders_after_order == (archived_orders_before_order + 1)
+        assert active_trades_after_order == (active_trades_before_order + 1)
+        assert closed_trades_before_order == closed_trades_after_order
+        # TODO check: order data in archived_orders and trades
 
         # 3 - STOP LOSS Create
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
         amount_for_stop_loss = market_buy_order.amount
         stop_loss_stop_price = candles["Close"][-1:].iloc[0] * 0.8  # last close - 20%
         stop_loss_price = stop_loss_stop_price * 0.95  # stop_price - 5%
@@ -103,21 +120,45 @@ class ExchangeBasicOperationsBot(GenericBot):
         )
         if not stop_loss_order:
             raise Exception("Stop loss creation failed.")
-        # TODO: check orders & trades
+        # TODO: wait order status without recording
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+        assert active_orders_after_order == (active_orders_before_order + 1)
+        assert archived_orders_after_order == archived_orders_before_order
+        assert active_trades_after_order == active_trades_before_order
+        assert closed_trades_before_order == closed_trades_after_order
 
         # 4 - STOP LOSS Cancel
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
+
         canceled_order = self.cancel_order(stop_loss_order.id)
         if not canceled_order:
             raise Exception("Stop loss cancel failed.")
-        # TODO: check orders & trades
+        # TODO: wait order status without recording
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+        assert active_orders_after_order == active_orders_before_order - 1
+        assert archived_orders_after_order == archived_orders_before_order + 1
+        assert active_trades_after_order == active_trades_before_order
+        assert closed_trades_before_order == closed_trades_after_order
 
         # 5 - SELL Market
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
         amount_to_sell = market_buy_order.amount
         market_sell_order = self.create_market_sell_order(amount_to_sell)
 
         if not market_sell_order:
             raise Exception("Sell test failed")
-        # TODO: check orders & trades
+        # TODO: wait order status without recording
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+        assert active_orders_after_order == active_orders_before_order - 1
+        assert archived_orders_after_order == archived_orders_before_order + 1
+        assert active_trades_after_order == active_trades_before_order - 1
+        assert closed_trades_before_order == closed_trades_after_order + 1
 
         return self.status
 
