@@ -11,11 +11,13 @@ from elena.domain.model.order import (Order, OrderSide, OrderStatusType,
                                       OrderType)
 from elena.domain.model.order_book import OrderBook
 from elena.domain.model.time_frame import TimeFrame
-from elena.domain.model.trading_pair import TradingPair
 from elena.domain.model.trade import Trade
+from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
+from elena.domain.ports.metrics_manager import Metric, MetricsManager
+from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
 
 
@@ -33,28 +35,68 @@ class GenericBot(Bot):
     initial_status: BotStatus  # for testing/development TODO: delete
     status: BotStatus
     _logger: Logger
+    _metrics_manager: MetricsManager
+    _notifications_manager: NotificationsManager
+
+    def init(
+        self,
+        manager: StrategyManager,
+        logger: Logger,
+        metrics_manager: MetricsManager,
+        notifications_manager: NotificationsManager,
+        exchange_manager: ExchangeManager,
+        bot_config: BotConfig,
+        bot_status: BotStatus,
+    ):
+        self.id = bot_config.id
+        self.name = bot_config.name
+        self.pair = bot_config.pair
+        self.time_frame = bot_config.time_frame
+        self.config = bot_config.config
+        self.manager = manager
+        self.bot_config = bot_config
+        self.initial_status = bot_status  # for testing/development TODO: delete
+        self.status = bot_status
+        self._logger = logger
+        self._metrics_manager = metrics_manager
+        self._notifications_manager = notifications_manager
+
+        exchange = manager.get_exchange(bot_config.exchange_id)
+        if not exchange:
+            raise Exception(f"Cannot get Exchange from {bot_config.exchange_id} ID")
+        self.exchange = exchange  # type: ignore
+        self.exchange_manager = exchange_manager
+        self._update_orders_status()
 
     def new_trade(self, order: Order):
         # All Trades start/"born" here...
-        new_trade = Trade(exchange_id=self.exchange.id,
-                          bot_id=self.id,
-                          strategy_id=self.bot_config.strategy_id,
-                          pair=self.pair,
-                          size=order.amount,
-                          entry_order_id=order.id, entry_price=order.average,
-                          exit_order_id=0, exit_price=0,
-                          )
+        new_trade = Trade(
+            exchange_id=self.exchange.id,
+            bot_id=self.id,
+            strategy_id=self.bot_config.strategy_id,
+            pair=self.pair,
+            size=order.amount,
+            entry_order_id=order.id,
+            entry_price=order.average,
+            exit_order_id=0,
+            exit_price=0,
+        )
         self.status.active_trades.append(new_trade)
 
-    def new_trade_manual(self, size: float, entry_price:float, exit_order_id, exit_price:float):
-        new_trade = Trade(exchange_id=self.exchange.id,
-                          bot_id=self.id,
-                          strategy_id=self.bot_config.strategy_id,
-                          pair=self.pair,
-                          size=size,
-                          entry_order_id='manual', entry_price=entry_price,
-                          exit_order_id=exit_order_id, exit_price=exit_price,
-                          )
+    def new_trade_manual(
+        self, size: float, entry_price: float, exit_order_id, exit_price: float
+    ):
+        new_trade = Trade(
+            exchange_id=self.exchange.id,
+            bot_id=self.id,
+            strategy_id=self.bot_config.strategy_id,
+            pair=self.pair,
+            size=size,
+            entry_order_id="manual",
+            entry_price=entry_price,
+            exit_order_id=exit_order_id,
+            exit_price=exit_price,
+        )
         self.status.active_trades.append(new_trade)
 
     def new_order(self, order: Order):
@@ -133,32 +175,6 @@ class GenericBot(Bot):
 
         self.status.active_orders = updated_orders
         return self.status
-
-    def init(
-        self,
-        manager: StrategyManager,
-        logger: Logger,
-        exchange_manager: ExchangeManager,
-        bot_config: BotConfig,
-        bot_status: BotStatus,
-    ):
-        self.id = bot_config.id
-        self.name = bot_config.name
-        self.pair = bot_config.pair
-        self.time_frame = bot_config.time_frame
-        self.config = bot_config.config
-        self.manager = manager
-        self.bot_config = bot_config
-        self.initial_status = bot_status  # for testing/development TODO: delete
-        self.status = bot_status
-        self._logger = logger
-
-        exchange = manager.get_exchange(bot_config.exchange_id)
-        if not exchange:
-            raise Exception(f"Cannot get Exchange from {bot_config.exchange_id} ID")
-        self.exchange = exchange  # type: ignore
-        self.exchange_manager = exchange_manager
-        self._update_orders_status()
 
     def next(self) -> Optional[BotStatus]:
         ...
@@ -245,6 +261,10 @@ class GenericBot(Bot):
                 self.exchange,
                 bot_config=self.bot_config,
                 order_id=order_id,
+            )
+            self._metrics_manager.counter(Metric.ORDER_CANCELLED, value=1, order=order)
+            self._notifications_manager.medium(
+                f"Order {order_id} was cancelled", order=order
             )
             self.archive_order(order)
             return order

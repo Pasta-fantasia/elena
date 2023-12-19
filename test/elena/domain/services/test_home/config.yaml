@@ -1,11 +1,16 @@
 Logger:
   class: elena.adapters.logger.local_logger.LocalLogger
-  level: INFO
+  level: DEBUG
   path: logs  # relative path under home directory
   max_bytes: 1000000 # 1 MB max log files size
-  backup_count: 5  # Number of log backup files
+  backup_count: 1  # Number of log backup files
+MetricsManager:
+  class: elena.adapters.metrics_manager.local_metrics_manager.LocalMetricsManager
+NotificationsManager:
+  class: elena.adapters.notifications_manager.local_notifications_manager.LocalNotificationsManager
 LocalBotManager:
   path: bots # relative path under home directory
 CctxExchangeManager:
   fetch_ohlcv_limit: 100
   fetch_ohlcv_limit_retry_every_milliseconds: 1000
+

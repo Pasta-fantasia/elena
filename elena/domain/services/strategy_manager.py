@@ -1,4 +1,3 @@
-import importlib
 import os
 import time
 from datetime import datetime
@@ -9,17 +8,15 @@ from cron_converter import Cron
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.exchange import Exchange, ExchangeType
-from elena.domain.model.order import (Order, OrderSide, OrderStatusType,
-                                      OrderType)
-from elena.domain.model.order_book import OrderBook
 from elena.domain.model.strategy_config import StrategyConfig
-from elena.domain.model.time_frame import TimeFrame
-from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
+from elena.domain.ports.metrics_manager import MetricsManager
+from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
+from elena.shared.dynamic_loading import get_class
 
 
 class StrategyManagerImpl(StrategyManager):
@@ -27,12 +24,16 @@ class StrategyManagerImpl(StrategyManager):
         self,
         strategy_config: StrategyConfig,
         logger: Logger,
+        metrics_manager: MetricsManager,
+        notifications_manager: NotificationsManager,
         bot_manager: BotManager,
         exchange_manager: ExchangeManager,
         exchanges: List[Exchange],
     ):
         self._config = strategy_config
         self._logger = logger
+        self._metrics_manager = metrics_manager
+        self._notifications_manager = notifications_manager
         self._bot_manager = bot_manager
         self._exchange_manager = exchange_manager
         self._exchanges = exchanges
@@ -63,13 +64,15 @@ class StrategyManagerImpl(StrategyManager):
                 if updated_status:
                     updated_statuses.append(updated_status)
                 try:
-                    updated_status = self._run_bot(self._exchange_manager, bot_config, status)
+                    updated_status = self._run_bot(
+                        self._exchange_manager, bot_config, status
+                    )
                     if updated_status:
                         updated_statuses.append(updated_status)
                 except Exception as err:
                     # A bad implemented bot should never crash Elena.
                     # The other bot may work and may need to do operations
-                    self._logger.error(f"Unhandled exception", exc_info=1)
+                    self._logger.error("Unhandled exception", exc_info=1)
                     # Except we are on a test session.
                     if "PYTEST_CURRENT_TEST" in os.environ:
                         raise err
@@ -130,15 +133,13 @@ class StrategyManagerImpl(StrategyManager):
         bot_config: BotConfig,
         bot_status: BotStatus,
     ) -> Bot:
-        class_parts = self._config.strategy_class.split(".")
-        class_name = class_parts[-1]
-        module_path = ".".join(class_parts[0:-1])
-        module = importlib.import_module(module_path)
-        _class = getattr(module, class_name)
+        _class = get_class(self._config.strategy_class)
         bot = _class()
         bot.init(
             manager=self,
             logger=self._logger,
+            metrics_manager=self._metrics_manager,
+            notifications_manager=self._notifications_manager,
             exchange_manager=exchange_manager,
             bot_config=bot_config,
             bot_status=bot_status,
@@ -150,4 +151,3 @@ class StrategyManagerImpl(StrategyManager):
             if exchange.id == exchange_id.value:
                 return exchange
         return None
-
