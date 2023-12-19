@@ -78,6 +78,7 @@ class GenericBot(Bot):
             size=order.amount,
             entry_order_id=order.id,
             entry_price=order.average,
+            entry_time=order.timestamp,
             exit_order_id=0,
             exit_price=0,
         )
