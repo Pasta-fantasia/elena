@@ -42,9 +42,7 @@ class LocalBotManager(BotManager):
                 status = pickle.load(f)
         except FileNotFoundError:
             return None
-        self._logger.debug(
-            "Read bot status %s with %d orders", bot_id, len(status.active_orders)
-        )
+        self._logger.debug("Read bot status %s with %d orders", bot_id, len(status.active_orders))
         return status
 
     def write_all(self, statuses: List[BotStatus]):

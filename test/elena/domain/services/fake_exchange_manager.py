@@ -51,9 +51,7 @@ class FakeExchangeManager(ExchangeManager):
             )
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
-    def amount_to_precision(
-        self, exchange: Exchange, pair: TradingPair, amount: float
-    ) -> float:
+    def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
         if recording:
             return self._cctx.amount_to_precision(exchange, pair, amount)
         else:
@@ -65,9 +63,7 @@ class FakeExchangeManager(ExchangeManager):
             )
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
-    def price_to_precision(
-        self, exchange: Exchange, pair: TradingPair, price: float
-    ) -> float:
+    def price_to_precision(self, exchange: Exchange, pair: TradingPair, price: float) -> float:
         if recording:
             return self._cctx.price_to_precision(exchange, pair, price)
         else:
@@ -112,9 +108,7 @@ class FakeExchangeManager(ExchangeManager):
         params: Optional[Dict] = {},
     ) -> Order:
         if recording:
-            return self._cctx.place_order(
-                exchange, bot_config, order_type, side, amount, price, params
-            )
+            return self._cctx.place_order(exchange, bot_config, order_type, side, amount, price, params)
         else:
             return Record.load_recorded_output(
                 function_name="place_order",
@@ -140,9 +134,7 @@ class FakeExchangeManager(ExchangeManager):
             )
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)
-    def fetch_order(
-        self, exchange: Exchange, bot_config: BotConfig, order_id: str
-    ) -> Order:
+    def fetch_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         if recording:
             return self._cctx.fetch_order(exchange, bot_config, order_id)
         else:

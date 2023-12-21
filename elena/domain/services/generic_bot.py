@@ -83,9 +83,7 @@ class GenericBot(Bot):
         )
         self.status.active_trades.append(new_trade)
 
-    def new_trade_manual(
-        self, size: float, entry_price: float, exit_order_id, exit_price: float
-    ):
+    def new_trade_manual(self, size: float, entry_price: float, exit_order_id, exit_price: float):
         new_trade = Trade(
             exchange_id=self.exchange.id,
             bot_id=self.id,
@@ -134,10 +132,7 @@ class GenericBot(Bot):
             updated_order = self.fetch_order(order.id)
 
             if updated_order:
-                if (
-                    updated_order.status == OrderStatusType.closed
-                    or updated_order.status == OrderStatusType.canceled
-                ):
+                if updated_order.status == OrderStatusType.closed or updated_order.status == OrderStatusType.canceled:
                     # notify
                     if updated_order.status == OrderStatusType.closed:
                         self._logger.info(
@@ -146,9 +141,7 @@ class GenericBot(Bot):
                             f"at {updated_order.average}"
                         )
                     if updated_order.status == OrderStatusType.canceled:
-                        self._logger.info(
-                            f"Notify! Order {updated_order.id} was cancelled!-"
-                        )
+                        self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
                         # TODO: [Fran] what should we do if an order is cancelled?
                         #  Cancel are: manual, something could go
                         #  wrong in L or the market is stopped.
@@ -169,9 +162,7 @@ class GenericBot(Bot):
                 else:
                     updated_orders.append(updated_order)
             else:
-                self._logger.error(
-                    f"The order {order.id} has desapear! This should only happend on test environments"
-                )
+                self._logger.error(f"The order {order.id} has desapear! This should only happend on test environments")
 
         self.status.active_orders = updated_orders
         return self.status
@@ -263,9 +254,7 @@ class GenericBot(Bot):
                 order_id=order_id,
             )
             self._metrics_manager.counter(Metric.ORDER_CANCELLED, value=1, order=order)
-            self._notifications_manager.medium(
-                f"Order {order_id} was cancelled", order=order
-            )
+            self._notifications_manager.medium(f"Order {order_id} was cancelled", order=order)
             self.archive_order(order)
             return order
         except Exception as err:
@@ -273,9 +262,7 @@ class GenericBot(Bot):
             self._logger.error(f"Error cancelling order {order_id}", exc_info=1)
             return None
 
-    def stop_loss(
-        self, amount: float, stop_price: float, price: float
-    ) -> Optional[Order]:
+    def stop_loss(self, amount: float, stop_price: float, price: float) -> Optional[Order]:
         # TODO: https://dev.binance.vision/t/code-1013-msg-filter-failure-percent-price/1592 PERCENT_PRICE filter
         #   while testing we got "'binance {"code":-1013,"msg":"Filter failure: PERCENT_PRICE_BY_SIDE"}'"
         try:
