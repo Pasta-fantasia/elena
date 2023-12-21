@@ -15,9 +15,7 @@ class Trade(BaseModel):
     pair: TradingPair
     size: float  # ordered amount of base currency
 
-    entry_time: int = int(
-        time.time() * 1000
-    )  # order placing/opening Unix timestamp in milliseconds
+    entry_time: int = int(time.time() * 1000)  # order placing/opening Unix timestamp in milliseconds
     entry_price: float
     entry_order_id: Optional[str] = "manual"
 

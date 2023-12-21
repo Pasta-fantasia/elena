@@ -24,9 +24,7 @@ def test_load_all_recorded_data():
     for limit_min_amount in limit_min_amount_data:
         if limit_min_amount == expected_limit_min_amount:
             return
-    raise AssertionError(
-        "Cannot find expected `limit_min_amount` in loaded recorded data."
-    )
+    raise AssertionError("Cannot find expected `limit_min_amount` in loaded recorded data.")
 
 
 def test_load_recorded_output():

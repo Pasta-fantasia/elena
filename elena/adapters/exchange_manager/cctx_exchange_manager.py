@@ -170,24 +170,18 @@ class CctxExchangeManager(ExchangeManager):
         )
         conn = self._connect(exchange)
         candles = self._fetch_candles(conn, pair, time_frame)
-        self._logger.info(
-            "Read %d %s candles from %s", candles.shape[0], pair, exchange.id.value
-        )
+        self._logger.info("Read %d %s candles from %s", candles.shape[0], pair, exchange.id.value)
         return candles
 
     def _fetch_candles(
         self, connection, pair: TradingPair, time_frame: TimeFrame, page_size: int = 100
     ) -> pd.DataFrame:
-        candles_list = self._fetch_candles_with_retry(
-            connection, pair, time_frame, page_size
-        )
+        candles_list = self._fetch_candles_with_retry(connection, pair, time_frame, page_size)
         candles_df = pd.DataFrame(candles_list)
         if candles_df.shape == (0, 0):
             return pd.DataFrame(columns=self._candles_columns)
         candles_df.columns = self._candles_columns
-        candles_df["Open time"] = pd.to_numeric(
-            candles_df["Open time"], downcast="integer"
-        )
+        candles_df["Open time"] = pd.to_numeric(candles_df["Open time"], downcast="integer")
         candles_df["Open"] = pd.to_numeric(candles_df["Open"], downcast="float")
         candles_df["High"] = pd.to_numeric(candles_df["High"], downcast="float")
         candles_df["Low"] = pd.to_numeric(candles_df["Low"], downcast="float")
@@ -209,17 +203,11 @@ class CctxExchangeManager(ExchangeManager):
         candles = pd.DataFrame()
         while retry:
             try:
-                candles = connection.fetch_ohlcv(
-                    str(pair), time_frame.value, limit=limit
-                )
+                candles = connection.fetch_ohlcv(str(pair), time_frame.value, limit=limit)
                 retry = False
             except ccxt.RateLimitExceeded as e:
-                self._logger.info(
-                    "Retrying connection to exchange, %s: %s", type(e).__name__, e
-                )
-                connection.sleep(
-                    self._config["fetch_ohlcv_limit_retry_every_milliseconds"]
-                )
+                self._logger.info("Retrying connection to exchange, %s: %s", type(e).__name__, e)
+                connection.sleep(self._config["fetch_ohlcv_limit_retry_every_milliseconds"])
             except Exception as err:
                 raise err
             i += 1
@@ -322,9 +310,7 @@ class CctxExchangeManager(ExchangeManager):
     def _map_currency(currency: str, balance: Dict) -> Optional[ByCurrency]:
         try:
             value = balance[currency]
-            return ByCurrency(
-                free=value["free"], used=value["used"], total=value["total"]
-            )
+            return ByCurrency(free=value["free"], used=value["used"], total=value["total"])
         except KeyError:
             return None
 
@@ -350,9 +336,7 @@ class CctxExchangeManager(ExchangeManager):
         result = self._map_order(exchange, bot_config, bot_config.pair, order)
         return result
 
-    def _map_order(
-        self, exchange: Exchange, bot_config: BotConfig, pair: TradingPair, order
-    ) -> Order:
+    def _map_order(self, exchange: Exchange, bot_config: BotConfig, pair: TradingPair, order) -> Order:
         return Order(
             id=order["id"],
             exchange_id=exchange.id,
@@ -408,9 +392,7 @@ class CctxExchangeManager(ExchangeManager):
         result = self._map_order(exchange, bot_config, bot_config.pair, order)
         return result
 
-    def fetch_order(
-        self, exchange: Exchange, bot_config: BotConfig, order_id: str
-    ) -> Order:
+    def fetch_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         conn = self._connect(exchange)
         order = conn.fetch_order(id=order_id, symbol=str(bot_config.pair))
         result = self._map_order(exchange, bot_config, bot_config.pair, order)
@@ -420,9 +402,7 @@ class CctxExchangeManager(ExchangeManager):
         conn = self._connect(exchange)
         return float(conn.markets[str(pair)]["limits"]["amount"]["min"])
 
-    def amount_to_precision(
-        self, exchange: Exchange, pair: TradingPair, amount: float
-    ) -> float:
+    def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
         conn = self._connect(exchange)
         min_amount = float(conn.markets[str(pair)]["limits"]["amount"]["min"])
         if amount > min_amount:
@@ -430,9 +410,7 @@ class CctxExchangeManager(ExchangeManager):
         else:
             return 0.0
 
-    def price_to_precision(
-        self, exchange: Exchange, pair: TradingPair, price: float
-    ) -> float:
+    def price_to_precision(self, exchange: Exchange, pair: TradingPair, price: float) -> float:
         conn = self._connect(exchange)
         if price > 0:
             return float(conn.price_to_precision(str(pair), price))

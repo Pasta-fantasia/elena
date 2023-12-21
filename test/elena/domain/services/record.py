@@ -90,9 +90,7 @@ class Record:
     @staticmethod
     def _save(data, function):
         now = get_time()
-        filepath = path.join(
-            pathlib.Path(__file__).parent, "data", f"{function}-{now}.json"
-        )
+        filepath = path.join(pathlib.Path(__file__).parent, "data", f"{function}-{now}.json")
         with open(filepath, "w") as fp:
             json.dump(data, fp, indent=4)
 
@@ -147,31 +145,23 @@ class Record:
             raise Exception(f"Un-implemented deserialization for type {data['type']}")
 
     @staticmethod
-    def _get_base_model_instance(
-        model_class: str, value: t.Dict[str, t.Any]
-    ) -> pydantic.BaseModel:
+    def _get_base_model_instance(model_class: str, value: t.Dict[str, t.Any]) -> pydantic.BaseModel:
         try:
             _class = get_class(model_class)
             instance = _class.parse_obj(value)
             return instance
         except Exception as err:
-            print(
-                f"Error deserializing Pydantic base model class '{model_class}' with value '{value}': {err}"
-            )
+            print(f"Error deserializing Pydantic base model class '{model_class}' with value '{value}': {err}")
             raise err
 
     @staticmethod
-    def _get_other_model_instance(
-        model_class: str, value: t.Dict[str, t.Any]
-    ) -> pydantic.BaseModel:
+    def _get_other_model_instance(model_class: str, value: t.Dict[str, t.Any]) -> pydantic.BaseModel:
         try:
             _class = get_class(model_class)
             instance = _class(value)
             return instance
         except Exception as err:
-            print(
-                f"Error deserializing other model class '{model_class}' with value '{value}': {err}"
-            )
+            print(f"Error deserializing other model class '{model_class}' with value '{value}': {err}")
             raise err
 
     @staticmethod
@@ -196,13 +186,9 @@ class Record:
         return recorded_data
 
     @staticmethod
-    def load_recorded_output(
-        function_name: str, all_recorded_data: t.Dict[str, t.Any], **kwargs
-    ):
+    def load_recorded_output(function_name: str, all_recorded_data: t.Dict[str, t.Any], **kwargs):
         if function_name not in all_recorded_data:
-            raise RuntimeError(
-                f"Cannot find recorded data for function '{function_name}'"
-            )
+            raise RuntimeError(f"Cannot find recorded data for function '{function_name}'")
         records = all_recorded_data[function_name]
 
         errors: t.List[str] = []
@@ -210,9 +196,7 @@ class Record:
             match = True
             errors = []
             for recorded_kwarg_name, recorded_kwarg_value in record["input"].items():
-                if Record._record_matches_kwargs(
-                    recorded_kwarg_name, recorded_kwarg_value, kwargs
-                ):
+                if Record._record_matches_kwargs(recorded_kwarg_name, recorded_kwarg_value, kwargs):
                     continue
                 else:
                     match = False
@@ -224,14 +208,11 @@ class Record:
             if match:
                 return record["output"]
         raise RuntimeError(
-            f"Cannot find recorded output for function '{function_name}' "
-            f"with kwargs {kwargs}: \n{errors}"
+            f"Cannot find recorded output for function '{function_name}' " f"with kwargs {kwargs}: \n{errors}"
         )
 
     @staticmethod
-    def _record_matches_kwargs(
-        recorded_kwarg_name, recorded_kwarg_value, kwargs
-    ) -> bool:
+    def _record_matches_kwargs(recorded_kwarg_name, recorded_kwarg_value, kwargs) -> bool:
         if recorded_kwarg_name not in kwargs:
             return False
 

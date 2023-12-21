@@ -50,23 +50,17 @@ class StrategyManagerImpl(StrategyManager):
         :return: the updated statuses list of all bot with any update in the current cycle
         """
 
-        previous_statuses_dict = {
-            _status.bot_id: _status for _status in previous_statuses
-        }
+        previous_statuses_dict = {_status.bot_id: _status for _status in previous_statuses}
         updated_statuses = []
         for bot_config in self._config.bots:
             run, status = self._get_run_status(bot_config, previous_statuses_dict)
             if run:
                 self._logger.info("Running bot %s: %s", bot_config.id, bot_config.name)
-                updated_status = self._run_bot(
-                    self._exchange_manager, bot_config, status
-                )
+                updated_status = self._run_bot(self._exchange_manager, bot_config, status)
                 if updated_status:
                     updated_statuses.append(updated_status)
                 try:
-                    updated_status = self._run_bot(
-                        self._exchange_manager, bot_config, status
-                    )
+                    updated_status = self._run_bot(self._exchange_manager, bot_config, status)
                     if updated_status:
                         updated_statuses.append(updated_status)
                 except Exception as err:
@@ -78,19 +72,13 @@ class StrategyManagerImpl(StrategyManager):
                         raise err
         return updated_statuses
 
-    def _get_run_status(
-        self, bot_config: BotConfig, previous_statuses_dict
-    ) -> Tuple[bool, BotStatus]:
+    def _get_run_status(self, bot_config: BotConfig, previous_statuses_dict) -> Tuple[bool, BotStatus]:
         run = True
         if bot_config.id in previous_statuses_dict:
             status = previous_statuses_dict[bot_config.id]
             last_execution = datetime.fromtimestamp(status.timestamp / 1000)
-            if (
-                bot_config.cron_expression
-            ):  # If there is no cron expression, the bot will run every time
-                run = self._check_if_bot_has_to_run(
-                    last_execution, bot_config.cron_expression
-                )
+            if bot_config.cron_expression:  # If there is no cron expression, the bot will run every time
+                run = self._check_if_bot_has_to_run(last_execution, bot_config.cron_expression)
         else:
             status = BotStatus(
                 bot_id=bot_config.id,
@@ -102,9 +90,7 @@ class StrategyManagerImpl(StrategyManager):
         return run, status
 
     @staticmethod
-    def _check_if_bot_has_to_run(
-        last_execution: datetime, cron_expression: str
-    ) -> bool:
+    def _check_if_bot_has_to_run(last_execution: datetime, cron_expression: str) -> bool:
         """
         Checks if the bot has to run or not comparing with cron expression.
         :param last_execution: the datetime of previous execution
