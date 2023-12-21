@@ -47,9 +47,7 @@ class ExchangeBasicOperationsBot(GenericBot):
 
         # Verify that the exchange is in sandbox mode!!!!
         if not self.exchange.sandbox_mode:
-            raise Exception(
-                "Exchange is not in sandbox mode, this strategy is ment for testing only!"
-            )
+            raise Exception("Exchange is not in sandbox mode, this strategy is ment for testing only!")
 
     def _orders_trades_status(self):
         return len(self.status.active_orders), len(self.status.archived_orders), len(self.status.active_trades), len(
@@ -83,14 +81,10 @@ class ExchangeBasicOperationsBot(GenericBot):
         amount_to_buy = amount_to_spend / estimated_close_price
         precision_to_buy = self.amount_to_precision(amount_to_buy)
         if not precision_to_buy:
-            raise Exception(
-                f"Cannot get precision_to_buy for amount_to_buy {amount_to_buy}"
-            )
+            raise Exception(f"Cannot get precision_to_buy for amount_to_buy {amount_to_buy}")
 
         if precision_to_buy < min_amount:
-            raise Exception(
-                "Not enough balance to run the tests. {self.pair.base} = {base_free} / {quote_free}"
-            )
+            raise Exception("Not enough balance to run the tests. {self.pair.base} = {base_free} / {quote_free}")
 
         active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
 
@@ -115,9 +109,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         amount_for_stop_loss = market_buy_order.amount
         stop_loss_stop_price = candles["Close"][-1:].iloc[0] * 0.8  # last close - 20%
         stop_loss_price = stop_loss_stop_price * 0.95  # stop_price - 5%
-        stop_loss_order = self.stop_loss(
-            amount_for_stop_loss, stop_loss_stop_price, stop_loss_price
-        )
+        stop_loss_order = self.stop_loss(amount_for_stop_loss, stop_loss_stop_price, stop_loss_price)
         if not stop_loss_order:
             raise Exception("Stop loss creation failed.")
         # TODO: wait order status without recording
@@ -176,9 +168,7 @@ def test_elena():
     notifications_manager = get_instance(config["NotificationsManager"]["class"])
     notifications_manager.init(config, logger)
 
-    bot_manager = LocalBotManager(
-        config, logger, metrics_manager, notifications_manager
-    )
+    bot_manager = LocalBotManager(config, logger, metrics_manager, notifications_manager)
     exchange_manager = FakeExchangeManager(config, logger)
 
     sut = Elena(

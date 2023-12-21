@@ -28,14 +28,10 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    def amount_to_precision(
-        self, exchange: Exchange, pair: TradingPair, amount: float
-    ) -> float:
+    def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
         ...
 
-    def price_to_precision(
-        self, exchange: Exchange, pair: TradingPair, price: float
-    ) -> float:
+    def price_to_precision(self, exchange: Exchange, pair: TradingPair, price: float) -> float:
         ...
 
     def read_order_book(self, exchange: Exchange, pair: TradingPair) -> OrderBook:
@@ -79,9 +75,7 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    def cancel_order(
-        self, exchange: Exchange, bot_config: BotConfig, order_id: str
-    ) -> Order:
+    def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         """
         Cancels an order on a Exchange
         :param exchange: exchange where to read market data
@@ -91,9 +85,7 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    def fetch_order(
-        self, exchange: Exchange, bot_config: BotConfig, order_id: str
-    ) -> Order:
+    def fetch_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         """
         Retrieves an order from Exchange
         :param exchange: exchange where to read market data
