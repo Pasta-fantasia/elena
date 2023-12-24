@@ -14,9 +14,7 @@ class LocalMetricsManager(MetricsManager):
         self._logger = logger
 
     def counter(self, metric: Metric, bot_config: BotConfig, value: int = 1):
-        self._logger.info(
-            "'Counter '%s': %s", metric.value, value, bot_config=bot_config
-        )
+        self._logger.info("'Counter '%s': %s", metric.value, value, bot_config=bot_config)
 
     def gauge(self, metric: Metric, bot_config: BotConfig, value: float):
         self._logger.info("Gauge '%s': %s", metric.value, value, bot_config=bot_config)
