@@ -48,6 +48,7 @@ class GenericBot(Bot):
         bot_config: BotConfig,
         bot_status: BotStatus,
     ):
+        self.bot_config = bot_config
         self.id = bot_config.id
         self.name = bot_config.name
         self.pair = bot_config.pair
@@ -253,8 +254,8 @@ class GenericBot(Bot):
                 bot_config=self.bot_config,
                 order_id=order_id,
             )
-            self._metrics_manager.counter(Metric.ORDER_CANCELLED, value=1, order=order)
-            self._notifications_manager.medium(f"Order {order_id} was cancelled", order=order)
+            self._metrics_manager.counter(Metric.ORDER_CANCELLED, self.bot_config)
+            self._notifications_manager.medium(f"Order {order_id} was cancelled")
             self.archive_order(order)
             return order
         except Exception as err:

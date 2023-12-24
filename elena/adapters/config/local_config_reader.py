@@ -75,5 +75,7 @@ class LocalConfigReader:
 
     def _load_secrets(self, home: str) -> Dict:
         strategies = self._load_config(home, "secrets.yaml")
-        strategies = self._filter_entries(strategies, ["Exchanges"])
+        strategies = self._filter_entries(
+            strategies, ["Exchanges", "TelegramNotificationsManager"]
+        )
         return strategies
