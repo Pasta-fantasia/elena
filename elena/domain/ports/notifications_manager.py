@@ -7,11 +7,11 @@ class NotificationsManager(Protocol):
     def init(self, config: dict, logger: Logger):
         ...
 
-    def high(self, notification: str, **kwargs):
+    def high(self, notification: str):
         ...
 
-    def medium(self, notification: str, **kwargs):
+    def medium(self, notification: str):
         ...
 
-    def low(self, notification: str, **kwargs):
+    def low(self, notification: str):
         ...
