@@ -1,6 +1,6 @@
 import pandas as pd
-from domain.model.bot_config import BotConfig
 
+from elena.domain.model.bot_config import BotConfig
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.metrics_manager import Metric, MetricsManager
 

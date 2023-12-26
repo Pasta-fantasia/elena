@@ -1,9 +1,9 @@
 from enum import Enum
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 import pandas as pd
-from domain.model.bot_config import BotConfig
 
+from elena.domain.model.bot_config import BotConfig
 from elena.domain.ports.logger import Logger
 
 
@@ -11,6 +11,7 @@ class Metric(str, Enum):
     ORDER_CANCELLED = "order_cancelled"
 
 
+@runtime_checkable
 class MetricsManager(Protocol):
     def init(self, config: dict, logger: Logger):
         ...

@@ -12,14 +12,19 @@ from elena.domain.ports.notifications_manager import NotificationsManager
 
 
 class LocalBotManager(BotManager):
-    def __init__(
+    _path: str
+    _logger: Logger
+    _metrics_manager: MetricsManager
+    _notifications_manager: NotificationsManager
+
+    def init(
         self,
         config: Dict,
         logger: Logger,
         metrics_manager: MetricsManager,
         notifications_manager: NotificationsManager,
     ):
-        self._path = path.join(config["home"], config["LocalBotManager"]["path"])
+        self._path = path.join(config["home"], config["BotManager"]["path"])
         self._logger = logger
         self._metrics_manager = metrics_manager
         self._notifications_manager = notifications_manager

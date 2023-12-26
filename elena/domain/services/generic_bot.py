@@ -136,11 +136,7 @@ class GenericBot(Bot):
                 if updated_order.status == OrderStatusType.closed or updated_order.status == OrderStatusType.canceled:
                     # notify
                     if updated_order.status == OrderStatusType.closed:
-                        self._logger.info(
-                            f"Notify! Order {updated_order.id} "
-                            f"was closed for {updated_order.amount} {updated_order.pair} "
-                            f"at {updated_order.average}"
-                        )
+                        self._logger.info(f"Notify! Order {updated_order.id} " f"was closed for {updated_order.amount} {updated_order.pair} " f"at {updated_order.average}")
                     if updated_order.status == OrderStatusType.canceled:
                         self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
                         # TODO: [Fran] what should we do if an order is cancelled?
@@ -152,11 +148,7 @@ class GenericBot(Bot):
 
                 elif updated_order.status == OrderStatusType.open and updated_order.filled > 0:  # type: ignore
 
-                    self._logger.info(
-                        f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: "
-                        f"{updated_order.filled} of {updated_order.amount} {updated_order.pair} at"
-                        f" {updated_order.average}"
-                    )
+                    self._logger.info(f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: " f"{updated_order.filled} of {updated_order.amount} {updated_order.pair} at" f" {updated_order.average}")
 
                     # PARTIALLY_FILLED is considered an active order, It's on the strategy to do something.
                     updated_orders.append(updated_order)
