@@ -1,8 +1,8 @@
 from typing import Dict, List, Optional, Protocol
 
-from domain.ports.logger import Logger
-from domain.ports.metrics_manager import MetricsManager
-from domain.ports.notifications_manager import NotificationsManager
+from elena.domain.ports.logger import Logger
+from elena.domain.ports.metrics_manager import MetricsManager
+from elena.domain.ports.notifications_manager import NotificationsManager
 
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.strategy_config import StrategyConfig

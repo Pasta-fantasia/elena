@@ -1,8 +1,7 @@
 import pathlib
 from os import path
 
-from entrypoint.local.entrypoint import get_elena_instance
-
+from elena.domain.services.elena import get_elena_instance
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.ports.exchange_manager import ExchangeManager

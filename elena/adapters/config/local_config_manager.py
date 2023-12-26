@@ -3,7 +3,7 @@ from os import path
 from typing import Dict
 
 import yaml  # type: ignore
-from domain.ports.config_manager import ConfigManager
+from elena.domain.ports.config_manager import ConfigManager
 
 
 class LocalConfigManager(ConfigManager):

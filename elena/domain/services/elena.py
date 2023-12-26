@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Dict
 
-from shared.dynamic_loading import get_instance
+from elena.shared.dynamic_loading import get_instance
 
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot_manager import BotManager
