@@ -68,7 +68,7 @@ class GenericBot(Bot):
         self.exchange_manager = exchange_manager
         self._update_orders_status()
 
-    def new_trade(self, order: Order):
+    def new_trade_by_order(self, order: Order):
         # All Trades start/"born" here...
         new_trade = Trade(
             exchange_id=self.exchange.id,
@@ -107,7 +107,19 @@ class GenericBot(Bot):
             self.status.active_orders.append(order)
 
         if order.side == OrderSide.buy:
-            self.new_trade(order)
+            self.new_trade_by_order(order)
+
+        if order.side == OrderSide.sell:
+            if order.stop_price > 0:
+                # stop loss
+                pass
+            else:
+                if order.status == OrderStatusType.closed:
+                    # executed sale, check trades
+                    # identify trades but not ne    cessary close them... we can sell with no exec
+                    # if we cancel an order should we remove exit_order?
+                    pass
+
 
     def archive_order_close_trades(self, order: Order):
         for trade in self.status.active_trades:

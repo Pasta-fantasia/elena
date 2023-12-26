@@ -152,6 +152,14 @@ class ExchangeBasicOperationsBot(GenericBot):
         assert active_trades_after_order == active_trades_before_order - 1
         assert closed_trades_before_order == closed_trades_after_order + 1
 
+        # we may find an order with:
+        #  - the same amount
+        #  - greater
+        #  - lower
+        # or the sum of all amounts...
+        # partially close trades?
+
+
         return self.status
 
 
