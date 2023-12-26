@@ -1,9 +1,6 @@
 import os
-
 from datetime import datetime
 from typing import Dict
-
-from elena.shared.dynamic_loading import get_instance
 
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot_manager import BotManager
@@ -13,6 +10,7 @@ from elena.domain.ports.metrics_manager import MetricsManager
 from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.services.config_loader import ConfigLoader
 from elena.domain.services.strategy_manager import StrategyManagerImpl
+from elena.shared.dynamic_loading import get_instance
 
 
 class Elena:

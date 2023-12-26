@@ -1,7 +1,6 @@
 from typing import Dict, Optional, Protocol
 
 import pandas as pd
-from elena.domain.ports.logger import Logger
 
 from elena.domain.model.balance import Balance
 from elena.domain.model.bot_config import BotConfig
@@ -10,6 +9,7 @@ from elena.domain.model.order import Order, OrderSide, OrderType
 from elena.domain.model.order_book import OrderBook
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
+from elena.domain.ports.logger import Logger
 
 
 class ExchangeManager(Protocol):

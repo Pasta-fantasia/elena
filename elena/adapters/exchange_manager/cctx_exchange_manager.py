@@ -173,9 +173,7 @@ class CctxExchangeManager(ExchangeManager):
         self._logger.info("Read %d %s candles from %s", candles.shape[0], pair, exchange.id.value)
         return candles
 
-    def _fetch_candles(
-        self, connection, pair: TradingPair, time_frame: TimeFrame, page_size: int = 100
-    ) -> pd.DataFrame:
+    def _fetch_candles(self, connection, pair: TradingPair, time_frame: TimeFrame, page_size: int = 100) -> pd.DataFrame:
         candles_list = self._fetch_candles_with_retry(connection, pair, time_frame, page_size)
         candles_df = pd.DataFrame(candles_list)
         if candles_df.shape == (0, 0):
@@ -190,9 +188,7 @@ class CctxExchangeManager(ExchangeManager):
         candles_df.set_index("Open time")
         return candles_df
 
-    def _fetch_candles_with_retry(
-        self, connection, pair: TradingPair, time_frame: TimeFrame, page_size: int = 100
-    ) -> List[List]:
+    def _fetch_candles_with_retry(self, connection, pair: TradingPair, time_frame: TimeFrame, page_size: int = 100) -> List[List]:
         # https://github.com/ccxt/ccxt/issues/10273
         # from https://github.com/ccxt/ccxt/blob/master/examples/py/kucoin-rate-limit.py
 

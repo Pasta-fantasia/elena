@@ -1,7 +1,6 @@
 import pathlib
 from os import path
 
-from elena.domain.services.elena import get_elena_instance
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.ports.exchange_manager import ExchangeManager
@@ -9,6 +8,7 @@ from elena.domain.ports.logger import Logger
 from elena.domain.ports.metrics_manager import MetricsManager
 from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
+from elena.domain.services.elena import get_elena_instance
 from elena.domain.services.generic_bot import GenericBot
 
 

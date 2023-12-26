@@ -16,10 +16,7 @@ try:
     for p in requirements:
         if p.startswith("git+"):
             linked_dependencies.append(p)
-            print(
-                f"Warning: dependency_links for {p} may not work. "
-                f"Check https://peps.python.org/pep-0440/#direct-references"
-            )
+            print(f"Warning: dependency_links for {p} may not work. " f"Check https://peps.python.org/pep-0440/#direct-references")
         elif p.startswith("--index-url"):
             pass  # linked_dependencies.append(p[12:-1])
         elif p.startswith("--extra-index-url"):

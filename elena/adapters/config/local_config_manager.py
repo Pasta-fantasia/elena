@@ -3,6 +3,7 @@ from os import path
 from typing import Dict
 
 import yaml  # type: ignore
+
 from elena.domain.ports.config_manager import ConfigManager
 
 
