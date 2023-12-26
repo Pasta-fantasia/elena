@@ -3,7 +3,7 @@ VENV=.venv
 PYTHON=$(VENV)/bin/python3
 BIN=$(VENV)/bin/
 
-$(VENV): requirements.txt requirements_test.txt setup.py
+$(VENV): requirements.txt requirements_test.txt setup.py setup.cfg
 	python3 -m venv $(VENV)
 	$(BIN)pip install -U pip setuptools wheel
 	$(BIN)pip install -r requirements.txt
