@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from typing import Dict
 
-from domain.ports.config_manager import ConfigManager
+from elena.domain.ports.config_manager import ConfigManager
 
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot_manager import BotManager
