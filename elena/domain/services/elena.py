@@ -1,3 +1,5 @@
+import os
+
 from datetime import datetime
 from typing import Dict
 
@@ -54,7 +56,10 @@ class Elena:
         self._bot_manager.write_all(new_statuses)
 
 
-def get_elena_instance(config_manager_class_path: str, config_manager_url: str) -> Elena:
+def get_elena_instance(config_manager_class_path: str = "elena.adapters.config.local_config_manager.LocalConfigManager", config_manager_url: str = "") -> Elena:
+    if config_manager_url == "":
+        config_manager_url = os.environ.get("ELENA_HOME", os.getcwd())
+
     config_manager = get_instance(config_manager_class_path)
     config_manager.init(config_manager_url)
     config = config_manager.config
