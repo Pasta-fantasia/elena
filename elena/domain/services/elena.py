@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Dict
 
+from shared.dynamic_loading import get_instance
+
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.exchange_manager import ExchangeManager
@@ -50,3 +52,38 @@ class Elena:
         previous_statuses = self._bot_manager.load_all(strategy_config)
         new_statuses = strategy_manager.run(previous_statuses)
         self._bot_manager.write_all(new_statuses)
+
+
+def get_elena_instance(config_manager_class_path: str, config_manager_url: str) -> Elena:
+    config_manager = get_instance(config_manager_class_path)
+    config_manager.init(config_manager_url)
+    config = config_manager.config
+
+    logger = get_instance(config["Logger"]["class"])
+    logger.init(config)
+
+    metrics_manager = get_instance(config["MetricsManager"]["class"])
+    metrics_manager.init(config, logger)
+
+    notifications_manager = get_instance(config["NotificationsManager"]["class"])
+    notifications_manager.init(config, logger)
+
+    bot_manager = get_instance(config["BotManager"]["class"])
+    bot_manager.init(
+        config=config,
+        logger=logger,
+        metrics_manager=metrics_manager,
+        notifications_manager=notifications_manager,
+    )
+
+    exchange_manager = get_instance(config["ExchangeManager"]["class"])
+    exchange_manager.init(config=config, logger=logger)
+
+    return Elena(
+        config=config,
+        logger=logger,
+        metrics_manager=metrics_manager,
+        notifications_manager=notifications_manager,
+        bot_manager=bot_manager,
+        exchange_manager=exchange_manager,
+    )

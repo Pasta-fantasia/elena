@@ -1,6 +1,7 @@
 from typing import Dict, Optional, Protocol
 
 import pandas as pd
+from domain.ports.logger import Logger
 
 from elena.domain.model.balance import Balance
 from elena.domain.model.bot_config import BotConfig
@@ -12,6 +13,9 @@ from elena.domain.model.trading_pair import TradingPair
 
 
 class ExchangeManager(Protocol):
+    def init(self, config: Dict, logger: Logger):
+        ...
+
     def read_candles(
         self,
         exchange: Exchange,

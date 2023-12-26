@@ -127,7 +127,7 @@ class CctxExchangeManager(ExchangeManager):
     _candles_columns = ["Open time", "Open", "High", "Low", "Close", "Volume"]
 
     def __init__(self, config: Dict, logger: Logger):
-        self._config = config["CctxExchangeManager"]
+        self._config = config["ExchangeManager"]
         self._logger = logger
         self._conn = None
 
