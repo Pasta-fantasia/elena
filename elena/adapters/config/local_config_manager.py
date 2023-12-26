@@ -18,8 +18,7 @@ class LocalConfigManager(ConfigManager):
         self._config = {**home_config, **base_config, **strategies, **secrets}
         self._filter_entries()
 
-    @property
-    def config(self) -> Dict:
+    def get_config(self) -> Dict:
         return self._config
 
     def _load_config(self, home: str, filename: str) -> Dict:

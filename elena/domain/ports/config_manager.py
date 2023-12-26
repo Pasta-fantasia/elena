@@ -1,10 +1,10 @@
-from typing import Dict, Protocol
+from typing import Dict, Protocol, runtime_checkable
 
 
+@runtime_checkable
 class ConfigManager(Protocol):
     def init(self, url: str):
         ...
 
-    @property
-    def config(self) -> Dict:
+    def get_config(self) -> Dict:
         ...

@@ -2,6 +2,8 @@ import os
 from datetime import datetime
 from typing import Dict
 
+from domain.ports.config_manager import ConfigManager
+
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.exchange_manager import ExchangeManager
@@ -10,7 +12,7 @@ from elena.domain.ports.metrics_manager import MetricsManager
 from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.services.config_loader import ConfigLoader
 from elena.domain.services.strategy_manager import StrategyManagerImpl
-from elena.shared.dynamic_loading import get_instance
+from elena.shared.dynamic_loading import get_class
 
 
 class Elena:
@@ -58,20 +60,35 @@ def get_elena_instance(config_manager_class_path: str = "elena.adapters.config.l
     if config_manager_url == "":
         config_manager_url = os.environ.get("ELENA_HOME", os.getcwd())
 
-    config_manager = get_instance(config_manager_class_path)
+    config_manager_class = get_class(config_manager_class_path)
+    if not issubclass(config_manager_class, ConfigManager):
+        raise ValueError(f"{config_manager_class_path} must implement ConfigManager")
+    config_manager = config_manager_class()
     config_manager.init(config_manager_url)
-    config = config_manager.config
+    config = config_manager.get_config()
 
-    logger = get_instance(config["Logger"]["class"])
+    logger_class = get_class(config["Logger"]["class"])
+    if not issubclass(logger_class, Logger):
+        raise ValueError(f'{config["Logger"]["class"]} must implement Logger')
+    logger = logger_class()
     logger.init(config)
 
-    metrics_manager = get_instance(config["MetricsManager"]["class"])
+    metrics_manager_class = get_class(config["MetricsManager"]["class"])
+    if not issubclass(metrics_manager_class, MetricsManager):
+        raise ValueError(f'{config["MetricsManager"]["class"]} must implement MetricsManager')
+    metrics_manager = metrics_manager_class()
     metrics_manager.init(config, logger)
 
-    notifications_manager = get_instance(config["NotificationsManager"]["class"])
+    notifications_manager_class = get_class(config["NotificationsManager"]["class"])
+    if not issubclass(notifications_manager_class, NotificationsManager):
+        raise ValueError(f'{config["NotificationsManager"]["class"]} must implement NotificationsManager')
+    notifications_manager = notifications_manager_class()
     notifications_manager.init(config, logger)
 
-    bot_manager = get_instance(config["BotManager"]["class"])
+    bot_manager_class = get_class(config["BotManager"]["class"])
+    if not issubclass(bot_manager_class, BotManager):
+        raise ValueError(f'{config["BotManager"]["class"]} must implement BotManager')
+    bot_manager = bot_manager_class()
     bot_manager.init(
         config=config,
         logger=logger,
@@ -79,7 +96,10 @@ def get_elena_instance(config_manager_class_path: str = "elena.adapters.config.l
         notifications_manager=notifications_manager,
     )
 
-    exchange_manager = get_instance(config["ExchangeManager"]["class"])
+    exchange_manager_class = get_class(config["ExchangeManager"]["class"])
+    if not issubclass(exchange_manager_class, ExchangeManager):
+        raise ValueError(f'{config["ExchangeManager"]["class"]} must implement ExchangeManager')
+    exchange_manager = exchange_manager_class()
     exchange_manager.init(config=config, logger=logger)
 
     return Elena(
