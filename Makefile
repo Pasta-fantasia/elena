@@ -3,15 +3,23 @@ VENV=.venv
 PYTHON=$(VENV)/bin/python3
 BIN=$(VENV)/bin/
 
-$(VENV): requirements.txt requirements_test.txt setup.py setup.cfg
+all: $(BIN)activate
+
+$(BIN)activate: requirements.txt setup.py setup.cfg
 	python3 -m venv $(VENV)
 	$(BIN)pip install -U pip setuptools wheel
 	$(BIN)pip install -r requirements.txt
+
+$(BIN)pytest: $(BIN)activate requirements_test.txt
 	$(BIN)pip install -r requirements_test.txt
 
+# shortcuts to use as "Make venv" or "Make vent_test"
+venv: $(BIN)activate
+vent_test: $(BIN)pytest
+
 .PHONY: test
-test: $(VENV)
-	$(PYTHON) -m pytest
+test: vent_test
+	$(BIN)pytest
 
 .PHONY: release
 release: clean test
@@ -19,11 +27,11 @@ release: clean test
 
 .PHONY: upload
 upload: release
-    $(PYTHON) "setup.py upload -r http://TODO.com/pypi"
+	$(PYTHON) setup.py upload
 
 # code linters
 .PHONY: lint
-lint: $(VENV)
+lint: vent_test
 	$(BIN)pre-commit run --all-files
 
 .PHONY: lint-changed

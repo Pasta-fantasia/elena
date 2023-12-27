@@ -24,4 +24,4 @@ jobs:
       run: make test
 
     - name: Run distcheck
-      run: make distcheck
+      run: make release
