@@ -2,6 +2,8 @@
 VENV=.venv
 PYTHON=$(VENV)/bin/python3
 BIN=$(VENV)/bin/
+SECRETS_SAMPLE=test/elena/domain/services/test_home/secrets-sample.yaml
+SECRETS=test/elena/domain/services/test_home/secrets.yaml
 
 all: $(BIN)activate
 
@@ -10,15 +12,19 @@ $(BIN)activate: requirements.txt setup.py setup.cfg
 	$(BIN)pip install -U pip setuptools wheel
 	$(BIN)pip install -r requirements.txt
 
+# a secrets.yaml is needed to run the test
+$(SECRETS):
+	cp $(SECRETS_SAMPLE) $(SECRETS)
+
 $(BIN)pytest: $(BIN)activate requirements_test.txt
 	$(BIN)pip install -r requirements_test.txt
 
 # shortcuts to use as "Make venv" or "Make vent_test"
 venv: $(BIN)activate
-vent_test: $(BIN)pytest
+venv_test: $(BIN)pytest
 
 .PHONY: test
-test: vent_test
+test: venv_test $(SECRETS)
 	$(BIN)pytest
 
 .PHONY: release
@@ -31,7 +37,7 @@ upload: release
 
 # code linters
 .PHONY: lint
-lint: vent_test
+lint: venv_test
 	$(BIN)pre-commit run --all-files
 
 .PHONY: lint-changed
