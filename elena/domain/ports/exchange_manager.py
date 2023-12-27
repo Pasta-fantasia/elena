@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Protocol
+from typing import Dict, Optional, Protocol, runtime_checkable
 
 import pandas as pd
 
@@ -9,9 +9,14 @@ from elena.domain.model.order import Order, OrderSide, OrderType
 from elena.domain.model.order_book import OrderBook
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
+from elena.domain.ports.logger import Logger
 
 
+@runtime_checkable
 class ExchangeManager(Protocol):
+    def init(self, config: Dict, logger: Logger):
+        ...
+
     def read_candles(
         self,
         exchange: Exchange,

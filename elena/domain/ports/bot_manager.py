@@ -1,10 +1,23 @@
-from typing import List, Optional, Protocol
+from typing import Dict, List, Optional, Protocol, runtime_checkable
 
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.strategy_config import StrategyConfig
+from elena.domain.ports.logger import Logger
+from elena.domain.ports.metrics_manager import MetricsManager
+from elena.domain.ports.notifications_manager import NotificationsManager
 
 
+@runtime_checkable
 class BotManager(Protocol):
+    def init(
+        self,
+        config: Dict,
+        logger: Logger,
+        metrics_manager: MetricsManager,
+        notifications_manager: NotificationsManager,
+    ):
+        ...
+
     def load_all(self, strategy_config: StrategyConfig) -> List[BotStatus]:
         """
         Loads all bot statuses pertaining to a Strategy from persistence

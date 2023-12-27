@@ -27,7 +27,10 @@ else:
 
 
 class FakeExchangeManager(ExchangeManager):
-    def __init__(self, config: Dict, logger: Logger):
+    _cctx: CctxExchangeManager
+    _logger: Logger
+
+    def init(self, config: Dict, logger: Logger):
         self._cctx = CctxExchangeManager(config, logger)
         self._logger = logger
 

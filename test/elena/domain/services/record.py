@@ -200,16 +200,11 @@ class Record:
                     continue
                 else:
                     match = False
-                    errors.append(
-                        f"recorded kwarg '{recorded_kwarg_name}' with value '{recorded_kwarg_value}' "
-                        f"does not match '{kwargs}'\n"
-                    )
+                    errors.append(f"recorded kwarg '{recorded_kwarg_name}' with value '{recorded_kwarg_value}' " f"does not match '{kwargs}'\n")
                     break
             if match:
                 return record["output"]
-        raise RuntimeError(
-            f"Cannot find recorded output for function '{function_name}' " f"with kwargs {kwargs}: \n{errors}"
-        )
+        raise RuntimeError(f"Cannot find recorded output for function '{function_name}' " f"with kwargs {kwargs}: \n{errors}")
 
     @staticmethod
     def _record_matches_kwargs(recorded_kwarg_name, recorded_kwarg_value, kwargs) -> bool:

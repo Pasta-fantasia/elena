@@ -18,13 +18,15 @@ There are tree configuration files:
 ### config.yaml
 
 An optional configuration file (default values are used if not present). 
-Used to override the default configuration for adaptors (logs, paths to bots files and CCTX).
+Used to override the default configuration for adaptors.
 
-- Be aware that if you override any adaptor configuration (i.e. LocalLogger), you need to define all values, not only the one you want to change.
-- You can define your own Logger or MetricsManager by defining its class in the configuration file:
+- Be aware that if you override any adaptor configuration (i.e. Logger), you need to define all values, not only the one you want to change.
+- You need to define your own Logger or MetricsManager by defining its class in the configuration file:
   - The logger class must implement the [Logger](./elena/domain/ports/logger.py) interface.
   - The metrics manager class must implement the [MetricsManager](./elena/domain/ports/metrics_manager.py) interface.
   - The notifications manager class must implement the [NotificationsManager](./elena/domain/ports/notifications_manager.py) interface.
+  - The bot manager class must implement the [BotManager](./elena/domain/ports/bot_manager.py) interface.
+  - The exchange manager class must implement the [ExchangeManager](./elena/domain/ports/exchange_manager.py) interface.
 
 A typical `config.yaml` file content, showing the default values:
 
@@ -39,12 +41,16 @@ MetricsManager:
   class: elena.adapters.metrics_manager.local_metrics_manager.LocalMetricsManager
 NotificationsManager:
   class: elena.adapters.notifications_manager.local_notifications_manager.LocalNotificationsManager
-LocalBotManager:
+BotManager:
+  class: "elena.adapters.bot_manager.local_bot_manager.LocalBotManager"
   path: bots # relative path under home directory
-CctxExchangeManager:
+ExchangeManager:
+  class: "elena.adapters.exchange_manager.cctx_exchange_manager.CctxExchangeManager"
   fetch_ohlcv_limit: 100
   fetch_ohlcv_limit_retry_every_milliseconds: 1000
 ```
+
+**NOTE:** If any configuration has passwords or API keys, is strongly recommended to use the `secrets.yaml` file instead.
 
 
 ### strategies.yaml

@@ -48,6 +48,7 @@ class GenericBot(Bot):
         bot_config: BotConfig,
         bot_status: BotStatus,
     ):
+        self.bot_config = bot_config
         self.id = bot_config.id
         self.name = bot_config.name
         self.pair = bot_config.pair
@@ -148,11 +149,7 @@ class GenericBot(Bot):
                 if updated_order.status == OrderStatusType.closed or updated_order.status == OrderStatusType.canceled:
                     # notify
                     if updated_order.status == OrderStatusType.closed:
-                        self._logger.info(
-                            f"Notify! Order {updated_order.id} "
-                            f"was closed for {updated_order.amount} {updated_order.pair} "
-                            f"at {updated_order.average}"
-                        )
+                        self._logger.info(f"Notify! Order {updated_order.id} " f"was closed for {updated_order.amount} {updated_order.pair} " f"at {updated_order.average}")
                     if updated_order.status == OrderStatusType.canceled:
                         self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
                         # TODO: [Fran] what should we do if an order is cancelled?
@@ -164,11 +161,7 @@ class GenericBot(Bot):
 
                 elif updated_order.status == OrderStatusType.open and updated_order.filled > 0:  # type: ignore
 
-                    self._logger.info(
-                        f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: "
-                        f"{updated_order.filled} of {updated_order.amount} {updated_order.pair} at"
-                        f" {updated_order.average}"
-                    )
+                    self._logger.info(f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: " f"{updated_order.filled} of {updated_order.amount} {updated_order.pair} at" f" {updated_order.average}")
 
                     # PARTIALLY_FILLED is considered an active order, It's on the strategy to do something.
                     updated_orders.append(updated_order)
@@ -266,8 +259,8 @@ class GenericBot(Bot):
                 bot_config=self.bot_config,
                 order_id=order_id,
             )
-            self._metrics_manager.counter(Metric.ORDER_CANCELLED, value=1, order=order)
-            self._notifications_manager.medium(f"Order {order_id} was cancelled", order=order)
+            self._metrics_manager.counter(Metric.ORDER_CANCELLED, self.bot_config)
+            self._notifications_manager.medium(f"Order {order_id} was cancelled")
             self.archive_order(order)
             return order
         except Exception as err:

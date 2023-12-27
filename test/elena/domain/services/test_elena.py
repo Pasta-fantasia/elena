@@ -1,10 +1,6 @@
 import pathlib
 from os import path
-from test.elena.domain.services.fake_exchange_manager import \
-    FakeExchangeManager
 
-from elena.adapters.bot_manager.local_bot_manager import LocalBotManager
-from elena.adapters.config.local_config_reader import LocalConfigReader
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.ports.exchange_manager import ExchangeManager
@@ -12,9 +8,8 @@ from elena.domain.ports.logger import Logger
 from elena.domain.ports.metrics_manager import MetricsManager
 from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
-from elena.domain.services.elena import Elena
+from elena.domain.services.elena import get_elena_instance
 from elena.domain.services.generic_bot import GenericBot
-from elena.shared.dynamic_loading import get_instance
 
 
 class ExchangeBasicOperationsBot(GenericBot):
@@ -164,28 +159,8 @@ class ExchangeBasicOperationsBot(GenericBot):
 
 
 def test_elena():
-    test_home_dir = path.join(pathlib.Path(__file__).parent, "test_home")
-    config = LocalConfigReader(test_home_dir).config
-
-    logger = get_instance(config["Logger"]["class"])
-    logger.init(config)
-
-    metrics_manager = get_instance(config["MetricsManager"]["class"])
-    metrics_manager.init(config, logger)
-
-    notifications_manager = get_instance(config["NotificationsManager"]["class"])
-    notifications_manager.init(config, logger)
-
-    bot_manager = LocalBotManager(config, logger, metrics_manager, notifications_manager)
-    exchange_manager = FakeExchangeManager(config, logger)
-
-    sut = Elena(
-        config=config,
-        logger=logger,
-        metrics_manager=metrics_manager,
-        notifications_manager=notifications_manager,
-        bot_manager=bot_manager,
-        exchange_manager=exchange_manager,
+    sut = get_elena_instance(
+        config_manager_class_path="elena.adapters.config.local_config_manager.LocalConfigManager",
+        config_manager_url=path.join(pathlib.Path(__file__).parent, "test_home"),
     )
-
     sut.run()
