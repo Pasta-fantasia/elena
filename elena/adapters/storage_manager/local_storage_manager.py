@@ -27,7 +27,7 @@ class LocalStorageManager(StorageManager):
             with open(filename, "rb") as f:
                 status = pickle.load(f)
         except FileNotFoundError as err:
-            raise StorageError(f"Bot status {bot_id} not found") from err
+            raise StorageError(f"Error lading bot status {bot_id}: {err}") from err
         self._logger.debug("Loaded bot status %s with %d orders", bot_id, len(status.active_orders))
         return status
 
@@ -41,7 +41,7 @@ class LocalStorageManager(StorageManager):
             with open(filename, "wb") as f:
                 pickle.dump(status, f, pickle.HIGHEST_PROTOCOL)
         except Exception as err:
-            raise StorageError(f"Error saving bot status {status.bot_id}") from err
+            raise StorageError(f"Error saving bot status {status.bot_id}: {err}") from err
         self._logger.debug(
             "Saved bot status %s with %d orders",
             status.bot_id,

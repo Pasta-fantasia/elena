@@ -6,7 +6,7 @@ from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.metrics_manager import MetricsManager
 from elena.domain.ports.notifications_manager import NotificationsManager
-from elena.domain.ports.storage_manager import StorageManager
+from elena.domain.ports.storage_manager import StorageError, StorageManager
 
 
 class LocalBotManager(BotManager):
@@ -31,11 +31,19 @@ class LocalBotManager(BotManager):
     def load_all(self, strategy_config: StrategyConfig) -> List[BotStatus]:
         statuses = []
         for bot in strategy_config.bots:
-            status = self._storage_manager.load_bot_status(bot.id)
+            try:
+                status = self._storage_manager.load_bot_status(bot.id)
+            except StorageError as err:
+                self._logger.warning(f"Failed to load bot status for bot {bot.id}: {err}")
+                continue
             if status:
                 statuses.append(status)
         return statuses
 
     def save_all(self, statuses: List[BotStatus]):
         for status in statuses:
-            self._storage_manager.save_bot_status(status)
+            try:
+                self._storage_manager.save_bot_status(status)
+            except StorageError as err:
+                self._logger.warning(f"Failed to save bot status for bot {status.bot_id}: {err}")
+                continue
