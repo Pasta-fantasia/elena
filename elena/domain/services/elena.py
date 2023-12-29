@@ -83,13 +83,13 @@ def get_elena_instance(config_manager_class_path: str = "elena.adapters.config.l
     if not issubclass(metrics_manager_class, MetricsManager):
         raise ValueError(f'{config["MetricsManager"]["class"]} must implement MetricsManager')
     metrics_manager = metrics_manager_class()
-    metrics_manager.init(config, logger)
+    metrics_manager.init(config, logger, storage_manager)
 
     notifications_manager_class = get_class(config["NotificationsManager"]["class"])
     if not issubclass(notifications_manager_class, NotificationsManager):
         raise ValueError(f'{config["NotificationsManager"]["class"]} must implement NotificationsManager')
     notifications_manager = notifications_manager_class()
-    notifications_manager.init(config, logger)
+    notifications_manager.init(config, logger, storage_manager)
 
     bot_manager_class = get_class(config["BotManager"]["class"])
     if not issubclass(bot_manager_class, BotManager):
@@ -107,7 +107,11 @@ def get_elena_instance(config_manager_class_path: str = "elena.adapters.config.l
     if not issubclass(exchange_manager_class, ExchangeManager):
         raise ValueError(f'{config["ExchangeManager"]["class"]} must implement ExchangeManager')
     exchange_manager = exchange_manager_class()
-    exchange_manager.init(config=config, logger=logger)
+    exchange_manager.init(
+        config=config,
+        logger=logger,
+        storage_manager=storage_manager,
+    )
 
     return Elena(
         config=config,
