@@ -2,14 +2,14 @@ import os
 from datetime import datetime
 from typing import Dict
 
-from elena.domain.ports.config_manager import ConfigManager
-
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot_manager import BotManager
+from elena.domain.ports.config_manager import ConfigManager
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.metrics_manager import MetricsManager
 from elena.domain.ports.notifications_manager import NotificationsManager
+from elena.domain.ports.storage_manager import StorageManager
 from elena.domain.services.config_loader import ConfigLoader
 from elena.domain.services.strategy_manager import StrategyManagerImpl
 from elena.shared.dynamic_loading import get_class
@@ -53,7 +53,7 @@ class Elena:
         )
         previous_statuses = self._bot_manager.load_all(strategy_config)
         new_statuses = strategy_manager.run(previous_statuses)
-        self._bot_manager.write_all(new_statuses)
+        self._bot_manager.save_all(new_statuses)
 
 
 def get_elena_instance(config_manager_class_path: str = "elena.adapters.config.local_config_manager.LocalConfigManager", config_manager_url: str = "") -> Elena:
@@ -72,6 +72,12 @@ def get_elena_instance(config_manager_class_path: str = "elena.adapters.config.l
         raise ValueError(f'{config["Logger"]["class"]} must implement Logger')
     logger = logger_class()
     logger.init(config)
+
+    storage_manager_class = get_class(config["StorageManager"]["class"])
+    if not issubclass(storage_manager_class, StorageManager):
+        raise ValueError(f'{config["StorageManager"]["class"]} must implement StorageManager')
+    storage_manager = storage_manager_class()
+    storage_manager.init(config, logger)
 
     metrics_manager_class = get_class(config["MetricsManager"]["class"])
     if not issubclass(metrics_manager_class, MetricsManager):
@@ -94,6 +100,7 @@ def get_elena_instance(config_manager_class_path: str = "elena.adapters.config.l
         logger=logger,
         metrics_manager=metrics_manager,
         notifications_manager=notifications_manager,
+        storage_manager=storage_manager,
     )
 
     exchange_manager_class = get_class(config["ExchangeManager"]["class"])
