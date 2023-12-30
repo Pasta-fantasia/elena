@@ -5,6 +5,7 @@ import pandas as pd
 
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.ports.logger import Logger
+from elena.domain.ports.storage_manager import StorageManager
 
 
 class Metric(str, Enum):
@@ -13,7 +14,7 @@ class Metric(str, Enum):
 
 @runtime_checkable
 class MetricsManager(Protocol):
-    def init(self, config: dict, logger: Logger):
+    def init(self, config: dict, logger: Logger, storage_manager: StorageManager):
         ...
 
     def counter(self, metric: Metric, bot_config: BotConfig, value: int = 1):

@@ -5,9 +5,11 @@ Logger:
   max_bytes: 1000000 # 1 MB max log files size
   backup_count: 5  # Number of log backup files
 BotManager:
-  class: "elena.adapters.bot_manager.local_bot_manager.LocalBotManager"
-  path: bots # relative path under home directory
+  class: elena.adapters.bot_manager.local_bot_manager.LocalBotManager
 ExchangeManager:
-  class: "elena.adapters.exchange_manager.cctx_exchange_manager.CctxExchangeManager"
+  class: elena.adapters.exchange_manager.cctx_exchange_manager.CctxExchangeManager
   fetch_ohlcv_limit: 100
   fetch_ohlcv_limit_retry_every_milliseconds: 1000
+StorageManager:
+  class: elena.adapters.storage_manager.local_storage_manager.LocalStorageManager
+  path: storage # relative path under home directory

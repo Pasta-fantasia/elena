@@ -10,11 +10,12 @@ from elena.domain.model.order_book import OrderBook
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.logger import Logger
+from elena.domain.ports.storage_manager import StorageManager
 
 
 @runtime_checkable
 class ExchangeManager(Protocol):
-    def init(self, config: Dict, logger: Logger):
+    def init(self, config: Dict, logger: Logger, storage_manager: StorageManager):
         ...
 
     def read_candles(
