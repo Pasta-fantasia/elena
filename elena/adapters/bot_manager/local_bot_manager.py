@@ -45,5 +45,5 @@ class LocalBotManager(BotManager):
             try:
                 self._storage_manager.save_bot_status(status)
             except StorageError as err:
-                self._logger.warning(f"Failed to save bot status for bot {status.bot_id}: {err}")
+                self._logger.error(f"Failed to save bot status for bot {status.bot_id}: {err}")
                 continue

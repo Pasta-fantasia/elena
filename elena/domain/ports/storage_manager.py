@@ -17,6 +17,6 @@ class StorageManager(Protocol):
         """Load bot status from storage, raise StorageError on failure"""
         ...
 
-    def save_bot_status(self, status: BotStatus):
+    def save_bot_status(self, bot_status: BotStatus):
         """Save bot status to storage, raise StorageError on failure"""
         ...

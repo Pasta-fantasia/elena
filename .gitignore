@@ -142,6 +142,6 @@ dmypy.json
 /.github/
 
 /TODO.md
-/test/elena/domain/services/test_home/secrets.yaml
-/test/elena/domain/services/test_home/storage/
-/test/elena/domain/services/test_home/logs/
+/test/test_home/secrets.yaml
+/test/test_home/storage/
+/test/test_home/logs/
