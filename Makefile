@@ -2,8 +2,8 @@
 VENV=.venv
 PYTHON=$(VENV)/bin/python3
 BIN=$(VENV)/bin/
-SECRETS_SAMPLE=test/elena/domain/services/test_home/secrets-sample.yaml
-SECRETS=test/elena/domain/services/test_home/secrets.yaml
+SECRETS_SAMPLE=test/test_home/secrets-sample.yaml
+SECRETS=test/test_home/secrets.yaml
 
 all: $(BIN)activate
 
@@ -14,7 +14,7 @@ $(BIN)activate: requirements.txt setup.py setup.cfg
 
 # a secrets.yaml is needed to run the test
 $(SECRETS):
-	cp $(SECRETS_SAMPLE) $(SECRETS)
+	cp -n $(SECRETS_SAMPLE) $(SECRETS)
 
 $(BIN)pytest: $(BIN)activate requirements_test.txt
 	$(BIN)pip install -r requirements_test.txt

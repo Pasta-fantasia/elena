@@ -40,6 +40,14 @@ class LocalStorageManager(StorageManager):
         """Save bot status to storage, raise StorageError on failure"""
         self._save(bot_status.bot_id, bot_status)
 
+    def load_data_frame(self, df_id: str) -> pd.DataFrame:
+        """Load Pandas DataFrame from storage, raise StorageError on failure"""
+        return self._load(df_id, "DataFrame")  # type: ignore
+
+    def save_data_frame(self, df_id: str, df: pd.DataFrame):
+        """Save Pandas DataFrame to storage, raise StorageError on failure"""
+        self._save(df_id, df)
+
     def _load(self, data_id: str, class_name: str) -> Optional[Any]:
         filepath = self._get_filepath(data_id, class_name)
         self._logger.debug("Loading %s %s from disk: %s", class_name, data_id, filepath)
