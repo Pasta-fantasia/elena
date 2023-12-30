@@ -4,28 +4,20 @@ from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot_manager import BotManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.metrics_manager import MetricsManager
-from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.storage_manager import StorageError, StorageManager
 
 
 class LocalBotManager(BotManager):
     _logger: Logger
-    _metrics_manager: MetricsManager
-    _notifications_manager: NotificationsManager
     _storage_manager: StorageManager
 
     def init(
         self,
         config: Dict,
         logger: Logger,
-        metrics_manager: MetricsManager,
-        notifications_manager: NotificationsManager,
         storage_manager: StorageManager,
     ):
         self._logger = logger
-        self._metrics_manager = metrics_manager
-        self._notifications_manager = notifications_manager
         self._storage_manager = storage_manager
 
     def load_all(self, strategy_config: StrategyConfig) -> List[BotStatus]:

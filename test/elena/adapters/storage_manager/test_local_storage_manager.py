@@ -4,11 +4,10 @@ from os import path
 from mockito import mock
 from pandas import DataFrame
 
-from elena.adapters.storage_manager.local_storage_manager import \
-    LocalStorageManager
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.order import Order, OrderSide, OrderType
 from elena.domain.model.trading_pair import TradingPair
+from elena.domain.services.elena import get_storage_manager
 
 
 def test_save_and_load_bot_status():
@@ -67,11 +66,13 @@ def test_save_and_load_bot_status():
         closed_trades=[],
     )
 
-    sut = LocalStorageManager()
-    sut.init(
+    sut = get_storage_manager(
         config={
             "home": path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
-            "StorageManager": {"path": "storage"},
+            "StorageManager": {
+                "class": "elena.adapters.storage_manager.local_storage_manager.LocalStorageManager",
+                "path": "storage",
+            },
         },
         logger=mock(),
     )
@@ -122,11 +123,13 @@ def test_save_and_load_data_frame():
     }
     df = DataFrame.from_dict(df_dict)
 
-    sut = LocalStorageManager()
-    sut.init(
+    sut = get_storage_manager(
         config={
             "home": path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
-            "StorageManager": {"path": "storage"},
+            "StorageManager": {
+                "class": "elena.adapters.storage_manager.local_storage_manager.LocalStorageManager",
+                "path": "storage",
+            },
         },
         logger=mock(),
     )
