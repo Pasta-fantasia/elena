@@ -40,6 +40,7 @@ class LocalConfigManager(ConfigManager):
             "NotificationsManager",
             "BotManager",
             "ExchangeManager",
+            "StorageManager",
             "Exchanges",
             "Strategies",
             "Tags",

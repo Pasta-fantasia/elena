@@ -17,6 +17,7 @@ from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
+from elena.domain.ports.storage_manager import StorageManager
 
 recording = True
 excluded_kwargs = ["exchange"]
@@ -30,8 +31,9 @@ class FakeExchangeManager(ExchangeManager):
     _cctx: CctxExchangeManager
     _logger: Logger
 
-    def init(self, config: Dict, logger: Logger):
-        self._cctx = CctxExchangeManager(config, logger)
+    def init(self, config: Dict, logger: Logger, storage_manager: StorageManager):
+        self._cctx = CctxExchangeManager()
+        self._cctx.init(config, logger, storage_manager)
         self._logger = logger
 
     @Record(enabled=recording, excluded_kwargs=excluded_kwargs)

@@ -27,6 +27,7 @@ Used to override the default configuration for adaptors.
   - The notifications manager class must implement the [NotificationsManager](./elena/domain/ports/notifications_manager.py) interface.
   - The bot manager class must implement the [BotManager](./elena/domain/ports/bot_manager.py) interface.
   - The exchange manager class must implement the [ExchangeManager](./elena/domain/ports/exchange_manager.py) interface.
+  - The storage manager class must implement the [StorageManager](./elena/domain/ports/storage_manager.py) interface.
 
 A typical `config.yaml` file content, showing the default values:
 
@@ -43,11 +44,13 @@ NotificationsManager:
   class: elena.adapters.notifications_manager.local_notifications_manager.LocalNotificationsManager
 BotManager:
   class: "elena.adapters.bot_manager.local_bot_manager.LocalBotManager"
-  path: bots # relative path under home directory
 ExchangeManager:
   class: "elena.adapters.exchange_manager.cctx_exchange_manager.CctxExchangeManager"
   fetch_ohlcv_limit: 100
   fetch_ohlcv_limit_retry_every_milliseconds: 1000
+StorageManager:
+  class: "elena.adapters.storage_manager.local_storage_manager.LocalStorageManager"
+  path: storage # relative path under home directory
 ```
 
 **NOTE:** If any configuration has passwords or API keys, is strongly recommended to use the `secrets.yaml` file instead.
