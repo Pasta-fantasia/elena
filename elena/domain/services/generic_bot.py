@@ -69,7 +69,7 @@ class GenericBot(Bot):
         self.exchange_manager = exchange_manager
         self._update_orders_status()
 
-    def new_trade(self, order: Order):
+    def new_trade_by_order(self, order: Order):
         # All Trades start/"born" here...
         new_trade = Trade(
             exchange_id=self.exchange.id,
@@ -79,6 +79,7 @@ class GenericBot(Bot):
             size=order.amount,
             entry_order_id=order.id,
             entry_price=order.average,
+            entry_time=order.timestamp,
             exit_order_id=0,
             exit_price=0,
         )
@@ -100,6 +101,8 @@ class GenericBot(Bot):
 
     def new_order(self, order: Order):
         # TODO: order_add + trade_stop (going long) | trade_start (going short)
+        if order is None:
+            raise "Order can't be None"
 
         if order.status == OrderStatusType.closed:
             self.status.archived_orders.append(order)
@@ -107,7 +110,19 @@ class GenericBot(Bot):
             self.status.active_orders.append(order)
 
         if order.side == OrderSide.buy:
-            self.new_trade(order)
+            self.new_trade_by_order(order)
+
+        if order.side == OrderSide.sell:
+            if order.stop_price and order.stop_price > 0:
+                # stop loss
+                pass
+            else:
+                if order.status == OrderStatusType.closed:
+                    # executed sale, check trades
+                    # identify trades but not necessary close them... we can sell with no exec
+                    # if we cancel an order should we remove exit_order?
+                    pass
+
 
     def archive_order_close_trades(self, order: Order):
         for trade in self.status.active_trades:

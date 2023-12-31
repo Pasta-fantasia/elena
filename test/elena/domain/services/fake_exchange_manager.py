@@ -19,7 +19,7 @@ from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.storage_manager import StorageManager
 
-recording = False
+recording = True
 excluded_kwargs = ["exchange"]
 if recording:
     recorded_data = {}
