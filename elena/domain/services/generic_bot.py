@@ -101,6 +101,8 @@ class GenericBot(Bot):
 
     def new_order(self, order: Order):
         # TODO: order_add + trade_stop (going long) | trade_start (going short)
+        if order is None:
+            raise "Order can't be None"
 
         if order.status == OrderStatusType.closed:
             self.status.archived_orders.append(order)
@@ -111,13 +113,13 @@ class GenericBot(Bot):
             self.new_trade_by_order(order)
 
         if order.side == OrderSide.sell:
-            if order.stop_price > 0:
+            if order.stop_price and order.stop_price > 0:
                 # stop loss
                 pass
             else:
                 if order.status == OrderStatusType.closed:
                     # executed sale, check trades
-                    # identify trades but not ne    cessary close them... we can sell with no exec
+                    # identify trades but not necessary close them... we can sell with no exec
                     # if we cancel an order should we remove exit_order?
                     pass
 
