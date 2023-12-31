@@ -40,6 +40,10 @@ class LocalStorageManager(StorageManager):
         """Save bot status to storage, raise StorageError on failure"""
         self._save(bot_status.bot_id, bot_status)
 
+    def delete_bot_status(self, bot_id: str):
+        """Delete bot status from storage, raise StorageError on failure"""
+        self._delete(bot_id, "BotStatus")
+
     def load_data_frame(self, df_id: str) -> pd.DataFrame:
         """Load Pandas DataFrame from storage, raise StorageError on failure"""
         return self._load(df_id, "DataFrame")  # type: ignore
@@ -47,6 +51,9 @@ class LocalStorageManager(StorageManager):
     def save_data_frame(self, df_id: str, df: pd.DataFrame):
         """Save Pandas DataFrame to storage, raise StorageError on failure"""
         self._save(df_id, df)
+    def delete_data_frame(self, df_id: str):
+        """Delete Pandas DataFrame from storage, raise StorageError on failure"""
+        self._delete(df_id, "DataFrame")
 
     def _load(self, data_id: str, class_name: str) -> Optional[Any]:
         filepath = self._get_filepath(data_id, class_name)
@@ -100,3 +107,12 @@ class LocalStorageManager(StorageManager):
         dir_path = path.join(self._path, class_name)
         Path(dir_path).mkdir(parents=True, exist_ok=True)
         return path.join(dir_path, f"{data_id}.json")
+
+    def _delete(self, data_id: str, class_name: str):
+        """Delete bot status from storage, raise StorageError on failure"""
+        filepath = self._get_filepath(data_id, class_name)
+        self._logger.debug("Deleting %s %s from disk: %s", class_name, data_id, filepath)
+        try:
+            Path(filepath).unlink()
+        except Exception as err:
+            raise StorageError(f"Error deleting BotStatus {class_name} {data_id}: {err}") from err
