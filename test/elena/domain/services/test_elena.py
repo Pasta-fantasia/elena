@@ -161,6 +161,6 @@ class ExchangeBasicOperationsBot(GenericBot):
 def test_elena():
     sut = get_elena_instance(
         config_manager_class_path="elena.adapters.config.local_config_manager.LocalConfigManager",
-        config_manager_url=path.join(pathlib.Path(__file__).parent, "test_home"),
+        config_manager_url=path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
     )
     sut.run()
