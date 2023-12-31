@@ -37,7 +37,7 @@ class LocalStorageManager(StorageManager):
         return self._load(bot_id, "BotStatus")  # type: ignore
 
     def save_bot_status(self, bot_status: BotStatus):
-        """Save bot status to storage, raise StorageError on failure"""
+        """Inserts or updates bot status to storage, raise StorageError on failure"""
         self._save(bot_status.bot_id, bot_status)
 
     def delete_bot_status(self, bot_id: str):
@@ -50,7 +50,22 @@ class LocalStorageManager(StorageManager):
 
     def save_data_frame(self, df_id: str, df: pd.DataFrame):
         """Save Pandas DataFrame to storage, raise StorageError on failure"""
-        self._save(df_id, df)
+        try:
+            existing_pd = self._load(df_id, "DataFrame")  # type: ignore
+        except StorageError:
+            existing_pd = pd.DataFrame()
+
+        if existing_pd.empty:  # type: ignore
+            self._save(df_id, df)
+        else:
+            try:
+                # Try to merge the existing DataFrame with the new one
+                merged_pd = pd.merge(existing_pd, df, how="outer")
+                self._save(df_id, merged_pd)
+            except pd.errors.MergeError:
+                # If the merge fails, just save the new DataFrame
+                self._save(df_id, df)
+
     def delete_data_frame(self, df_id: str):
         """Delete Pandas DataFrame from storage, raise StorageError on failure"""
         self._delete(df_id, "DataFrame")

@@ -20,7 +20,7 @@ class StorageManager(Protocol):
         ...
 
     def save_bot_status(self, bot_status: BotStatus):
-        """Save bot status to storage, raise StorageError on failure"""
+        """Insert or update bot status into storage, raise StorageError on failure"""
         ...
 
     def delete_bot_status(self, bot_id: str):
@@ -32,7 +32,11 @@ class StorageManager(Protocol):
         ...
 
     def save_data_frame(self, df_id: str, df: pd.DataFrame):
-        """Save Pandas DataFrame to storage, raise StorageError on failure"""
+        """
+        Insert or update Pandas DataFrame into storage, raise StorageError on failure
+        To update a DataFrame, both DataFrame have to be indexed by the same column(s)
+        and also have the same columns, and then the new values will be merged with the old ones
+        """
         ...
 
     def delete_data_frame(self, df_id: str):
