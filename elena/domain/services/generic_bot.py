@@ -135,7 +135,7 @@ class GenericBot(Bot):
         if amount_to_close > 0:
             self._logger.error("The order size is bigger than any trade")
 
-    def new_order(self, order: Order):
+    def _register_new_order_on_trades(self, order: Order):
         if order is None:
             raise "Order can't be None"
 
@@ -163,7 +163,7 @@ class GenericBot(Bot):
         else:
             raise "Order condition unhandled (OrderSide)"
 
-    def archive_order_close_trades(self, order: Order):
+    def _archive_order_close_trades_on_update_orders(self, order: Order):
         for trade in self.status.active_trades:
             if trade.exit_order_id == order.id:
                 self.status.active_trades.remove(trade)
@@ -173,7 +173,7 @@ class GenericBot(Bot):
         # move to archived
         self.status.archived_orders.append(order)
 
-    def archive_order(self, order: Order):
+    def _archive_order_on_cancel(self, order: Order):
         for loop_order in self.status.active_orders:
             if loop_order.id == order.id:
                 self.status.active_orders.remove(loop_order)
@@ -198,7 +198,7 @@ class GenericBot(Bot):
                         #  wrong in L or the market is stopped.
 
                     # updates trades
-                    self.archive_order_close_trades(updated_order)
+                    self._archive_order_close_trades_on_update_orders(updated_order)
 
                 elif updated_order.status == OrderStatusType.open and updated_order.filled > 0:  # type: ignore
 
@@ -304,7 +304,7 @@ class GenericBot(Bot):
             )
             self._metrics_manager.counter(Metric.ORDER_CANCELLED, self.bot_config)
             self._notifications_manager.medium(f"Order {order_id} was cancelled")
-            self.archive_order(order)
+            self._archive_order_on_cancel(order)
             return order
         except Exception as err:
             print(f"Error cancelling order: {err}")
@@ -342,7 +342,7 @@ class GenericBot(Bot):
             )
             self._logger.info("Placed market stop loss: %s", order)
 
-            self.new_order(order)
+            self._register_new_order_on_trades(order)
             return order
         except Exception as err:
             print(f"Error creating stop loss: {err}")
@@ -371,7 +371,7 @@ class GenericBot(Bot):
             )
             self._logger.info("Placed market buy: %s", order)
 
-            self.new_order(order)
+            self._register_new_order_on_trades(order)
             return order
         except Exception as err:
             print(f"Error creating market buy order: {err}")
@@ -393,7 +393,7 @@ class GenericBot(Bot):
             )
             self._logger.info("Placed market sell: %s", order)
 
-            self.new_order(order)
+            self._register_new_order_on_trades(order)
             return order
         except Exception as err:
             print(f"Error creating market sell order: {err}")
