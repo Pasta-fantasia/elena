@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Optional
 
 import pandas as pd
@@ -69,6 +70,8 @@ class GenericBot(Bot):
         self.exchange_manager = exchange_manager
         self._update_orders_status()
 
+    #  ---- StatusManager
+
     def new_trade_by_order(self, order: Order):
         # All Trades start/"born" here...
         new_trade = Trade(
@@ -99,30 +102,66 @@ class GenericBot(Bot):
         )
         self.status.active_trades.append(new_trade)
 
+    def _close_individual_trade_on_new_order(self, trade: Trade, order: Order, amount_to_close: float) -> float:
+        if trade.size <= amount_to_close:
+            self.status.active_trades.remove(trade)
+            trade.exit_time = order.timestamp
+            trade.exit_price = order.average
+            self.status.closed_trades.append(trade)
+        else:
+            self._logger.error(f"Amount to close is insufficient for id:{trade.id} size: {trade.size}")
+        return amount_to_close - trade.size
+
+    def close_trades_on_new_order(self, order: Order):
+        amount_to_close = order.amount
+        # check trades with an exit order id
+        for trade in self.status.active_trades:
+            if trade.exit_order_id == order.id and amount_to_close > 0:
+                amount_to_close = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
+
+        # check trades without an exit order id
+        if amount_to_close > 0:
+            for trade in self.status.active_trades:
+                if trade.exit_order_id == 0 and amount_to_close > 0:
+                    amount_to_close = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
+
+        # close trade even with a different order_id
+        if amount_to_close > 0:
+            self._logger.warning("The order size is bigger than the trades with an explicit order_id or a blank order_id")
+            for trade in self.status.active_trades:
+                if amount_to_close > 0:
+                    amount_to_close = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
+
+        if amount_to_close > 0:
+            self._logger.error("The order size is bigger than any trade")
+
     def new_order(self, order: Order):
-        # TODO: order_add + trade_stop (going long) | trade_start (going short)
         if order is None:
             raise "Order can't be None"
 
-        if order.status == OrderStatusType.closed:
-            self.status.archived_orders.append(order)
-        else:
-            self.status.active_orders.append(order)
+        # TODO OrderStatusType.canceled or rejected
+        if order.status == OrderStatusType.canceled or order.status == OrderStatusType.rejected:
+            raise "Order condition unhandled (canceled or rejected)"
 
         if order.side == OrderSide.buy:
             self.new_trade_by_order(order)
+            # TODO: budget.lock
+            if order.status == OrderStatusType.closed:
+                self.status.archived_orders.append(order)
+            else:  # open & partials are active, budget is lock equally.
+                self.status.active_orders.append(order)
 
-        if order.side == OrderSide.sell:
-            if order.stop_price and order.stop_price > 0:
-                # stop loss
-                pass
+        elif order.side == OrderSide.sell:
+            if order.status == OrderStatusType.closed:
+                # TODO: budget.unlock
+                self.close_trades_on_new_order(order)
+                self.status.archived_orders.append(order)
             else:
-                if order.status == OrderStatusType.closed:
-                    # executed sale, check trades
-                    # identify trades but not necessary close them... we can sell with no exec
-                    # if we cancel an order should we remove exit_order?
-                    pass
-
+                # stop loss => if order.stop_price and order.stop_price > 0:
+                # TODO: budget.unlock (partial) ???
+                self.status.active_orders.append(order)
+        else:
+            raise "Order condition unhandled (OrderSide)"
 
     def archive_order_close_trades(self, order: Order):
         for trade in self.status.active_trades:
@@ -174,6 +213,8 @@ class GenericBot(Bot):
 
         self.status.active_orders = updated_orders
         return self.status
+
+    #  ---- Main
 
     def next(self) -> Optional[BotStatus]:
         ...

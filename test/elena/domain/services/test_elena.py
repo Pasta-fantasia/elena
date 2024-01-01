@@ -154,7 +154,6 @@ class ExchangeBasicOperationsBot(GenericBot):
         # or the sum of all amounts...
         # partially close trades?
 
-
         return self.status
 
 
