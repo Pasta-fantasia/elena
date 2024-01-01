@@ -112,7 +112,7 @@ class GenericBot(Bot):
             self._logger.error(f"Amount to close is insufficient for id:{trade.id} size: {trade.size}")
         return amount_to_close - trade.size
 
-    def close_trades_on_new_order(self, order: Order):
+    def _close_trades_on_new_order(self, order: Order):
         amount_to_close = order.amount
         # check trades with an exit order id
         for trade in self.status.active_trades:
@@ -154,7 +154,7 @@ class GenericBot(Bot):
         elif order.side == OrderSide.sell:
             if order.status == OrderStatusType.closed:
                 # TODO: budget.unlock
-                self.close_trades_on_new_order(order)
+                self._close_trades_on_new_order(order)
                 self.status.archived_orders.append(order)
             else:
                 # stop loss => if order.stop_price and order.stop_price > 0:
