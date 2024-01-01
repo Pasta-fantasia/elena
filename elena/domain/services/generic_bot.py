@@ -109,7 +109,7 @@ class GenericBot(Bot):
             trade.exit_price = order.average
             self.status.closed_trades.append(trade)
         else:
-            self._logger.error(f"Amount to close is insufficient for id:{trade.id} size: {trade.size}")
+            self._logger.error(f"Amount to close is insufficient for trade id:{trade.id} size: {trade.size} on order {order.id} size: {order.amount} with pending to close {amount_to_close}")
         return amount_to_close - trade.size
 
     def _close_trades_on_new_order(self, order: Order):
