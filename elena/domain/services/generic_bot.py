@@ -72,7 +72,7 @@ class GenericBot(Bot):
 
     #  ---- StatusManager
 
-    def new_trade_by_order(self, order: Order):
+    def _new_trade_by_order(self, order: Order):
         # All Trades start/"born" here...
         new_trade = Trade(
             exchange_id=self.exchange.id,
@@ -144,7 +144,7 @@ class GenericBot(Bot):
             raise "Order condition unhandled (canceled or rejected)"
 
         if order.side == OrderSide.buy:
-            self.new_trade_by_order(order)
+            self._new_trade_by_order(order)
             # TODO: budget.lock
             if order.status == OrderStatusType.closed:
                 self.status.archived_orders.append(order)
