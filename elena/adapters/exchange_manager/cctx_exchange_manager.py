@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import ccxt
@@ -14,7 +15,7 @@ from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.storage_manager import StorageManager
+from elena.domain.ports.storage_manager import StorageError, StorageManager
 
 _CONNECT_MAPPER = {
     ExchangeType.ace: ccxt.ace,
@@ -176,10 +177,51 @@ class CctxExchangeManager(ExchangeManager):
             exchange.id,
             pair,
         )
+        candles_dataframe_id = self._get_candles_dataframe_id(exchange, pair, time_frame)
+        try:
+            stored_candles = self._storage_manager.load_data_frame(candles_dataframe_id)
+            stored_candles.set_index("Open time")
+        except StorageError:
+            stored_candles = pd.DataFrame()
+
+        if not stored_candles.empty and self._are_stored_candles_up_to_date(stored_candles, time_frame, datetime.now()):
+            # If the stored candles are up-to-date, return them
+            return stored_candles
+
         conn = self._connect(exchange)
         candles = self._fetch_candles(conn, pair, time_frame)
+        self._storage_manager.save_data_frame(candles_dataframe_id, candles)
         self._logger.info("Read %d %s candles from %s", candles.shape[0], pair, exchange.id.value)
         return candles
+
+    @staticmethod
+    def _get_candles_dataframe_id(exchange: Exchange, pair: TradingPair, time_frame: TimeFrame) -> str:
+        pair_str = str(pair).replace("/", "-")
+        return f"Candles-{exchange.id}-{pair_str}-{time_frame.value}"
+
+    @staticmethod
+    def _are_stored_candles_up_to_date(stored_candles: pd.DataFrame, time_frame: TimeFrame, now: datetime) -> bool:
+        last_candle = stored_candles.iloc[-1]
+        last_candle_time = datetime.fromtimestamp(last_candle["Open time"] / 1000)
+        return CctxExchangeManager._are_datetimes_in_same_frame(last_candle_time, now, time_frame)
+
+    @staticmethod
+    def _are_datetimes_in_same_frame(last_candle_time: datetime, now: datetime, time_frame: TimeFrame) -> bool:
+        time_difference = now - last_candle_time
+        if time_frame == TimeFrame.min_1:
+            return time_difference < timedelta(minutes=1)
+        elif time_frame == TimeFrame.hour_1:
+            return time_difference < timedelta(hours=1)
+        elif time_frame == TimeFrame.day_1:
+            return time_difference < timedelta(days=1)
+        elif time_frame == TimeFrame.month_1:
+            if last_candle_time.month != now.month:
+                return False
+            return time_difference < timedelta(days=31)
+        elif time_frame == TimeFrame.year_1:
+            return last_candle_time.year == now.year
+        else:
+            raise ValueError(f"Unknown time frame: {time_frame}")
 
     def _fetch_candles(self, connection, pair: TradingPair, time_frame: TimeFrame, page_size: int = 100) -> pd.DataFrame:
         candles_list = self._fetch_candles_with_retry(connection, pair, time_frame, page_size)
