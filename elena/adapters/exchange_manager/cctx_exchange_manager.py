@@ -177,10 +177,10 @@ class CctxExchangeManager(ExchangeManager):
             exchange.id,
             pair,
         )
-        candles_dataframe_id = self._get_candles_dataframe_id(exchange, pair, time_frame)
+        candles_dataframe_id = self._get_dataframe_id(exchange, pair, time_frame)
         try:
             stored_candles = self._storage_manager.load_data_frame(candles_dataframe_id)
-            stored_candles.set_index("Open time")
+            stored_candles.set_index("Open time", inplace=True)
         except StorageError:
             stored_candles = pd.DataFrame()
 
@@ -195,7 +195,7 @@ class CctxExchangeManager(ExchangeManager):
         return candles
 
     @staticmethod
-    def _get_candles_dataframe_id(exchange: Exchange, pair: TradingPair, time_frame: TimeFrame) -> str:
+    def _get_dataframe_id(exchange: Exchange, pair: TradingPair, time_frame: TimeFrame) -> str:
         pair_str = str(pair).replace("/", "-")
         return f"Candles-{exchange.id}-{pair_str}-{time_frame.value}"
 

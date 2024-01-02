@@ -140,7 +140,7 @@ def test_save_and_load_data_frame():
     pd.testing.assert_frame_equal(actual, df)
 
 
-def test_update_data_frame():
+def test_update_data_frame_using_candles():
     data1 = {
         "Open time": {
             0: 1702479180000,
