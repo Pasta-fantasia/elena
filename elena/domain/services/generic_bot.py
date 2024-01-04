@@ -83,7 +83,7 @@ class GenericBot(Bot):
             entry_order_id=order.id,
             entry_price=order.average,
             entry_time=order.timestamp,
-            exit_order_id=0,
+            exit_order_id='0',  # TODO define an OrderId.Null
             exit_price=0,
         )
         self.status.active_trades.append(new_trade)
@@ -108,9 +108,10 @@ class GenericBot(Bot):
             trade.exit_time = order.timestamp
             trade.exit_price = order.average
             self.status.closed_trades.append(trade)
+            return amount_to_close - trade.size
         else:
             self._logger.error(f"Amount to close is insufficient for trade id:{trade.id} size: {trade.size} on order {order.id} size: {order.amount} with pending to close {amount_to_close}")
-        return amount_to_close - trade.size
+            return amount_to_close
 
     def _close_trades_on_new_order(self, order: Order):
         amount_to_close = order.amount
@@ -122,7 +123,7 @@ class GenericBot(Bot):
         # check trades without an exit order id
         if amount_to_close > 0:
             for trade in self.status.active_trades:
-                if trade.exit_order_id == 0 and amount_to_close > 0:
+                if trade.exit_order_id == '0' and amount_to_close > 0: # TODO define an OrderId.Null
                     amount_to_close = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
 
         # close trade even with a different order_id

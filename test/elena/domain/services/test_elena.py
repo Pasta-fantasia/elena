@@ -142,10 +142,10 @@ class ExchangeBasicOperationsBot(GenericBot):
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
-        assert active_orders_after_order == active_orders_before_order - 1
+        assert active_orders_after_order == active_orders_before_order
         assert archived_orders_after_order == archived_orders_before_order + 1
         assert active_trades_after_order == active_trades_before_order - 1
-        assert closed_trades_before_order == closed_trades_after_order + 1
+        assert closed_trades_after_order == closed_trades_before_order + 1
 
         # we may find an order with:
         #  - the same amount
