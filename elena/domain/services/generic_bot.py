@@ -166,24 +166,29 @@ class GenericBot(Bot):
 
     def _update_trades_on_update_orders(self, order: Order):
         # notify ???
+        # Budget
 
         if order.status == OrderStatusType.closed:
             self._logger.info(f"Notify! Order {updated_order.id} " f"was closed for {updated_order.amount} {updated_order.pair} " f"at {updated_order.average}")
-        if order.status == OrderStatusType.canceled:
+        elif order.status == OrderStatusType.canceled:
             self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
             # TODO: [Fran] what should we do if an order is cancelled?
             #  Cancel are: manual, something could go
             #  wrong in L or the market is stopped.
+        elif updated_order.status == OrderStatusType.open and updated_order.filled > 0:
+            # Partical
+            pass
 
         for trade in self.status.active_trades:
             if trade.exit_order_id == order.id:
+                # _close_trades_on_new_order?
                 self.status.active_trades.remove(trade)
                 trade.exit_time = order.timestamp
                 trade.exit_price = order.average
                 self.status.closed_trades.append(trade)
 
-
     def _archive_order_on_cancel(self, order: Order):
+        # TODO: check
         for loop_order in self.status.active_orders:
             if loop_order.id == order.id:
                 self.status.active_orders.remove(loop_order)
