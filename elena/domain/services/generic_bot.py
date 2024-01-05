@@ -210,7 +210,7 @@ class GenericBot(Bot):
                 else:
                     updated_orders.append(updated_order)
             else:
-                self._logger.error(f"The order {order.id} has desapear! This should only happend on test environments")
+                self._logger.error(f"The order {order.id} has disappear! This should only happened on test environments")
 
         self.status.active_orders = updated_orders
         return self.status
