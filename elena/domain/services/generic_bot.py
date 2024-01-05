@@ -168,6 +168,25 @@ class GenericBot(Bot):
         # notify ???
         # Budget
 
+        # on buy, close
+        #   update trade
+        # on sell, close
+        #   close trade
+        #   budget.unlock
+
+        # on buy, cancel
+        #   archive trade?
+        #   budget.unlock
+        # on sell, cancel
+        #   do nothing
+
+        # on buy, partial
+        #   update trade
+        # on sell, partial
+        #   do nothing
+        #   budget.unlock(partial)? => risky
+
+
         if order.status == OrderStatusType.closed:
             self._logger.info(f"Notify! Order {updated_order.id} " f"was closed for {updated_order.amount} {updated_order.pair} " f"at {updated_order.average}")
         elif order.status == OrderStatusType.canceled:
@@ -175,8 +194,8 @@ class GenericBot(Bot):
             # TODO: [Fran] what should we do if an order is cancelled?
             #  Cancel are: manual, something could go
             #  wrong in L or the market is stopped.
-        elif updated_order.status == OrderStatusType.open and updated_order.filled > 0:
-            # Partical
+        elif order.status == OrderStatusType.open and order.filled > 0:
+            # Partial
             pass
 
         for trade in self.status.active_trades:
