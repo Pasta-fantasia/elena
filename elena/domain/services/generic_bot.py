@@ -164,15 +164,24 @@ class GenericBot(Bot):
         else:
             raise "Order condition unhandled (OrderSide)"
 
-    def _archive_order_close_trades_on_update_orders(self, order: Order):
+    def _update_trades_on_update_orders(self, order: Order):
+        # notify ???
+
+        if order.status == OrderStatusType.closed:
+            self._logger.info(f"Notify! Order {updated_order.id} " f"was closed for {updated_order.amount} {updated_order.pair} " f"at {updated_order.average}")
+        if order.status == OrderStatusType.canceled:
+            self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
+            # TODO: [Fran] what should we do if an order is cancelled?
+            #  Cancel are: manual, something could go
+            #  wrong in L or the market is stopped.
+
         for trade in self.status.active_trades:
             if trade.exit_order_id == order.id:
                 self.status.active_trades.remove(trade)
                 trade.exit_time = order.timestamp
                 trade.exit_price = order.average
                 self.status.closed_trades.append(trade)
-        # move to archived
-        self.status.archived_orders.append(order)
+
 
     def _archive_order_on_cancel(self, order: Order):
         for loop_order in self.status.active_orders:
@@ -184,30 +193,23 @@ class GenericBot(Bot):
         # orders
         updated_orders = []
         for order in self.status.active_orders:
-            # update status
+            # update order status
             updated_order = self.fetch_order(order.id)
 
             if updated_order:
                 if updated_order.status == OrderStatusType.closed or updated_order.status == OrderStatusType.canceled:
-                    # notify
-                    if updated_order.status == OrderStatusType.closed:
-                        self._logger.info(f"Notify! Order {updated_order.id} " f"was closed for {updated_order.amount} {updated_order.pair} " f"at {updated_order.average}")
-                    if updated_order.status == OrderStatusType.canceled:
-                        self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
-                        # TODO: [Fran] what should we do if an order is cancelled?
-                        #  Cancel are: manual, something could go
-                        #  wrong in L or the market is stopped.
-
                     # updates trades
-                    self._archive_order_close_trades_on_update_orders(updated_order)
+                    self._update_trades_on_update_orders(updated_order)
+                    # move to archived
+                    self.status.archived_orders.append(updated_order)
 
                 elif updated_order.status == OrderStatusType.open and updated_order.filled > 0:  # type: ignore
-
-                    self._logger.info(f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: " f"{updated_order.filled} of {updated_order.amount} {updated_order.pair} at" f" {updated_order.average}")
-
-                    # PARTIALLY_FILLED is considered an active order, It's on the strategy to do something.
+                    # updates trades
+                    self._update_trades_on_update_orders(updated_order)
+                    # keep active
                     updated_orders.append(updated_order)
                 else:
+                    # nothing changed, keep active
                     updated_orders.append(updated_order)
             else:
                 self._logger.error(f"The order {order.id} has disappear! This should only happened on test environments")
