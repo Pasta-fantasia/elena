@@ -133,8 +133,8 @@ class GenericBot(Bot):
                 if amount_to_close > 0:
                     amount_to_close = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
 
-        if amount_to_close > 0:
-            self._logger.error("The order size is bigger than any trade")
+        if amount_to_close > 0:  # TODO: how to pass min_amount?
+            self._logger.error("The order size is bigger than any trade. {amount_to_close} left to close of {order.amount}.")
 
     def _register_new_order_on_trades(self, order: Order):
         if order is None:
