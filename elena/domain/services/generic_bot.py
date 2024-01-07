@@ -195,7 +195,7 @@ class GenericBot(Bot):
                 bot_config=self.bot_config,
                 order_id=order_id,
             )
-            self._metrics_manager.counter(Metric.ORDER_CANCELLED, self.bot_config)
+            self._metrics_manager.counter(Metric.ORDER_CANCELLED, self.bot_config.strategy_id, 1, [self.bot_config.exchange_id.value])
             self._notifications_manager.medium(f"Order {order_id} was cancelled")
             self.status.archive_order_on_cancel(order)
             return order

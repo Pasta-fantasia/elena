@@ -1,15 +1,12 @@
 from enum import Enum
-from typing import Protocol, runtime_checkable
+from typing import List, Protocol, runtime_checkable
 
-import pandas as pd
-
-from elena.domain.model.bot_config import BotConfig
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.storage_manager import StorageManager
 
 
 class Metric(str, Enum):
-    ORDER_CANCELLED = "order_cancelled"
+    ORDER_CANCELLED = "OrderCancelled"
 
 
 @runtime_checkable
@@ -17,11 +14,8 @@ class MetricsManager(Protocol):
     def init(self, config: dict, logger: Logger, storage_manager: StorageManager):
         ...
 
-    def counter(self, metric: Metric, bot_config: BotConfig, value: int = 1):
+    def counter(self, metric: Metric, strategy_id: str, value: int, tags: List[str]):
         ...
 
-    def gauge(self, metric: Metric, bot_config: BotConfig, value: float):
-        ...
-
-    def candles(self, bot_config: BotConfig, value: pd.DataFrame):
+    def gauge(self, metric: Metric, strategy_id: str, value: float, tags: List[str]):
         ...
