@@ -113,7 +113,7 @@ class GenericBot(Bot):
             self._logger.error(f"Amount to close is insufficient for trade id:{trade.id} size: {trade.size} on order {order.id} size: {order.amount} with pending to close {amount_to_close}")
             return amount_to_close
 
-    def _close_trades_on_new_order(self, order: Order):
+    def _close_trades_on_new_updated_order(self, order: Order):
         amount_to_close = order.amount
         # check trades with an exit order id
         for trade in self.status.active_trades:
@@ -155,7 +155,7 @@ class GenericBot(Bot):
         elif order.side == OrderSide.sell:
             if order.status == OrderStatusType.closed:
                 # TODO: budget.unlock
-                self._close_trades_on_new_order(order)
+                self._close_trades_on_new_updated_order(order)
                 self.status.archived_orders.append(order)
             else:
                 # stop loss => if order.stop_price and order.stop_price > 0:
@@ -181,54 +181,54 @@ class GenericBot(Bot):
         if order.side == OrderSide.buy:
             if order.status == OrderStatusType.closed:
                 # on buy, close
-                #   update trade.order status
+                #   update trade.order status (done in _update_orders_status)
+                # nothing to do here
                 pass
             elif order.status == OrderStatusType.canceled or order.status == OrderStatusType.rejected:
                 # on buy, cancel or rejected
-                #   archive trade?
-                #   budget.unlock
-                pass
+                #   archive trade
+                trade_found = False
+                for trade in self.status.active_trades:
+                    if trade.entry_order_id == order.id:
+                        self.status.active_trades.remove(trade)
+                        trade.exit_time = order.timestamp
+                        trade.exit_price = 0
+                        trade.exit_order_id = order.status
+                        self.status.closed_trades.append(trade)
+                        trade_found = True
+                if not trade_found:
+                    self._logger.error(f"Order {order.id} canceled or rejected not found in trades. Bot: {self.id}")
+
+                # TODO: budget.unlock
             elif order.status == OrderStatusType.open:  # open & partials are active, budget is lock equally.
-                # on buy, partial
-                #   update trade.order status
-                # update order in active
+                # on buy, open or partial
+                #   update trade.order status (done in _update_orders_status)
+                # nothing to do here
                 pass
             else:
                 raise "Order condition unhandled (OrderSide.buy)"
 
         elif order.side == OrderSide.sell:
             if order.status == OrderStatusType.closed:
-                # TODO: budget.unlock
                 # on sell, close
-                #   close trade... _close_trades_on_new_order?
-                #   budget.unlock
-                self._close_trades_on_new_order(order)
-                self.status.archived_orders.append(order)
+                #   close trade... _close_trades_on_new_updated_order?
+                self._close_trades_on_new_updated_order(order)
+                # TODO: budget.unlock
             elif order.status == OrderStatusType.canceled or order.status == OrderStatusType.rejected:
                 # on sell, cancel or rejected
                 #   do nothing
                 pass
             elif order.status == OrderStatusType.open:
                 # on sell, partial
-                #   update trade.order status
+                #   update trade.order status (done in _update_orders_status)
                 #   budget.unlock(partial)? => risky
                 # stop loss => if order.stop_price and order.stop_price > 0:
                 # TODO: budget.unlock (partial) ???
-
-                self.status.active_orders.append(order)
+                pass
             else:
                 raise "Order condition unhandled (OrderSide.sell)"
         else:
             raise "Order condition unhandled (OrderSide)"
-
-        # prev
-        for trade in self.status.active_trades:
-            if trade.exit_order_id == order.id:
-                # _close_trades_on_new_order?
-                self.status.active_trades.remove(trade)
-                trade.exit_time = order.timestamp
-                trade.exit_price = order.average
-                self.status.closed_trades.append(trade)
 
     def _archive_order_on_cancel(self, order: Order):
         # TODO: check
@@ -239,25 +239,20 @@ class GenericBot(Bot):
 
     def _update_orders_status(self) -> BotStatus:
         # orders
+        # update active and archived orders
+        # call _update_trades_on_update_orders to update trades
         updated_orders = []
         for order in self.status.active_orders:
             # update order status
             updated_order = self.fetch_order(order.id)
 
             if updated_order:
-                if updated_order.status == OrderStatusType.closed or updated_order.status == OrderStatusType.canceled:
-                    # updates trades
-                    self._update_trades_on_update_orders(updated_order)
+                self._update_trades_on_update_orders(updated_order)
+                if updated_order.status in [OrderStatusType.closed, OrderStatusType.canceled, OrderStatusType.rejected]:
                     # move to archived
                     self.status.archived_orders.append(updated_order)
-
-                elif updated_order.status == OrderStatusType.open and updated_order.filled > 0:  # type: ignore
-                    # updates trades
-                    self._update_trades_on_update_orders(updated_order)
-                    # keep active
-                    updated_orders.append(updated_order)
                 else:
-                    # nothing changed, keep active
+                    # keep active with new status
                     updated_orders.append(updated_order)
             else:
                 self._logger.error(f"The order {order.id} has disappear! This should only happened on test environments")
