@@ -68,6 +68,8 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not balance:
             raise Exception("Cannot get balance")
 
+        base_symbol = self.pair.base
+        base_free = balance.currencies[base_symbol].free
         quote_symbol = self.pair.quote
         quote_free = balance.currencies[quote_symbol].free
 
@@ -79,7 +81,7 @@ class ExchangeBasicOperationsBot(GenericBot):
             raise Exception(f"Cannot get precision_to_buy for amount_to_buy {amount_to_buy}")
 
         if precision_to_buy < min_amount:
-            raise Exception("Not enough balance to run the tests. {self.pair.base} = {base_free} / {quote_free}")
+            raise Exception(f"Not enough balance to run the tests. {self.pair.base} = {base_free} / {quote_free}")
 
         active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
 
@@ -146,6 +148,52 @@ class ExchangeBasicOperationsBot(GenericBot):
         assert archived_orders_after_order == archived_orders_before_order + 1
         assert active_trades_after_order == active_trades_before_order - 1
         assert closed_trades_after_order == closed_trades_before_order + 1
+
+        # 6 - BUY twice and SELL once to check Trades
+        # 6.1 BUY twice
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
+
+        amount_to_buy_75 = amount_to_buy * 0.75
+        amount_to_buy_rest = amount_to_buy - amount_to_buy_75
+
+        if amount_to_buy_75 < min_amount:
+            raise Exception(f"Not enough balance to run the tests. amount_to_buy_75: {amount_to_buy_75} < {min_amount}")
+
+        if amount_to_buy_rest < min_amount:
+            raise Exception(f"Not enough balance to run the tests. amount_to_buy_rest: {amount_to_buy_rest} < {min_amount}")
+
+        market_buy_order_75 = self.create_market_buy_order(amount_to_buy_75)
+        if not market_buy_order_75:
+            raise Exception("market_buy_order_75 creation failed.")
+
+        market_buy_order_rest = self.create_market_buy_order(amount_to_buy_rest)
+        if not market_buy_order_rest:
+            raise Exception("market_buy_order_rest creation failed.")
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+
+        assert active_orders_before_order == active_orders_after_order
+        assert archived_orders_after_order == (archived_orders_before_order + 2)
+        assert active_trades_after_order == (active_trades_before_order + 2)
+        assert closed_trades_before_order == closed_trades_after_order
+
+        # 6.2 SELL once
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
+        amount_to_sell = market_buy_order_75.amount + market_buy_order_rest.amount
+
+        market_sell_order = self.create_market_sell_order(amount_to_sell)
+
+        if not market_sell_order:
+            raise Exception("Sell test failed")
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+        assert active_orders_after_order == active_orders_before_order
+        assert archived_orders_after_order == archived_orders_before_order + 1
+        assert active_trades_after_order == active_trades_before_order - 2
+        assert closed_trades_after_order == closed_trades_before_order + 2
+
 
         # we may find an order with:
         #  - the same amount
