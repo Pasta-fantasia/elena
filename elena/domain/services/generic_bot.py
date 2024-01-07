@@ -165,9 +165,6 @@ class GenericBot(Bot):
             raise "Order condition unhandled (OrderSide)"
 
     def _update_trades_on_update_orders(self, order: Order):
-        # notify ???
-        # Budget
-
         if order is None:
             raise "Order can't be None"
 
@@ -216,7 +213,8 @@ class GenericBot(Bot):
                 # TODO: budget.unlock
             elif order.status == OrderStatusType.canceled or order.status == OrderStatusType.rejected:
                 # on sell, cancel or rejected
-                #   do nothing
+                #   do nothing unless partial
+                # TODO: if a partial order is cancelled... what should be done?
                 pass
             elif order.status == OrderStatusType.open:
                 # on sell, partial
@@ -231,9 +229,13 @@ class GenericBot(Bot):
             raise "Order condition unhandled (OrderSide)"
 
     def _archive_order_on_cancel(self, order: Order):
+        found_order = False
         for loop_order in self.status.active_orders:
             if loop_order.id == order.id:
                 self.status.active_orders.remove(loop_order)
+                found_order = True
+        if not found_order:
+            self._logger.error(f"Order {order.id} canceled but not found in active_orders. Bot: {self.id}")
         self.status.archived_orders.append(order)
         self._update_trades_on_update_orders(order)  # TODO: check
 
