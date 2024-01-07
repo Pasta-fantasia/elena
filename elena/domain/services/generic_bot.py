@@ -168,35 +168,62 @@ class GenericBot(Bot):
         # notify ???
         # Budget
 
-        # on buy, close
-        #   update trade
-        # on sell, close
-        #   close trade
-        #   budget.unlock
+        if order is None:
+            raise "Order can't be None"
 
-        # on buy, cancel
-        #   archive trade?
-        #   budget.unlock
-        # on sell, cancel
-        #   do nothing
+        if order.status == OrderStatusType.rejected:
+            # on rejected
+            #   => problem... the market could be closed.
+            #   keep processing trades
+            self._logger.error(f"Order {order.id} was rejected")
+            self._notifications_manager.high(f"Order {order.id} was rejected")
 
-        # on buy, partial
-        #   update trade
-        # on sell, partial
-        #   do nothing
-        #   budget.unlock(partial)? => risky
+        if order.side == OrderSide.buy:
+            if order.status == OrderStatusType.closed:
+                self.status.archived_orders.append(order)
+                # on buy, close
+                #   update trade.order status
+                #   remove order from active
+            elif order.status == OrderStatusType.canceled or order.status == OrderStatusType.rejected:
+                # on buy, cancel or rejected
+                #   archive trade?
+                #   budget.unlock
+                pass
+            elif order.status == OrderStatusType.open::  # open & partials are active, budget is lock equally.
+                # on buy, partial
+                #   update trade.order status
+                # update order in active
+                pass
+            else:
+                raise "Order condition unhandled (OrderSide.buy)"
 
+        if order.side == OrderSide.sell:
+            if order.status == OrderStatusType.closed:
+                # TODO: budget.unlock
+                # on sell, close
+                #   close trade... _close_trades_on_new_order?
+                #   budget.unlock
+                self._close_trades_on_new_order(order)
+                self.status.archived_orders.append(order)
+            elif order.status == OrderStatusType.canceled or order.status == OrderStatusType.rejected:
+                # on sell, cancel or rejected
+                #   do nothing
+                pass
+            elif order.status == OrderStatusType.open:
+                # on sell, partial
+                #   update trade.order status
+                #   budget.unlock(partial)? => risky
+                # stop loss => if order.stop_price and order.stop_price > 0:
+                # TODO: budget.unlock (partial) ???
 
-        if order.status == OrderStatusType.closed:
-            self._logger.info(f"Notify! Order {updated_order.id} " f"was closed for {updated_order.amount} {updated_order.pair} " f"at {updated_order.average}")
-        elif order.status == OrderStatusType.canceled:
-            self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
-            # TODO: [Fran] what should we do if an order is cancelled?
-            #  Cancel are: manual, something could go
-            #  wrong in L or the market is stopped.
-        elif order.status == OrderStatusType.open and order.filled > 0:
-            # Partial
-            pass
+                self.status.active_orders.append(order)
+            else:
+                raise "Order condition unhandled (OrderSide.sell)"
+        else:
+            raise "Order condition unhandled (OrderSide)"
+
+        # prev
+
 
         for trade in self.status.active_trades:
             if trade.exit_order_id == order.id:
