@@ -231,11 +231,11 @@ class GenericBot(Bot):
             raise "Order condition unhandled (OrderSide)"
 
     def _archive_order_on_cancel(self, order: Order):
-        # TODO: check
         for loop_order in self.status.active_orders:
             if loop_order.id == order.id:
                 self.status.active_orders.remove(loop_order)
         self.status.archived_orders.append(order)
+        self._update_trades_on_update_orders(order)  # TODO: check
 
     def _update_orders_status(self) -> BotStatus:
         # orders
