@@ -1,4 +1,5 @@
 import pathlib
+import time
 from os import path
 
 from elena.domain.model.bot_config import BotConfig
@@ -91,6 +92,7 @@ class ExchangeBasicOperationsBot(GenericBot):
             raise Exception("Buy test failed")
 
         # TODO: wait order status without recording
+        time.sleep(15)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
@@ -110,6 +112,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not stop_loss_order:
             raise Exception("Stop loss creation failed.")
         # TODO: wait order status without recording
+        time.sleep(15)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
@@ -125,6 +128,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not canceled_order:
             raise Exception("Stop loss cancel failed.")
         # TODO: wait order status without recording
+        time.sleep(15)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
@@ -141,6 +145,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not market_sell_order:
             raise Exception("Sell test failed")
         # TODO: wait order status without recording
+        time.sleep(15)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
@@ -165,10 +170,14 @@ class ExchangeBasicOperationsBot(GenericBot):
         market_buy_order_75 = self.create_market_buy_order(amount_to_buy_75)
         if not market_buy_order_75:
             raise Exception("market_buy_order_75 creation failed.")
+        # TODO: wait order status without recording
+        time.sleep(15)
 
         market_buy_order_rest = self.create_market_buy_order(amount_to_buy_rest)
         if not market_buy_order_rest:
             raise Exception("market_buy_order_rest creation failed.")
+        # TODO: wait order status without recording
+        time.sleep(15)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
@@ -186,6 +195,8 @@ class ExchangeBasicOperationsBot(GenericBot):
 
         if not market_sell_order:
             raise Exception("Sell test failed")
+        # TODO: wait order status without recording
+        time.sleep(15)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
