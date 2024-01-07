@@ -175,21 +175,20 @@ class GenericBot(Bot):
             # on rejected
             #   => problem... the market could be closed.
             #   keep processing trades
-            self._logger.error(f"Order {order.id} was rejected")
-            self._notifications_manager.high(f"Order {order.id} was rejected")
+            self._logger.error(f"Order {order.id} was rejected. Bot: {self.id}")
+            self._notifications_manager.high(f"Order {order.id} was rejected. Bot: {self.id}")
 
         if order.side == OrderSide.buy:
             if order.status == OrderStatusType.closed:
-                self.status.archived_orders.append(order)
                 # on buy, close
                 #   update trade.order status
-                #   remove order from active
+                pass
             elif order.status == OrderStatusType.canceled or order.status == OrderStatusType.rejected:
                 # on buy, cancel or rejected
                 #   archive trade?
                 #   budget.unlock
                 pass
-            elif order.status == OrderStatusType.open::  # open & partials are active, budget is lock equally.
+            elif order.status == OrderStatusType.open:  # open & partials are active, budget is lock equally.
                 # on buy, partial
                 #   update trade.order status
                 # update order in active
@@ -197,7 +196,7 @@ class GenericBot(Bot):
             else:
                 raise "Order condition unhandled (OrderSide.buy)"
 
-        if order.side == OrderSide.sell:
+        elif order.side == OrderSide.sell:
             if order.status == OrderStatusType.closed:
                 # TODO: budget.unlock
                 # on sell, close
@@ -223,8 +222,6 @@ class GenericBot(Bot):
             raise "Order condition unhandled (OrderSide)"
 
         # prev
-
-
         for trade in self.status.active_trades:
             if trade.exit_order_id == order.id:
                 # _close_trades_on_new_order?
