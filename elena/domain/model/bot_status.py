@@ -73,8 +73,15 @@ class BotStatus(BaseModel):
         )
         self.active_trades.append(new_trade)
 
+    def _get_precision(self, f1: float) -> int:
+        # https://stackoverflow.com/questions/3018758/determine-precision-and-scale-of-particular-number-in-python
+        # TODO: review solution
+        str1 = str(f1)
+        return len(str1.split(".")[1])
+
     def _close_individual_trade_on_new_order(self, trade: Trade, order: Order, amount_to_close: float) -> float:
-        if trade.size <= amount_to_close:
+        size_precision = self._get_precision(trade.size)  # done to avoid a call to Exchange to round amount_to_close at retrun
+        if trade.size <= round(amount_to_close, size_precision):
             self.active_trades.remove(trade)
             trade.exit_time = order.timestamp
             trade.exit_price = order.average
@@ -87,20 +94,20 @@ class BotStatus(BaseModel):
     def _close_trades_on_new_updated_order(self, order: Order):
         amount_to_close = order.amount
         # check trades with an exit order id
-        for trade in self.active_trades:
+        for trade in self.active_trades[:]:
             if trade.exit_order_id == order.id and amount_to_close > 0:
                 amount_to_close = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
 
         # check trades without an exit order id
         if amount_to_close > 0:
-            for trade in self.active_trades:
+            for trade in self.active_trades[:]:
                 if trade.exit_order_id == '0' and amount_to_close > 0:  # TODO define an OrderId.Null
                     amount_to_close = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
 
         # close trade even with a different order_id
         if amount_to_close > 0:
             # self._logger.warning("The order size is bigger than the trades with an explicit order_id or a blank order_id")
-            for trade in self.active_trades:
+            for trade in self.active_trades[:]:
                 if amount_to_close > 0:
                     amount_to_close = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
 
@@ -158,7 +165,7 @@ class BotStatus(BaseModel):
                 # on buy, cancel or rejected
                 #   archive trade
                 trade_found = False
-                for trade in self.active_trades:
+                for trade in self.active_trades[:]:
                     if trade.entry_order_id == order.id:
                         self.active_trades.remove(trade)
                         trade.exit_time = order.timestamp
@@ -204,7 +211,7 @@ class BotStatus(BaseModel):
 
     def archive_order_on_cancel(self, order: Order):
         found_order = False
-        for loop_order in self.active_orders:
+        for loop_order in self.active_orders[:]:
             if loop_order.id == order.id:
                 self.active_orders.remove(loop_order)
                 found_order = True
