@@ -51,6 +51,7 @@ class ExchangeBasicOperationsBot(GenericBot):
 
     def next(self) -> BotStatus:
         self._logger.info("%s strategy: processing next cycle ...", self.name)
+        sleep_time = 3
 
         # 1 - INFO
         min_amount = self.limit_min_amount()
@@ -92,7 +93,7 @@ class ExchangeBasicOperationsBot(GenericBot):
             raise Exception("Buy test failed")
 
         # TODO: wait order status without recording
-        time.sleep(15)
+        time.sleep(sleep_time)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
@@ -112,7 +113,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not stop_loss_order:
             raise Exception("Stop loss creation failed.")
         # TODO: wait order status without recording
-        time.sleep(15)
+        time.sleep(sleep_time)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
@@ -128,7 +129,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not canceled_order:
             raise Exception("Stop loss cancel failed.")
         # TODO: wait order status without recording
-        time.sleep(15)
+        time.sleep(sleep_time)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
@@ -145,7 +146,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not market_sell_order:
             raise Exception("Sell test failed")
         # TODO: wait order status without recording
-        time.sleep(15)
+        time.sleep(sleep_time)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
@@ -171,13 +172,13 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not market_buy_order_75:
             raise Exception("market_buy_order_75 creation failed.")
         # TODO: wait order status without recording
-        time.sleep(15)
+        time.sleep(sleep_time)
 
         market_buy_order_rest = self.create_market_buy_order(amount_to_buy_rest)
         if not market_buy_order_rest:
             raise Exception("market_buy_order_rest creation failed.")
         # TODO: wait order status without recording
-        time.sleep(15)
+        time.sleep(sleep_time)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
@@ -196,7 +197,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not market_sell_order:
             raise Exception("Sell test failed")
         # TODO: wait order status without recording
-        time.sleep(15)
+        time.sleep(sleep_time)
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
@@ -204,7 +205,6 @@ class ExchangeBasicOperationsBot(GenericBot):
         assert archived_orders_after_order == archived_orders_before_order + 1
         assert active_trades_after_order == active_trades_before_order - 2
         assert closed_trades_after_order == closed_trades_before_order + 2
-
 
         # we may find an order with:
         #  - the same amount
