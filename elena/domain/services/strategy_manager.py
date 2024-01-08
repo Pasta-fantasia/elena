@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 from cron_converter import Cron
 
 from elena.domain.model.bot_config import BotConfig
-from elena.domain.model.bot_status import BotStatus
+from elena.domain.model.bot_status import BotStatus, BotBudget
 from elena.domain.model.exchange import Exchange, ExchangeType
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot import Bot
@@ -83,6 +83,7 @@ class StrategyManagerImpl(StrategyManager):
                 archived_orders=[],
                 active_trades=[],
                 closed_trades=[],
+                budget=BotBudget()
             )
         return run, status
 

@@ -1,7 +1,7 @@
 import time
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from elena.domain.model.order import Order, OrderSide, OrderStatusType
 from elena.domain.model.trade import Trade
@@ -9,43 +9,45 @@ from elena.domain.model.trade import Trade
 
 class BotBudget(BaseModel):
     # Budget in quote to spend in the strategy.
-    _free: float = 0
-    _used: float = 0
-    _budget_control: bool = False
+    # TODO: make free, used and budget_control read only
+    free: float = 0.0
+    used: float = 0.0
+    budget_control: bool = False
 
     def set(self, budget: float):
-        self._free = budget
-        self._budget_control = (budget > 0)
+        self.free = budget
+        self.used = 0
+        self.budget_control = (budget > 0)
 
     def lock(self, used: float):
-        if self._budget_control and self._free > used:
-            # raise?
+        if self.budget_control and self.free > used:
+            # raise? return false? as it is now the operation si already done...
             pass
-        self._free = self._free - used
-        self._used = self._used + used
+        self.free = self.free - used
+        self.used = self.used + used
 
     def unlock(self, released: float):
-        if self._budget_control and self._used > released:
-            # warning?
+        if self.budget_control and self.used > released:
+            # think!
             pass
-        self._free = self._free + released
-        self._used = self._used - released
+        self.free = self.free + released
+        self.used = self.used - released
 
-    @property
-    def free(self):
-        return self._free
+    # @property
+    # def free(self):
+    #     return self._free
+    #
+    # @property
+    # def used(self):
+    #     return self._used
 
-    @property
-    def used(self):
-        return self._used
+    # @property
+    def total(self) -> float:
+        return self.free + self.used
 
-    @property
-    def total(self):
-        return self._free + self._used
-
-    @property
-    def is_budget_controlled(self):
-        return self._budget_control
+    # @property
+    def is_budget_controlled(self) -> bool:
+        return self.budget_control
 
 
 class BotStatus(BaseModel):
@@ -55,7 +57,7 @@ class BotStatus(BaseModel):
     archived_orders: List[Order]
     active_trades: List[Trade]
     closed_trades: List[Trade]
-    budget: Optional[BotBudget] = None
+    budget: BotBudget
 
     def _new_trade_by_order(self, order: Order):
         # All Trades start/"born" here...
@@ -67,53 +69,68 @@ class BotStatus(BaseModel):
             size=order.amount,
             entry_order_id=order.id,
             entry_price=order.average,
+            entry_cost=order.cost,
             entry_time=order.timestamp,
             exit_order_id='0',  # TODO define an OrderId.Null
-            exit_price=0,
+            exit_price=0.0,
+            exit_cost=0.0,
         )
         self.active_trades.append(new_trade)
 
-    def _get_precision(self, f1: float) -> int:
+    @staticmethod
+    def _get_precision(f1: float) -> int:
         # https://stackoverflow.com/questions/3018758/determine-precision-and-scale-of-particular-number-in-python
         # TODO: review solution
         str1 = str(f1)
         return len(str1.split(".")[1])
 
-    def _close_individual_trade_on_new_order(self, trade: Trade, order: Order, amount_to_close: float) -> float:
+    @staticmethod
+    def _calc_update_trade_return_and_duration(trade: Trade) -> float:
+        trade.duration = trade.exit_time - trade.entry_time
+        trade.return_pct = trade.exit_price / trade.entry_price
+        cash_rtn = trade.exit_cost - trade.entry_cost
+        return cash_rtn
+
+    def _close_individual_trade_on_new_order(self, trade: Trade, order: Order, amount_to_close: float, rtn: float) -> (float, float):
         size_precision = self._get_precision(trade.size)  # done to avoid a call to Exchange to round amount_to_close at retrun
         if trade.size <= round(amount_to_close, size_precision):
             self.active_trades.remove(trade)
             trade.exit_time = order.timestamp
             trade.exit_price = order.average
+            trade.exit_cost = order.cost
+            rtn = rtn + self._calc_update_trade_return_and_duration(trade)
             self.closed_trades.append(trade)
-            return amount_to_close - trade.size
+            return amount_to_close - trade.size, rtn
         else:
             # self._logger.error(f"Amount to close is insufficient for trade id:{trade.id} size: {trade.size} on order {order.id} size: {order.amount} with pending to close {amount_to_close}")
-            return amount_to_close
+            return amount_to_close, rtn
 
-    def _close_trades_on_new_updated_order(self, order: Order):
+    def _close_trades_on_new_updated_order(self, order: Order) -> float:
         amount_to_close = order.amount
+        rtn = 0.0
         # check trades with an exit order id
         for trade in self.active_trades[:]:
             if trade.exit_order_id == order.id and amount_to_close > 0:
-                amount_to_close = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
+                amount_to_close, rtn = self._close_individual_trade_on_new_order(trade, order, amount_to_close, rtn)
 
         # check trades without an exit order id
         if amount_to_close > 0:
             for trade in self.active_trades[:]:
                 if trade.exit_order_id == '0' and amount_to_close > 0:  # TODO define an OrderId.Null
-                    amount_to_close = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
+                    amount_to_close, rtn = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
 
         # close trade even with a different order_id
         if amount_to_close > 0:
             # self._logger.warning("The order size is bigger than the trades with an explicit order_id or a blank order_id")
             for trade in self.active_trades[:]:
                 if amount_to_close > 0:
-                    amount_to_close = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
+                    amount_to_close, rtn = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
 
         if amount_to_close > 0:  # TODO: how to pass min_amount?
             # self._logger.error("The order size is bigger than any trade. {amount_to_close} left to close of {order.amount}.")
             pass
+
+        return rtn
 
     def register_new_order_on_trades(self, order: Order):
         if order is None:
@@ -125,7 +142,7 @@ class BotStatus(BaseModel):
 
         if order.side == OrderSide.buy:
             self._new_trade_by_order(order)
-            # TODO: budget.lock
+            self.budget.lock(order.cost)
             if order.status == OrderStatusType.closed:
                 self.archived_orders.append(order)
             else:  # open & partials are active, budget is lock equally.
@@ -133,8 +150,9 @@ class BotStatus(BaseModel):
 
         elif order.side == OrderSide.sell:
             if order.status == OrderStatusType.closed:
-                # TODO: budget.unlock
-                self._close_trades_on_new_updated_order(order)
+                rtn = self._close_trades_on_new_updated_order(order)
+                # TODO profit control in budget
+                self.budget.unlock(order.cost)
                 self.archived_orders.append(order)
             else:
                 # stop loss => if order.stop_price and order.stop_price > 0:
@@ -177,7 +195,8 @@ class BotStatus(BaseModel):
                     # self._logger.error(f"Order {order.id} canceled or rejected not found in trades. Bot: {self.bot_id}")
                     pass
 
-                # TODO: budget.unlock
+                # TODO order.cost is set on cancel and reject?
+                self.budget.unlock(order.cost)
             elif order.status == OrderStatusType.open:  # open & partials are active, budget is lock equally.
                 # on buy, open or partial
                 #   update trade.order status (done in _update_orders_status)
@@ -190,8 +209,10 @@ class BotStatus(BaseModel):
             if order.status == OrderStatusType.closed:
                 # on sell, close
                 #   close trade... _close_trades_on_new_updated_order?
-                self._close_trades_on_new_updated_order(order)
-                # TODO: budget.unlock
+                rtn = self._close_trades_on_new_updated_order(order)
+                # TODO profit control in budget
+                self.budget.unlock(order.cost)
+
             elif order.status == OrderStatusType.canceled or order.status == OrderStatusType.rejected:
                 # on sell, cancel or rejected
                 #   do nothing unless partial
