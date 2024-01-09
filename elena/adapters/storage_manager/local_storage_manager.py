@@ -1,6 +1,5 @@
 from os import path
 from pathlib import Path
-from typing import Any
 
 from elena.adapters.storage_manager.file_storage_manager import \
     FileStorageManager
@@ -16,7 +15,7 @@ class LocalStorageManager(FileStorageManager):
         Path(self._path).mkdir(parents=True, exist_ok=True)
         self._logger.info("LocalStorageManager working at %s", self._path)
 
-    def _get_filepath(self, data_id: str, class_name: str) -> Any:
+    def _get_filepath(self, data_id: str, class_name: str) -> str:
         dir_path = path.join(self._path, class_name)
         Path(dir_path).mkdir(parents=True, exist_ok=True)
         return path.join(dir_path, f"{data_id}.json")
