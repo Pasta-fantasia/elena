@@ -178,6 +178,7 @@ class CctxExchangeManager(ExchangeManager):
             pair,
         )
         candles_dataframe_id = self._get_dataframe_id(exchange, pair, time_frame)
+
         try:
             stored_candles = self._storage_manager.load_data_frame(candles_dataframe_id)
         except Exception:
@@ -189,8 +190,13 @@ class CctxExchangeManager(ExchangeManager):
 
         conn = self._connect(exchange)
         candles = self._fetch_candles(conn, pair, time_frame)
-        self._storage_manager.save_data_frame(candles_dataframe_id, candles)
         self._logger.info("Read %d %s candles from %s", candles.shape[0], pair, exchange.id.value)
+
+        try:
+            self._storage_manager.save_data_frame(candles_dataframe_id, candles)
+        except Exception as err:
+            self._logger.error("Error saving candles: %s", err, exc_info=1)
+
         return candles
 
     @staticmethod
