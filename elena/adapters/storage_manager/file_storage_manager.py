@@ -66,7 +66,7 @@ class FileStorageManager(StorageManager):
 
     def _load(self, data_id: str, class_name: str) -> Optional[Any]:
         filepath = self._get_filepath(data_id, class_name)
-        self._logger.debug("Loading %s %s from disk: %s", class_name, data_id, filepath)
+        self._logger.debug("Loading %s %s from storage: %s", class_name, data_id, filepath)
         try:
             json_data = self._load_file(filepath)
         except Exception as err:
@@ -95,7 +95,7 @@ class FileStorageManager(StorageManager):
         record_dict = record.dict()
         json_data = json.dumps(record_dict, indent=4)
         filepath = self._get_filepath(data_id, record.class_name)
-        self._logger.debug("Saving %s %s to disk: %s", record.class_name, data_id, filepath)
+        self._logger.debug("Saving %s %s to storage: %s", record.class_name, data_id, filepath)
         try:
             self._save_file(filepath, json_data)
         except Exception as err:
@@ -127,7 +127,7 @@ class FileStorageManager(StorageManager):
     def _delete(self, data_id: str, class_name: str):
         """Delete bot status from storage, raise StorageError on failure"""
         filepath = self._get_filepath(data_id, class_name)
-        self._logger.debug("Deleting %s %s from disk: %s", class_name, data_id, filepath)
+        self._logger.debug("Deleting %s %s from storage: %s", class_name, data_id, filepath)
         try:
             self._delete_file(filepath)
         except Exception as err:
