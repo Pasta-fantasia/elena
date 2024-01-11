@@ -4,8 +4,7 @@ from os import path
 from mockito import mock
 
 from elena.domain.ports.metrics_manager import Metric
-from elena.domain.services.elena import (get_metrics_manager,
-                                         get_storage_manager)
+from elena.domain.services.elena import get_metrics_manager, get_storage_manager
 
 config = {
     "home": path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
@@ -43,16 +42,16 @@ def test_counter():
     actual = storage_manager.load_data_frame(df_id).to_dict()
     assert len(actual) == 3
     assert "time" in actual
-    assert actual["value"] == {0: 7}
-    assert actual["tags"] == {0: "tag7"}
+    assert actual["value"] == {"0": 7}
+    assert actual["tags"] == {"0": "tag7"}
 
     sut.counter(Metric.ORDER_CANCELLED, strategy_id, 77, ["tag77"])
 
     actual = storage_manager.load_data_frame(df_id).to_dict()
     assert len(actual) == 3
     assert "time" in actual
-    assert actual["value"] == {0: 7, 1: 77}
-    assert actual["tags"] == {0: "tag7", 1: "tag77"}
+    assert actual["value"] == {"0": 7, "1": 77}
+    assert actual["tags"] == {"0": "tag7", "1": "tag77"}
 
 
 def test_gauge():
@@ -79,13 +78,13 @@ def test_gauge():
     actual = storage_manager.load_data_frame(df_id).to_dict()
     assert len(actual) == 3
     assert "time" in actual
-    assert actual["value"] == {0: 8.8}
-    assert actual["tags"] == {0: "tag88"}
+    assert actual["value"] == {"0": 8.8}
+    assert actual["tags"] == {"0": "tag88"}
 
     sut.gauge(Metric.ORDER_CANCELLED, strategy_id, 9.9, ["tag99"])
 
     actual = storage_manager.load_data_frame(df_id).to_dict()
     assert len(actual) == 3
     assert "time" in actual
-    assert actual["value"] == {0: 8.8, 1: 9.9}
-    assert actual["tags"] == {0: "tag88", 1: "tag99"}
+    assert actual["value"] == {"0": 8.8, "1": 9.9}
+    assert actual["tags"] == {"0": "tag88", "1": "tag99"}

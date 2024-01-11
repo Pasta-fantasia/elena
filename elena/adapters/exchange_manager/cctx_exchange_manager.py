@@ -8,8 +8,7 @@ import pandas as pd
 from elena.domain.model.balance import Balance, ByAvailability, ByCurrency
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.exchange import Exchange, ExchangeType
-from elena.domain.model.order import (Fee, Order, OrderSide, OrderStatusType,
-                                      OrderType)
+from elena.domain.model.order import Fee, Order, OrderSide, OrderStatusType, OrderType
 from elena.domain.model.order_book import OrderBook, PriceAmount
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair

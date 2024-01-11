@@ -31,34 +31,47 @@ class FileStorageManager(StorageManager):
         return self._load(bot_id, "BotStatus")  # type: ignore
 
     def save_bot_status(self, bot_status: BotStatus):
-        """Inserts or updates bot status to storage, raise StorageError on failure"""
+        """Insert or overwrite a bot status into storage, raise StorageError on failure"""
         self._save(bot_status.bot_id, bot_status)
 
     def delete_bot_status(self, bot_id: str):
-        """Delete bot status from storage, raise StorageError on failure"""
+        """Delete a bot status from storage, raise StorageError on failure"""
         self._delete(bot_id, "BotStatus")
 
     def load_data_frame(self, df_id: str) -> pd.DataFrame:
-        """Load Pandas DataFrame from storage, raise StorageError on failure"""
+        """Load a Pandas DataFrame from storage, raise StorageError on failure"""
         return self._load(df_id, "DataFrame")  # type: ignore
 
     def save_data_frame(self, df_id: str, df: pd.DataFrame):
-        """Save Pandas DataFrame to storage, raise StorageError on failure"""
-        try:
-            existing_pd = self._load(df_id, "DataFrame")  # type: ignore
-        except StorageError:
-            existing_pd = pd.DataFrame()
+        """Insert or overwrite a Pandas DataFrame into storage, raise StorageError on failure"""
+        self._save(df_id, df)
 
-        if existing_pd.empty:  # type: ignore
+    def merge_data_frame(self, df_id: str, df: pd.DataFrame, index_column: str) -> pd.DataFrame:
+        """
+        Merges an existing Pandas DataFrame with the new one, raise StorageError on failure
+        Both DataFrames will be indexed by the same column(s) before merging
+        and also have the same columns, and then the new values will be merged with the old ones
+        The new values will overwrite the old ones if they have the same index and column
+        If there is no existing DataFrame, it will be created
+        """
+        try:
+            existing_df: pd.DataFrame = self._load(df_id, "DataFrame")
+        except StorageError:
+            existing_df = pd.DataFrame()
+
+        if existing_df.empty:  # type: ignore
             self._save(df_id, df)
-        else:
-            try:
-                # Try to merge the existing DataFrame with the new one
-                merged_pd = pd.merge(existing_pd, df, how="outer")
-                self._save(df_id, merged_pd)
-            except pd.errors.MergeError:
-                # If the merge fails, just save the new DataFrame
-                self._save(df_id, df)
+            return df
+
+        try:
+            # Try to merge the existing DataFrame with the new one and save it
+            merged_df = pd.concat([existing_df[existing_df[index_column].isin(df[index_column]) == False], df]).reset_index(drop=True)  # noqa: E712
+            self._save(df_id, merged_df)
+            return merged_df
+        except pd.errors.MergeError:
+            # If the merge fails, just save the new DataFrame
+            self._save(df_id, df)
+            return df
 
     def delete_data_frame(self, df_id: str):
         """Delete Pandas DataFrame from storage, raise StorageError on failure"""
@@ -79,7 +92,7 @@ class FileStorageManager(StorageManager):
     def _from_record(self, record: Record) -> Any:
         try:
             if record.class_name == "DataFrame":
-                return pd.read_json(record.value)
+                return pd.DataFrame.from_dict(record.value)
             else:
                 _class = get_class(f"{record.class_module}.{record.class_name}")
                 return _class.parse_obj(record.value)
@@ -104,7 +117,7 @@ class FileStorageManager(StorageManager):
     @staticmethod
     def _to_record(data_id: str, data: Any) -> Record:
         if isinstance(data, pd.DataFrame):
-            value = data.to_json()
+            value = data.to_dict()
         elif isinstance(data, pydantic.BaseModel):
             value = data.dict()
         else:
