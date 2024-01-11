@@ -1,8 +1,7 @@
 from os import path
 from pathlib import Path
 
-from elena.adapters.storage_manager.file_storage_manager import \
-    FileStorageManager
+from elena.adapters.storage_manager.file_storage_manager import FileStorageManager
 from elena.domain.ports.logger import Logger
 
 
