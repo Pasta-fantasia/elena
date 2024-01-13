@@ -9,45 +9,47 @@ from elena.domain.model.trade import Trade
 
 class BotBudget(BaseModel):
     # Budget in quote to spend in the strategy.
-    # TODO: make free, used and budget_control read only
-    free: float = 0.0
+    limit: float = 0.0
     used: float = 0.0
-    budget_control: bool = False
+    pct_re_invest_profit: float = 100.0  # set how much to re-invest
 
-    def set(self, budget: float):
-        self.free = budget
-        self.used = 0.0
-        self.budget_control = (budget > 0)
+    def set(self, budget: float, clear_used: bool = False):
+        # TODO set on load yaml... only if it's >0 ?
+        self.limit = budget
+        if clear_used:
+            self.used = 0.0
 
-    def lock(self, used: float):
-        if self.budget_control and self.free > used:
-            # raise? return false? as it is now the operation si already done...
+    def lock(self, locked: float):
+        if self.is_budget_limited and self.free > locked:
+            # TODO: raise? return false? as it is now the operation is already done...
             pass
-        self.free = self.free - used
-        self.used = self.used + used
+        self.used = self.used + locked
 
-    def unlock(self, released: float):
-        if self.budget_control and self.used > released:
-            # think!
+    def unlock(self, released: float, rtn: float):
+        if self.is_budget_limited and self.used > released:
+            # TODO: think!
             pass
-        self.free = self.free + released
-        self.used = self.used - released
+        # TODO profit control in budget
+        released_without_profit = released - rtn
+        self.used = self.used - released_without_profit
 
-    # @property
-    # def free(self):
-    #     return self._free
-    #
-    # @property
-    # def used(self):
-    #     return self._used
+        re_usable_profit = rtn
+        if self.pct_re_invest_profit != 100.0 and rtn > 0.0:
+            re_usable_profit = (rtn * (1 / self.pct_re_invest_profit))
+
+        self.limit = self.limit + re_usable_profit
+
+    @property
+    def free(self) -> float:
+        return self.limit - self.used
+
+    @property
+    def is_budget_limited(self) -> bool:
+        return self.limit > 0.0
 
     @property
     def total(self) -> float:
         return self.free + self.used
-
-    @property
-    def is_budget_controlled(self) -> bool:
-        return self.budget_control
 
 
 class BotStatus(BaseModel):
@@ -151,8 +153,7 @@ class BotStatus(BaseModel):
         elif order.side == OrderSide.sell:
             if order.status == OrderStatusType.closed:
                 rtn = self._close_trades_on_new_updated_order(order)
-                # TODO profit control in budget
-                self.budget.unlock(order.cost)
+                self.budget.unlock(order.cost, rtn)
                 self.archived_orders.append(order)
             else:
                 # stop loss => if order.stop_price and order.stop_price > 0:
@@ -196,7 +197,7 @@ class BotStatus(BaseModel):
                     pass
 
                 # TODO order.cost is set on cancel and reject?
-                self.budget.unlock(order.cost)
+                self.budget.unlock(order.cost, 0.0)
             elif order.status == OrderStatusType.open:  # open & partials are active, budget is lock equally.
                 # on buy, open or partial
                 #   update trade.order status (done in _update_orders_status)
@@ -210,8 +211,7 @@ class BotStatus(BaseModel):
                 # on sell, close
                 #   close trade... _close_trades_on_new_updated_order?
                 rtn = self._close_trades_on_new_updated_order(order)
-                # TODO profit control in budget
-                self.budget.unlock(order.cost)
+                self.budget.unlock(order.cost, rtn)
 
             elif order.status == OrderStatusType.canceled or order.status == OrderStatusType.rejected:
                 # on sell, cancel or rejected
