@@ -30,11 +30,6 @@ repos:
       hooks:
         - id: black
           args: ["--safe", "--line-length=240"]
-    - repo: https://github.com/pycqa/isort
-      rev: 5.12.0
-      hooks:
-        - id: isort
-          name: isort
     - repo: https://github.com/PyCQA/flake8
       rev: 5.0.4
       hooks:

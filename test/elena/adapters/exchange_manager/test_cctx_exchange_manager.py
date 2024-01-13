@@ -3,8 +3,7 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from elena.adapters.exchange_manager.cctx_exchange_manager import \
-    CctxExchangeManager
+from elena.adapters.exchange_manager.cctx_exchange_manager import CctxExchangeManager
 from elena.domain.model.time_frame import TimeFrame
 
 

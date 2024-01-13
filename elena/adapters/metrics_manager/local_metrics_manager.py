@@ -33,7 +33,7 @@ class LocalMetricsManager(MetricsManager):
         df = pd.DataFrame(data=data, index=[0])
 
         df_id = self._get_dataframe_id(metric_type, metric, strategy_id)
-        self._storage_manager.save_data_frame(df_id, df)
+        self._storage_manager.merge_data_frame(df_id, df, "time")
         self._logger.info("%s %s %s: %s", metric_type, metric.value, strategy_id, value)
 
     @staticmethod

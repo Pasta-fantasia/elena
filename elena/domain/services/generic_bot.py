@@ -8,8 +8,7 @@ from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.exchange import Exchange
 from elena.domain.model.limits import Limits
-from elena.domain.model.order import (Order, OrderSide, OrderStatusType,
-                                      OrderType)
+from elena.domain.model.order import Order, OrderSide, OrderStatusType, OrderType
 from elena.domain.model.order_book import OrderBook
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trade import Trade

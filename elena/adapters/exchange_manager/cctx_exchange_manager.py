@@ -8,14 +8,13 @@ import pandas as pd
 from elena.domain.model.balance import Balance, ByAvailability, ByCurrency
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.exchange import Exchange, ExchangeType
-from elena.domain.model.order import (Fee, Order, OrderSide, OrderStatusType,
-                                      OrderType)
+from elena.domain.model.order import Fee, Order, OrderSide, OrderStatusType, OrderType
 from elena.domain.model.order_book import OrderBook, PriceAmount
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.storage_manager import StorageError, StorageManager
+from elena.domain.ports.storage_manager import StorageManager
 
 _CONNECT_MAPPER = {
     ExchangeType.ace: ccxt.ace,
@@ -178,10 +177,10 @@ class CctxExchangeManager(ExchangeManager):
             pair,
         )
         candles_dataframe_id = self._get_dataframe_id(exchange, pair, time_frame)
+
         try:
             stored_candles = self._storage_manager.load_data_frame(candles_dataframe_id)
-            stored_candles.set_index("Open time", inplace=True)
-        except StorageError:
+        except Exception:
             stored_candles = pd.DataFrame()
 
         if not stored_candles.empty and self._are_stored_candles_up_to_date(stored_candles, time_frame, datetime.now()):
@@ -190,8 +189,13 @@ class CctxExchangeManager(ExchangeManager):
 
         conn = self._connect(exchange)
         candles = self._fetch_candles(conn, pair, time_frame)
-        self._storage_manager.save_data_frame(candles_dataframe_id, candles)
         self._logger.info("Read %d %s candles from %s", candles.shape[0], pair, exchange.id.value)
+
+        try:
+            self._storage_manager.save_data_frame(candles_dataframe_id, candles)
+        except Exception as err:
+            self._logger.error("Error saving candles: %s", err, exc_info=1)
+
         return candles
 
     @staticmethod
@@ -201,9 +205,12 @@ class CctxExchangeManager(ExchangeManager):
 
     @staticmethod
     def _are_stored_candles_up_to_date(stored_candles: pd.DataFrame, time_frame: TimeFrame, now: datetime) -> bool:
-        last_candle = stored_candles.iloc[-1]
-        last_candle_time = datetime.fromtimestamp(last_candle["Open time"] / 1000)
-        return CctxExchangeManager._are_datetimes_in_same_frame(last_candle_time, now, time_frame)
+        try:
+            last_candle = stored_candles.iloc[-1]
+            last_candle_time = datetime.fromtimestamp(last_candle["Open time"] / 1000)
+            return CctxExchangeManager._are_datetimes_in_same_frame(last_candle_time, now, time_frame)
+        except Exception:
+            return False
 
     @staticmethod
     def _are_datetimes_in_same_frame(last_candle_time: datetime, now: datetime, time_frame: TimeFrame) -> bool:

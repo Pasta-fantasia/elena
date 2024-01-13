@@ -6,8 +6,7 @@ from typing import Dict, Optional
 
 import pandas as pd
 
-from elena.adapters.exchange_manager.cctx_exchange_manager import \
-    CctxExchangeManager
+from elena.adapters.exchange_manager.cctx_exchange_manager import CctxExchangeManager
 from elena.domain.model.balance import Balance
 from elena.domain.model.bot_config import BotConfig
 from elena.domain.model.exchange import Exchange
