@@ -16,7 +16,7 @@ class BotBudget(BaseModel):
 
     def set(self, budget: float):
         self.free = budget
-        self.used = 0
+        self.used = 0.0
         self.budget_control = (budget > 0)
 
     def lock(self, used: float):
@@ -41,11 +41,11 @@ class BotBudget(BaseModel):
     # def used(self):
     #     return self._used
 
-    # @property
+    @property
     def total(self) -> float:
         return self.free + self.used
 
-    # @property
+    @property
     def is_budget_controlled(self) -> bool:
         return self.budget_control
 
@@ -117,14 +117,14 @@ class BotStatus(BaseModel):
         if amount_to_close > 0:
             for trade in self.active_trades[:]:
                 if trade.exit_order_id == '0' and amount_to_close > 0:  # TODO define an OrderId.Null
-                    amount_to_close, rtn = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
+                    amount_to_close, rtn = self._close_individual_trade_on_new_order(trade, order, amount_to_close, rtn)
 
         # close trade even with a different order_id
         if amount_to_close > 0:
             # self._logger.warning("The order size is bigger than the trades with an explicit order_id or a blank order_id")
             for trade in self.active_trades[:]:
                 if amount_to_close > 0:
-                    amount_to_close, rtn = self._close_individual_trade_on_new_order(trade, order, amount_to_close)
+                    amount_to_close, rtn = self._close_individual_trade_on_new_order(trade, order, amount_to_close, rtn)
 
         if amount_to_close > 0:  # TODO: how to pass min_amount?
             # self._logger.error("The order size is bigger than any trade. {amount_to_close} left to close of {order.amount}.")
