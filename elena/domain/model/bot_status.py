@@ -27,7 +27,7 @@ class BotBudget(BaseModel):
         if self.is_budget_limited and self.free > locked:
             # TODO: raise? return false? as it is now the operation is already done...
             pass
-        self.used = self.used + locked
+        self.used = round(self.used + locked, 8)
 
     def unlock(self, released: float, rtn: float):
         if self.is_budget_limited and self.used > released:
@@ -35,17 +35,17 @@ class BotBudget(BaseModel):
             pass
         # TODO profit control in budget
         released_without_profit = released - rtn
-        self.used = self.used - released_without_profit
+        self.used = round(self.used - released_without_profit, 8)
 
         re_usable_profit = rtn
         if self.pct_reinvest_profit != 100.0 and rtn > 0.0:
             re_usable_profit = (rtn * (self.pct_reinvest_profit / 100))
 
-        self.current_limit = self.current_limit + re_usable_profit
+        self.current_limit = round(self.current_limit + re_usable_profit, 8)
 
     @property
     def free(self) -> float:
-        return self.current_limit - self.used
+        return round(self.current_limit - self.used, 8)
 
     @property
     def is_budget_limited(self) -> bool:
@@ -53,7 +53,7 @@ class BotBudget(BaseModel):
 
     @property
     def total(self) -> float:
-        return self.free + self.used
+        return round(self.free + self.used, 8)
 
 
 class BotStatus(BaseModel):
@@ -84,7 +84,7 @@ class BotStatus(BaseModel):
         self.active_trades.append(new_trade)
 
     @staticmethod
-    def _get_precision(f1: float) -> int:
+    def _get_trade_precision(f1: float) -> int:
         # https://stackoverflow.com/questions/3018758/determine-precision-and-scale-of-particular-number-in-python
         # TODO: review solution
         str1 = str(f1)
@@ -98,12 +98,12 @@ class BotStatus(BaseModel):
         return cash_rtn
 
     def _close_individual_trade_on_new_order(self, trade: Trade, order: Order, amount_to_close: float, rtn: float) -> (float, float):
-        size_precision = self._get_precision(trade.size)  # done to avoid a call to Exchange to round amount_to_close at retrun
+        size_precision = self._get_trade_precision(trade.size)  # done to avoid a call to Exchange to round amount_to_close at retrun
         if trade.size <= round(amount_to_close, size_precision):
             self.active_trades.remove(trade)
             trade.exit_time = order.timestamp
             trade.exit_price = order.average
-            trade.exit_cost = order.cost
+            trade.exit_cost = order.cost * (trade.size / order.amount)
             rtn = rtn + self._calc_update_trade_return_and_duration(trade)
             self.closed_trades.append(trade)
             return amount_to_close - trade.size, rtn

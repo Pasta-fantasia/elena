@@ -51,7 +51,7 @@ class ExchangeBasicOperationsBot(GenericBot):
 
     def next(self) -> BotStatus:
         self._logger.info("%s strategy: processing next cycle ...", self.name)
-        sleep_time = 3
+        sleep_time = 0
 
         # 1 - INFO
         min_amount = self.limit_min_amount()
@@ -212,9 +212,9 @@ class ExchangeBasicOperationsBot(GenericBot):
         time.sleep(sleep_time)
 
         # Check budget
-        # assert self.status.budget.used == market_buy_order_rest.cost + market_buy_order_75.cost - market_sell_order.cost
-        # assert self.status.budget.free == - (market_buy_order_rest.cost + market_buy_order_75.cost - market_sell_order.cost)
-        # assert self.status.budget.total == 0.0
+        assert self.status.budget.used == 0.0
+        assert self.status.budget.free == round(- (market_buy_order_rest.cost + market_buy_order_75.cost - market_sell_order.cost),8)
+        assert self.status.budget.total == self.status.budget.free
 
         # Check orders & trades
         active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
