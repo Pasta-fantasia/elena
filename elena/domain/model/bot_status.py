@@ -93,14 +93,15 @@ class BotStatus(BaseModel):
     @staticmethod
     def _calc_update_trade_return_and_duration(trade: Trade) -> float:
         trade.duration = trade.exit_time - trade.entry_time
-        trade.return_pct = trade.exit_price / trade.entry_price
-        cash_rtn = trade.exit_cost - trade.entry_cost
-        return cash_rtn
+        trade.profit = trade.exit_cost - trade.entry_cost
+        trade.return_pct = (trade.profit / trade.entry_cost) * 100
+        return trade.profit
 
     def _close_individual_trade_on_new_order(self, trade: Trade, order: Order, amount_to_close: float, rtn: float) -> (float, float):
         size_precision = self._get_trade_precision(trade.size)  # done to avoid a call to Exchange to round amount_to_close at retrun
         if trade.size <= round(amount_to_close, size_precision):
             self.active_trades.remove(trade)
+            trade.exit_order_id = order.id
             trade.exit_time = order.timestamp
             trade.exit_price = order.average
             trade.exit_cost = order.cost * (trade.size / order.amount)
