@@ -1,0 +1,21 @@
+{
+    "function": "amount_to_precision",
+    "input": {
+        "pair": {
+            "type": "BaseModel",
+            "model_class": "elena.domain.model.trading_pair.TradingPair",
+            "value": {
+                "base": "BTC",
+                "quote": "USDT"
+            }
+        },
+        "amount": {
+            "type": "float",
+            "value": 0.02844
+        }
+    },
+    "output": {
+        "type": "float",
+        "value": 0.02844
+    }
+}

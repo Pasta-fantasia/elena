@@ -12,7 +12,7 @@ expected_limit_min_amount = {
 
 
 def test_deserialize_from_json():
-    actual = Record._deserialize_from_json("limit_min_amount-1705235113804.json")
+    actual = Record._deserialize_from_json("limit_min_amount-1705236507196.json")
     assert actual == expected_limit_min_amount
 
 
