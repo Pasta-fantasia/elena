@@ -29,5 +29,3 @@ class Trade(BaseModel):
     return_pct: Optional[float] = 0.0
     profit: Optional[float] = 0.0
 
-    def __init__(self):
-        self.id = str(int(time.time() * 1000))  # all id are str

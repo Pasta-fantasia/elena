@@ -1,3 +1,4 @@
+import time
 from typing import Dict, Optional
 
 import pandas as pd
@@ -80,6 +81,7 @@ class GenericBot(Bot):
             exit_order_id=exit_order_id,
             exit_price=exit_price,
         )
+        new_trade.id = str(int(time.time() * 1000))  # TODO: improve trade.id auto generation
         new_trade.entry_cost = entry_price * size
         new_trade.entry_time = int(new_trade.id)
         self.status.active_trades.append(new_trade)
