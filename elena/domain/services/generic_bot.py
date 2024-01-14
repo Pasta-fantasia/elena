@@ -151,6 +151,17 @@ class GenericBot(Bot):
             self._logger.error("Error getting limit min amount", exc_info=1)
             return None
 
+    def limit_min_cost(self) -> Optional[float]:
+        try:
+            return self.exchange_manager.limit_min_cost(
+                self.exchange,
+                pair=self.pair,
+            )
+        except Exception as err:
+            print(f"Error getting limit min cost: {err}")
+            self._logger.error("Error getting limit min cost", exc_info=1)
+            return None
+
     def amount_to_precision(self, amount: float) -> Optional[float]:
         try:
             return self.exchange_manager.amount_to_precision(
