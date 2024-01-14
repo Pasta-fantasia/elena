@@ -8,16 +8,22 @@ from elena.domain.model.trade import Trade
 
 
 class BotBudget(BaseModel):
-    # Budget in quote to spend in the strategy.
-    limit: float = 0.0
-    used: float = 0.0
-    pct_re_invest_profit: float = 100.0  # set how much to re-invest
+    # Budget expressed on quote to spend in the strategy.
+    set_limit: float = 0.0  # Limit set on the bot configuration.
+    current_limit: float = 0.0  # Limit to use now, if profit is taken this number will increase over set_limit.
+    used: float = 0.0  # Budget currently used
+    pct_re_invest_profit: float = 100.0  # set how much to re-invest en percentage.
 
     def set(self, budget: float, clear_used: bool = False):
-        # TODO set on load yaml... only if it's >0 ?
-        self.limit = budget
-        if clear_used:
-            self.used = 0.0
+        # Every time a set comes with a new value the budget is changed
+        # No matter if there are accumulated profit.
+        # While the user kept the same budget on the bot configuration
+        # the current_limit can use the profit.
+        if self.set_limit != budget:
+            self.set_limit = budget
+            self.current_limit = budget
+            if clear_used:
+                self.used = 0.0
 
     def lock(self, locked: float):
         if self.is_budget_limited and self.free > locked:
@@ -35,17 +41,17 @@ class BotBudget(BaseModel):
 
         re_usable_profit = rtn
         if self.pct_re_invest_profit != 100.0 and rtn > 0.0:
-            re_usable_profit = (rtn * (1 / self.pct_re_invest_profit))
+            re_usable_profit = (rtn * (self.pct_re_invest_profit / 100))
 
-        self.limit = self.limit + re_usable_profit
+        self.current_limit = self.current_limit + re_usable_profit
 
     @property
     def free(self) -> float:
-        return self.limit - self.used
+        return self.current_limit - self.used
 
     @property
     def is_budget_limited(self) -> bool:
-        return self.limit > 0.0
+        return self.set_limit > 0.0
 
     @property
     def total(self) -> float:
