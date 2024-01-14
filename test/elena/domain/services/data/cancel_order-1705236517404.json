@@ -16,6 +16,8 @@
                 "exchange_id": "binance",
                 "time_frame": "1m",
                 "cron_expression": "*/5 * * * *",
+                "budget_limit": 0.0,
+                "pct_reinvest_profit": 100.0,
                 "tags": [
                     "ranging",
                     "bear"
@@ -28,14 +30,14 @@
         },
         "order_id": {
             "type": "str",
-            "value": "3448098"
+            "value": "2879870"
         }
     },
     "output": {
         "type": "BaseModel",
         "model_class": "elena.domain.model.order.Order",
         "value": {
-            "id": "3448098",
+            "id": "2879870",
             "exchange_id": "binance",
             "bot_id": "Exchange_Test_Ops_BTC_USDT",
             "strategy_id": "ExchangeBasicOperationsTest-1",
@@ -43,19 +45,19 @@
                 "base": "BTC",
                 "quote": "USDT"
             },
-            "timestamp": 1702485175960,
+            "timestamp": 1705236517194,
             "type": "stop_loss_limit",
             "side": "sell",
-            "price": 31972.77,
-            "amount": 0.00945,
+            "price": 32529.52,
+            "amount": 0.02845,
             "cost": 0.0,
             "average": null,
             "filled": 0.0,
-            "remaining": 0.00945,
+            "remaining": 0.02845,
             "status": "canceled",
             "fee": null,
-            "trigger_price": 33655.54,
-            "stop_price": 33655.54,
+            "trigger_price": 34241.6,
+            "stop_price": 34241.6,
             "take_profit_price": null,
             "stop_loss_price": null
         }

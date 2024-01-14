@@ -1,8 +1,9 @@
 import pathlib
+import time
 from os import path
 
 from elena.domain.model.bot_config import BotConfig
-from elena.domain.model.bot_status import BotStatus
+from elena.domain.model.bot_status import BotStatus, BotBudget
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
 from elena.domain.ports.metrics_manager import MetricsManager
@@ -44,8 +45,12 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not self.exchange.sandbox_mode:
             raise Exception("Exchange is not in sandbox mode, this strategy is ment for testing only!")
 
+    def _orders_trades_status(self):
+        return len(self.status.active_orders), len(self.status.archived_orders), len(self.status.active_trades), len(self.status.closed_trades)
+
     def next(self) -> BotStatus:
         self._logger.info("%s strategy: processing next cycle ...", self.name)
+        sleep_time = 0
 
         # 1 - INFO
         min_amount = self.limit_min_amount()
@@ -64,6 +69,8 @@ class ExchangeBasicOperationsBot(GenericBot):
         if not balance:
             raise Exception("Cannot get balance")
 
+        base_symbol = self.pair.base
+        base_free = balance.currencies[base_symbol].free
         quote_symbol = self.pair.quote
         quote_free = balance.currencies[quote_symbol].free
 
@@ -75,36 +82,152 @@ class ExchangeBasicOperationsBot(GenericBot):
             raise Exception(f"Cannot get precision_to_buy for amount_to_buy {amount_to_buy}")
 
         if precision_to_buy < min_amount:
-            raise Exception("Not enough balance to run the tests. {self.pair.base} = {base_free} / {quote_free}")
+            raise Exception(f"Not enough balance to run the tests. {self.pair.base} = {base_free} / {quote_free}")
+
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
 
         market_buy_order = self.create_market_buy_order(precision_to_buy)
 
         if not market_buy_order:
             raise Exception("Buy test failed")
-        # TODO: check orders & trades
+
+        # TODO: wait order status without recording
+        time.sleep(sleep_time)
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+
+        assert active_orders_before_order == active_orders_after_order
+        assert archived_orders_after_order == (archived_orders_before_order + 1)
+        assert active_trades_after_order == (active_trades_before_order + 1)
+        assert closed_trades_before_order == closed_trades_after_order
+        # TODO check: order data in archived_orders and trades
 
         # 3 - STOP LOSS Create
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
         amount_for_stop_loss = market_buy_order.amount
         stop_loss_stop_price = candles["Close"][-1:].iloc[0] * 0.8  # last close - 20%
         stop_loss_price = stop_loss_stop_price * 0.95  # stop_price - 5%
         stop_loss_order = self.stop_loss(amount_for_stop_loss, stop_loss_stop_price, stop_loss_price)
         if not stop_loss_order:
             raise Exception("Stop loss creation failed.")
-        # TODO: check orders & trades
+        # TODO: wait order status without recording
+        time.sleep(sleep_time)
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+        assert active_orders_after_order == (active_orders_before_order + 1)
+        assert archived_orders_after_order == archived_orders_before_order
+        assert active_trades_after_order == active_trades_before_order
+        assert closed_trades_before_order == closed_trades_after_order
 
         # 4 - STOP LOSS Cancel
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
+
         canceled_order = self.cancel_order(stop_loss_order.id)
         if not canceled_order:
             raise Exception("Stop loss cancel failed.")
-        # TODO: check orders & trades
+        # TODO: wait order status without recording
+        time.sleep(sleep_time)
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+        assert active_orders_after_order == active_orders_before_order - 1
+        assert archived_orders_after_order == archived_orders_before_order + 1
+        assert active_trades_after_order == active_trades_before_order
+        assert closed_trades_before_order == closed_trades_after_order
 
         # 5 - SELL Market
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
         amount_to_sell = market_buy_order.amount
         market_sell_order = self.create_market_sell_order(amount_to_sell)
 
         if not market_sell_order:
             raise Exception("Sell test failed")
-        # TODO: check orders & trades
+        # TODO: wait order status without recording
+        time.sleep(sleep_time)
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+        assert active_orders_after_order == active_orders_before_order
+        assert archived_orders_after_order == archived_orders_before_order + 1
+        assert active_trades_after_order == active_trades_before_order - 1
+        assert closed_trades_after_order == closed_trades_before_order + 1
+
+        # 6 - BUY twice and SELL once to check Trades and Budget
+        # 6.1 BUY twice
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
+
+        self.status.budget = BotBudget()  # reset free and used
+
+        amount_to_buy_75 = amount_to_buy * 0.75
+        amount_to_buy_rest = amount_to_buy - amount_to_buy_75
+
+        if amount_to_buy_75 < min_amount:
+            raise Exception(f"Not enough balance to run the tests. amount_to_buy_75: {amount_to_buy_75} < {min_amount}")
+
+        if amount_to_buy_rest < min_amount:
+            raise Exception(f"Not enough balance to run the tests. amount_to_buy_rest: {amount_to_buy_rest} < {min_amount}")
+
+        market_buy_order_75 = self.create_market_buy_order(amount_to_buy_75)
+        if not market_buy_order_75:
+            raise Exception("market_buy_order_75 creation failed.")
+        # TODO: wait order status without recording
+        time.sleep(sleep_time)
+
+        # Check budget
+        assert self.status.budget.used == market_buy_order_75.cost
+        assert self.status.budget.free == -market_buy_order_75.cost
+        assert self.status.budget.total == 0.0
+
+        market_buy_order_rest = self.create_market_buy_order(amount_to_buy_rest)
+        if not market_buy_order_rest:
+            raise Exception("market_buy_order_rest creation failed.")
+        # TODO: wait order status without recording
+        time.sleep(sleep_time)
+
+        # Check budget
+        assert self.status.budget.used == market_buy_order_rest.cost + market_buy_order_75.cost  # type: ignore
+        assert self.status.budget.free == -market_buy_order_rest.cost - market_buy_order_75.cost  # type: ignore
+        assert self.status.budget.total == 0.0
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+
+        assert active_orders_before_order == active_orders_after_order
+        assert archived_orders_after_order == (archived_orders_before_order + 2)
+        assert active_trades_after_order == (active_trades_before_order + 2)
+        assert closed_trades_before_order == closed_trades_after_order
+
+        # 6.2 SELL once
+        active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
+        amount_to_sell = market_buy_order_75.amount + market_buy_order_rest.amount
+
+        market_sell_order = self.create_market_sell_order(amount_to_sell)
+
+        if not market_sell_order:
+            raise Exception("Sell test failed")
+        # TODO: wait order status without recording
+        time.sleep(sleep_time)
+
+        # Check budget
+        assert self.status.budget.used == 0.0
+        assert self.status.budget.free == round(-(market_buy_order_rest.cost + market_buy_order_75.cost - market_sell_order.cost), 8)  # type: ignore
+        assert self.status.budget.total == self.status.budget.free
+
+        # Check orders & trades
+        active_orders_after_order, archived_orders_after_order, active_trades_after_order, closed_trades_after_order = self._orders_trades_status()
+        assert active_orders_after_order == active_orders_before_order
+        assert archived_orders_after_order == archived_orders_before_order + 1
+        assert active_trades_after_order == active_trades_before_order - 2
+        assert closed_trades_after_order == closed_trades_before_order + 2
+
+        # we may find an order with:
+        #  - the same amount
+        #  - greater
+        #  - lower
+        # or the sum of all amounts...
+        # partially close trades?
 
         return self.status
 

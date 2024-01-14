@@ -31,7 +31,6 @@ class GenericBot(Bot):
     manager: StrategyManager
     exchange_manager: ExchangeManager
     bot_config: BotConfig
-    initial_status: BotStatus  # for testing/development TODO: delete
     status: BotStatus
     _logger: Logger
     _metrics_manager: MetricsManager
@@ -55,8 +54,9 @@ class GenericBot(Bot):
         self.config = bot_config.config
         self.manager = manager
         self.bot_config = bot_config
-        self.initial_status = bot_status  # for testing/development TODO: delete
         self.status = bot_status
+        self.status.budget.set(bot_config.budget_limit)
+        self.status.budget.pct_reinvest_profit = bot_config.pct_reinvest_profit
         self._logger = logger
         self._metrics_manager = metrics_manager
         self._notifications_manager = notifications_manager
@@ -68,22 +68,7 @@ class GenericBot(Bot):
         self.exchange_manager = exchange_manager
         self._update_orders_status()
 
-    def new_trade(self, order: Order):
-        # All Trades start/"born" here...
-        new_trade = Trade(
-            exchange_id=self.exchange.id,
-            bot_id=self.id,
-            strategy_id=self.bot_config.strategy_id,
-            pair=self.pair,
-            size=order.amount,
-            entry_order_id=order.id,
-            entry_price=order.average,
-            exit_order_id=0,
-            exit_price=0,
-        )
-        self.status.active_trades.append(new_trade)
-
-    def new_trade_manual(self, size: float, entry_price: float, exit_order_id, exit_price: float):
+    def new_trade_manual(self, size: float, entry_price: float, exit_order_id, exit_price: float) -> str:
         new_trade = Trade(
             exchange_id=self.exchange.id,
             bot_id=self.id,
@@ -96,68 +81,32 @@ class GenericBot(Bot):
             exit_price=exit_price,
         )
         self.status.active_trades.append(new_trade)
-
-    def new_order(self, order: Order):
-        # TODO: order_add + trade_stop (going long) | trade_start (going short)
-
-        if order.status == OrderStatusType.closed:
-            self.status.archived_orders.append(order)
-        else:
-            self.status.active_orders.append(order)
-
-        if order.side == OrderSide.buy:
-            self.new_trade(order)
-
-    def archive_order_close_trades(self, order: Order):
-        for trade in self.status.active_trades:
-            if trade.exit_order_id == order.id:
-                self.status.active_trades.remove(trade)
-                trade.exit_time = order.timestamp
-                trade.exit_price = order.average
-                self.status.closed_trades.append(trade)
-        # move to archived
-        self.status.archived_orders.append(order)
-
-    def archive_order(self, order: Order):
-        for loop_order in self.status.active_orders:
-            if loop_order.id == order.id:
-                self.status.active_orders.remove(loop_order)
-        self.status.archived_orders.append(order)
+        return new_trade.id
 
     def _update_orders_status(self) -> BotStatus:
         # orders
+        # update active and archived orders
+        # call _update_trades_on_update_orders to update trades
         updated_orders = []
         for order in self.status.active_orders:
-            # update status
+            # update order status
             updated_order = self.fetch_order(order.id)
 
             if updated_order:
-                if updated_order.status == OrderStatusType.closed or updated_order.status == OrderStatusType.canceled:
-                    # notify
-                    if updated_order.status == OrderStatusType.closed:
-                        self._logger.info(f"Notify! Order {updated_order.id} " f"was closed for {updated_order.amount} {updated_order.pair} " f"at {updated_order.average}")
-                    if updated_order.status == OrderStatusType.canceled:
-                        self._logger.info(f"Notify! Order {updated_order.id} was cancelled!-")
-                        # TODO: [Fran] what should we do if an order is cancelled?
-                        #  Cancel are: manual, something could go
-                        #  wrong in L or the market is stopped.
-
-                    # updates trades
-                    self.archive_order_close_trades(updated_order)
-
-                elif updated_order.status == OrderStatusType.open and updated_order.filled > 0:  # type: ignore
-
-                    self._logger.info(f"Notify! Order {updated_order.id} is PARTIALLY_FILLED filled: " f"{updated_order.filled} of {updated_order.amount} {updated_order.pair} at" f" {updated_order.average}")
-
-                    # PARTIALLY_FILLED is considered an active order, It's on the strategy to do something.
-                    updated_orders.append(updated_order)
+                self.status.update_trades_on_update_orders(updated_order)
+                if updated_order.status in [OrderStatusType.closed, OrderStatusType.canceled, OrderStatusType.rejected]:
+                    # move to archived
+                    self.status.archived_orders.append(updated_order)
                 else:
+                    # keep active with new status
                     updated_orders.append(updated_order)
             else:
-                self._logger.error(f"The order {order.id} has desapear! This should only happend on test environments")
+                self._logger.error(f"The order {order.id} has disappear! This should only happened on test environments")
 
         self.status.active_orders = updated_orders
         return self.status
+
+    #  ---- Main
 
     def next(self) -> Optional[BotStatus]:
         ...
@@ -247,7 +196,7 @@ class GenericBot(Bot):
             )
             self._metrics_manager.counter(Metric.ORDER_CANCELLED, self.bot_config.strategy_id, 1, [self.bot_config.exchange_id.value])
             self._notifications_manager.medium(f"Order {order_id} was cancelled")
-            self.archive_order(order)
+            self.status.archive_order_on_cancel(order)
             return order
         except Exception as err:
             print(f"Error cancelling order: {err}")
@@ -285,7 +234,7 @@ class GenericBot(Bot):
             )
             self._logger.info("Placed market stop loss: %s", order)
 
-            self.new_order(order)
+            self.status.register_new_order_on_trades(order)
             return order
         except Exception as err:
             print(f"Error creating stop loss: {err}")
@@ -314,7 +263,7 @@ class GenericBot(Bot):
             )
             self._logger.info("Placed market buy: %s", order)
 
-            self.new_order(order)
+            self.status.register_new_order_on_trades(order)
             return order
         except Exception as err:
             print(f"Error creating market buy order: {err}")
@@ -336,7 +285,7 @@ class GenericBot(Bot):
             )
             self._logger.info("Placed market sell: %s", order)
 
-            self.new_order(order)
+            self.status.register_new_order_on_trades(order)
             return order
         except Exception as err:
             print(f"Error creating market sell order: {err}")

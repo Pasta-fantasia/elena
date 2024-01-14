@@ -11,11 +11,11 @@
         },
         "amount": {
             "type": "float",
-            "value": 0.00945
+            "value": 0.028451467171245724
         }
     },
     "output": {
         "type": "float",
-        "value": 0.00945
+        "value": 0.02845
     }
 }

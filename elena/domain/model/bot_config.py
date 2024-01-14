@@ -16,5 +16,7 @@ class BotConfig(BaseModel):
     exchange_id: ExchangeType
     time_frame: TimeFrame
     cron_expression: str
+    budget_limit: float = 0.0
+    pct_reinvest_profit: float = 100.0
     tags: List[str]
     config: Dict

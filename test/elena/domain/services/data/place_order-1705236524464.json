@@ -16,6 +16,8 @@
                 "exchange_id": "binance",
                 "time_frame": "1m",
                 "cron_expression": "*/5 * * * *",
+                "budget_limit": 0.0,
+                "pct_reinvest_profit": 100.0,
                 "tags": [
                     "ranging",
                     "bear"
@@ -34,11 +36,11 @@
         "side": {
             "type": "OtherModel",
             "model_class": "elena.domain.model.order.OrderSide",
-            "value": "sell"
+            "value": "buy"
         },
         "amount": {
             "type": "float",
-            "value": 0.00945
+            "value": 0.02133
         },
         "params": {
             "type": "dict",
@@ -51,7 +53,7 @@
         "type": "BaseModel",
         "model_class": "elena.domain.model.order.Order",
         "value": {
-            "id": "3448103",
+            "id": "2879932",
             "exchange_id": "binance",
             "bot_id": "Exchange_Test_Ops_BTC_USDT",
             "strategy_id": "ExchangeBasicOperationsTest-1",
@@ -59,14 +61,14 @@
                 "base": "BTC",
                 "quote": "USDT"
             },
-            "timestamp": 1702485176656,
+            "timestamp": 1705236524247,
             "type": "market",
-            "side": "sell",
-            "price": 42073.99,
-            "amount": 0.00945,
-            "cost": 397.5992055,
-            "average": 42073.99,
-            "filled": 0.00945,
+            "side": "buy",
+            "price": 42799.78430379747,
+            "amount": 0.02133,
+            "cost": 912.9193992,
+            "average": 42799.78430379747,
+            "filled": 0.02133,
             "remaining": 0.0,
             "status": "closed",
             "fee": null,

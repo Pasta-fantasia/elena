@@ -5,7 +5,7 @@ import pandas as pd
 from mockito import mock
 from pandas import DataFrame
 
-from elena.domain.model.bot_status import BotStatus
+from elena.domain.model.bot_status import BotStatus, BotBudget
 from elena.domain.model.order import Order, OrderSide, OrderType
 from elena.domain.model.trading_pair import TradingPair
 from elena.domain.services.elena import get_storage_manager
@@ -65,6 +65,7 @@ def test_save_and_load_bot_status():
         ],
         active_trades=[],
         closed_trades=[],
+        budget=BotBudget(),
     )
 
     sut = get_storage_manager(

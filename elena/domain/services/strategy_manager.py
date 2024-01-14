@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 from cron_converter import Cron
 
 from elena.domain.model.bot_config import BotConfig
-from elena.domain.model.bot_status import BotStatus
+from elena.domain.model.bot_status import BotStatus, BotBudget
 from elena.domain.model.exchange import Exchange, ExchangeType
 from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.ports.bot import Bot
@@ -56,9 +56,6 @@ class StrategyManagerImpl(StrategyManager):
             run, status = self._get_run_status(bot_config, previous_statuses_dict)
             if run:
                 self._logger.info("Running bot %s: %s", bot_config.id, bot_config.name)
-                updated_status = self._run_bot(self._exchange_manager, bot_config, status)
-                if updated_status:
-                    updated_statuses.append(updated_status)
                 try:
                     updated_status = self._run_bot(self._exchange_manager, bot_config, status)
                     if updated_status:
@@ -80,13 +77,7 @@ class StrategyManagerImpl(StrategyManager):
             if bot_config.cron_expression:  # If there is no cron expression, the bot will run every time
                 run = self._check_if_bot_has_to_run(last_execution, bot_config.cron_expression)
         else:
-            status = BotStatus(
-                bot_id=bot_config.id,
-                active_orders=[],
-                archived_orders=[],
-                active_trades=[],
-                closed_trades=[],
-            )
+            status = BotStatus(bot_id=bot_config.id, active_orders=[], archived_orders=[], active_trades=[], closed_trades=[], budget=BotBudget())
         return run, status
 
     @staticmethod

@@ -76,6 +76,8 @@ Strategies:
         exchange: binance
         time_frame: 1m # Valid values: 1m, 1h, 1d, 1M, 1y
         cron_expression: "*/5 * * * *" # At every 5th minute
+        budget_limit: 0.0 # don't control budget
+        pct_reinvest_profit: 100.0 # reinvest all profits
         tags:
           - ranging
           - bear

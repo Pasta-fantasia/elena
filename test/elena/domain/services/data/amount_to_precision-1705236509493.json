@@ -1,5 +1,5 @@
 {
-    "function": "price_to_precision",
+    "function": "amount_to_precision",
     "input": {
         "pair": {
             "type": "BaseModel",
@@ -9,14 +9,13 @@
                 "quote": "USDT"
             }
         },
-        "price": {
-            "type": "OtherModel",
-            "model_class": "numpy.float64",
-            "value": 31972.7668
+        "amount": {
+            "type": "float",
+            "value": 0.02845
         }
     },
     "output": {
         "type": "float",
-        "value": 31972.77
+        "value": 0.02845
     }
 }

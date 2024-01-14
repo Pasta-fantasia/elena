@@ -12,11 +12,11 @@
         "price": {
             "type": "OtherModel",
             "model_class": "numpy.float64",
-            "value": 33655.544
+            "value": 34241.6
         }
     },
     "output": {
         "type": "float",
-        "value": 33655.54
+        "value": 34241.6
     }
 }
