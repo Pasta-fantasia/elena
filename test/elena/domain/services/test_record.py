@@ -33,6 +33,6 @@ def test_load_recorded_output():
         "amount_to_precision",
         all_recorded_data,
         pair=TradingPair(base="BTC", quote="USDT"),
-        amount=0.028450000000000003,
+        amount=0.00711286679281143,
     )
-    assert actual == 0.02845
+    assert actual == 0.00711
