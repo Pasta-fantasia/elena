@@ -77,14 +77,7 @@ class StrategyManagerImpl(StrategyManager):
             if bot_config.cron_expression:  # If there is no cron expression, the bot will run every time
                 run = self._check_if_bot_has_to_run(last_execution, bot_config.cron_expression)
         else:
-            status = BotStatus(
-                bot_id=bot_config.id,
-                active_orders=[],
-                archived_orders=[],
-                active_trades=[],
-                closed_trades=[],
-                budget=BotBudget()
-            )
+            status = BotStatus(bot_id=bot_config.id, active_orders=[], archived_orders=[], active_trades=[], closed_trades=[], budget=BotBudget())
         return run, status
 
     @staticmethod

@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, Optional
 
 import pandas as pd
@@ -72,7 +71,7 @@ class GenericBot(Bot):
     def new_trade_manual(self, size: float, entry_price: float, exit_order_id, exit_price: float) -> str:
         new_trade = Trade(
             exchange_id=self.exchange.id,
-            bot_id=self.bot_id,
+            bot_id=self.id,
             strategy_id=self.bot_config.strategy_id,
             pair=self.pair,
             size=size,
@@ -81,7 +80,7 @@ class GenericBot(Bot):
             exit_order_id=exit_order_id,
             exit_price=exit_price,
         )
-        self.active_trades.append(new_trade)
+        self.status.active_trades.append(new_trade)
         return new_trade.id
 
     def _update_orders_status(self) -> BotStatus:

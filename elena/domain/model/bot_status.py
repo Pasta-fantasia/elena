@@ -1,7 +1,7 @@
 import time
-from typing import List, Optional
+from typing import List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from elena.domain.model.order import Order, OrderSide, OrderStatusType
 from elena.domain.model.trade import Trade
@@ -39,7 +39,7 @@ class BotBudget(BaseModel):
 
         re_usable_profit = rtn
         if self.pct_reinvest_profit != 100.0 and rtn > 0.0:
-            re_usable_profit = (rtn * (self.pct_reinvest_profit / 100))
+            re_usable_profit = rtn * (self.pct_reinvest_profit / 100)
 
         self.current_limit = round(self.current_limit + re_usable_profit, 8)
 
@@ -77,7 +77,7 @@ class BotStatus(BaseModel):
             entry_price=order.average,
             entry_cost=order.cost,
             entry_time=order.timestamp,
-            exit_order_id='0',  # TODO define an OrderId.Null
+            exit_order_id="0",  # TODO define an OrderId.Null
             exit_price=0.0,
             exit_cost=0.0,
         )
@@ -93,19 +93,19 @@ class BotStatus(BaseModel):
 
     @staticmethod
     def _calc_update_trade_return_and_duration(trade: Trade) -> float:
-        trade.duration = trade.exit_time - trade.entry_time
-        trade.profit = trade.exit_cost - trade.entry_cost
+        trade.duration = trade.exit_time - trade.entry_time  # type: ignore
+        trade.profit = trade.exit_cost - trade.entry_cost  # type: ignore
         trade.return_pct = (trade.profit / trade.entry_cost) * 100
         return trade.profit
 
-    def _close_individual_trade_on_new_order(self, trade: Trade, order: Order, amount_to_close: float, rtn: float) -> (float, float):
+    def _close_individual_trade_on_new_order(self, trade: Trade, order: Order, amount_to_close: float, rtn: float) -> [float, float]:  # type: ignore
         size_precision = self._get_trade_precision(trade.size)  # done to avoid a call to Exchange to round amount_to_close at retrun
         if trade.size <= round(amount_to_close, size_precision):
             self.active_trades.remove(trade)
             trade.exit_order_id = order.id
             trade.exit_time = order.timestamp
             trade.exit_price = order.average
-            trade.exit_cost = order.cost * (trade.size / order.amount)
+            trade.exit_cost = order.cost * (trade.size / order.amount)  # type: ignore
             rtn = rtn + self._calc_update_trade_return_and_duration(trade)
             self.closed_trades.append(trade)
             return amount_to_close - trade.size, rtn
@@ -124,7 +124,7 @@ class BotStatus(BaseModel):
         # check trades without an exit order id
         if amount_to_close > 0:
             for trade in self.active_trades[:]:
-                if trade.exit_order_id == '0' and amount_to_close > 0:  # TODO define an OrderId.Null
+                if trade.exit_order_id == "0" and amount_to_close > 0:  # TODO define an OrderId.Null
                     amount_to_close, rtn = self._close_individual_trade_on_new_order(trade, order, amount_to_close, rtn)
 
         # close trade even with a different order_id
@@ -146,12 +146,12 @@ class BotStatus(BaseModel):
 
         # TODO OrderStatusType.canceled or rejected
         if order.status == OrderStatusType.canceled or order.status == OrderStatusType.rejected:
-            raise "Order condition unhandled (canceled or rejected)"
+            raise RuntimeError("Order condition unhandled (canceled or rejected)")
 
         if order.side == OrderSide.buy:
-            trade_id = self._new_trade_by_order(order)
+            self._new_trade_by_order(order)
             # order.parent_trade = trade_id
-            self.budget.lock(order.cost)
+            self.budget.lock(order.cost)  # type: ignore
             if order.status == OrderStatusType.closed:
                 self.archived_orders.append(order)
             else:  # open & partials are active, budget is lock equally.
@@ -160,14 +160,14 @@ class BotStatus(BaseModel):
         elif order.side == OrderSide.sell:
             if order.status == OrderStatusType.closed:
                 rtn = self._close_trades_on_new_updated_order(order)
-                self.budget.unlock(order.cost, rtn)
+                self.budget.unlock(order.cost, rtn)  # type: ignore
                 self.archived_orders.append(order)
             else:
                 # stop loss => if order.stop_price and order.stop_price > 0:
                 # TODO: budget.unlock (partial) ???
                 self.active_orders.append(order)
         else:
-            raise "Order condition unhandled (OrderSide)"
+            raise RuntimeError("Order condition unhandled (OrderSide)")
 
     def update_trades_on_update_orders(self, order: Order):
         if order is None:
@@ -204,21 +204,21 @@ class BotStatus(BaseModel):
                     pass
 
                 # TODO order.cost is set on cancel and reject?
-                self.budget.unlock(order.cost, 0.0)
+                self.budget.unlock(order.cost, 0.0)  # type: ignore
             elif order.status == OrderStatusType.open:  # open & partials are active, budget is lock equally.
                 # on buy, open or partial
                 #   update trade.order status (done in _update_orders_status)
                 # nothing to do here
                 pass
             else:
-                raise "Order condition unhandled (OrderSide.buy)"
+                raise RuntimeError("Order condition unhandled (OrderSide.buy)")
 
         elif order.side == OrderSide.sell:
             if order.status == OrderStatusType.closed:
                 # on sell, close
                 #   close trade... _close_trades_on_new_updated_order?
                 rtn = self._close_trades_on_new_updated_order(order)
-                self.budget.unlock(order.cost, rtn)
+                self.budget.unlock(order.cost, rtn)  # type: ignore
 
             elif order.status == OrderStatusType.canceled or order.status == OrderStatusType.rejected:
                 # on sell, cancel or rejected
@@ -233,9 +233,9 @@ class BotStatus(BaseModel):
                 # TODO: budget.unlock (partial) ???
                 pass
             else:
-                raise "Order condition unhandled (OrderSide.sell)"
+                raise RuntimeError("Order condition unhandled (OrderSide.sell)")
         else:
-            raise "Order condition unhandled (OrderSide)"
+            raise RuntimeError("Order condition unhandled (OrderSide)")
 
     def archive_order_on_cancel(self, order: Order):
         found_order = False

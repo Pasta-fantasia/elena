@@ -65,7 +65,7 @@ def test_save_and_load_bot_status():
         ],
         active_trades=[],
         closed_trades=[],
-        budget=BotBudget()
+        budget=BotBudget(),
     )
 
     sut = get_storage_manager(

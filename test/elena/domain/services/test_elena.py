@@ -18,14 +18,14 @@ class ExchangeBasicOperationsBot(GenericBot):
     band_mult: float
 
     def init(
-            self,
-            manager: StrategyManager,
-            logger: Logger,
-            metrics_manager: MetricsManager,
-            notifications_manager: NotificationsManager,
-            exchange_manager: ExchangeManager,
-            bot_config: BotConfig,
-            bot_status: BotStatus,
+        self,
+        manager: StrategyManager,
+        logger: Logger,
+        metrics_manager: MetricsManager,
+        notifications_manager: NotificationsManager,
+        exchange_manager: ExchangeManager,
+        bot_config: BotConfig,
+        bot_status: BotStatus,
     ):  # type: ignore
         super().init(
             manager,
@@ -46,8 +46,7 @@ class ExchangeBasicOperationsBot(GenericBot):
             raise Exception("Exchange is not in sandbox mode, this strategy is ment for testing only!")
 
     def _orders_trades_status(self):
-        return len(self.status.active_orders), len(self.status.archived_orders), len(self.status.active_trades), len(
-            self.status.closed_trades)
+        return len(self.status.active_orders), len(self.status.archived_orders), len(self.status.active_trades), len(self.status.closed_trades)
 
     def next(self) -> BotStatus:
         self._logger.info("%s strategy: processing next cycle ...", self.name)
@@ -178,7 +177,7 @@ class ExchangeBasicOperationsBot(GenericBot):
 
         # Check budget
         assert self.status.budget.used == market_buy_order_75.cost
-        assert self.status.budget.free == - market_buy_order_75.cost
+        assert self.status.budget.free == -market_buy_order_75.cost
         assert self.status.budget.total == 0.0
 
         market_buy_order_rest = self.create_market_buy_order(amount_to_buy_rest)
@@ -188,8 +187,8 @@ class ExchangeBasicOperationsBot(GenericBot):
         time.sleep(sleep_time)
 
         # Check budget
-        assert self.status.budget.used == market_buy_order_rest.cost + market_buy_order_75.cost
-        assert self.status.budget.free == - market_buy_order_rest.cost - market_buy_order_75.cost
+        assert self.status.budget.used == market_buy_order_rest.cost + market_buy_order_75.cost  # type: ignore
+        assert self.status.budget.free == -market_buy_order_rest.cost - market_buy_order_75.cost  # type: ignore
         assert self.status.budget.total == 0.0
 
         # Check orders & trades
@@ -213,7 +212,7 @@ class ExchangeBasicOperationsBot(GenericBot):
 
         # Check budget
         assert self.status.budget.used == 0.0
-        assert self.status.budget.free == round(- (market_buy_order_rest.cost + market_buy_order_75.cost - market_sell_order.cost),8)
+        assert self.status.budget.free == round(-(market_buy_order_rest.cost + market_buy_order_75.cost - market_sell_order.cost), 8)  # type: ignore
         assert self.status.budget.total == self.status.budget.free
 
         # Check orders & trades
