@@ -80,6 +80,8 @@ class GenericBot(Bot):
             exit_order_id=exit_order_id,
             exit_price=exit_price,
         )
+        new_trade.entry_cost = entry_price * size
+        new_trade.entry_time = int(new_trade.id)
         self.status.active_trades.append(new_trade)
         return new_trade.id
 
