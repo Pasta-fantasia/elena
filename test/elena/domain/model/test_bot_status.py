@@ -5,7 +5,7 @@ def test_budget_simple():
     budget = BotBudget()
 
     # verify default values
-    assert budget.pct_re_invest_profit == 100.0
+    assert budget.pct_reinvest_profit == 100.0
     assert budget.free == 0
     assert budget.used == 0
     assert budget.total == 0
@@ -41,7 +41,7 @@ def test_budget_partial_unlock_with_100_benefits():
     budget.set(100)
     budget.lock(100)  # buy 100
 
-    assert budget.pct_re_invest_profit == 100.0
+    assert budget.pct_reinvest_profit == 100.0
     assert budget.set_limit == 100
     assert budget.used == 100
 
@@ -57,9 +57,9 @@ def test_budget_partial_unlock_with_50_benefits():
     budget = BotBudget()
     budget.set(100)
     budget.lock(100)  # buy 100
-    budget.pct_re_invest_profit = 50.0
+    budget.pct_reinvest_profit = 50.0
 
-    assert budget.pct_re_invest_profit == 50.0
+    assert budget.pct_reinvest_profit == 50.0
     assert budget.set_limit == 100
     assert budget.used == 100
 
@@ -75,9 +75,9 @@ def test_budget_partial_unlock_with_0_benefits():
     budget = BotBudget()
     budget.set(100)
     budget.lock(100)  # buy 100
-    budget.pct_re_invest_profit = 0
+    budget.pct_reinvest_profit = 0
 
-    assert budget.pct_re_invest_profit == 0
+    assert budget.pct_reinvest_profit == 0
     assert budget.set_limit == 100
     assert budget.used == 100
 
@@ -93,7 +93,7 @@ def test_budget_on_a_new_set_with_used_budget():
     budget = BotBudget()
     budget.set(100)
     budget.lock(100)  # buy 100
-    budget.pct_re_invest_profit = 0
+    budget.pct_reinvest_profit = 0
 
     budget.unlock(100, 50)  # sell 50, but with 50 in benefits, take none as more budget
     assert budget.set_limit == 100
@@ -108,7 +108,7 @@ def test_budget_on_a_new_set_with_used_budget():
     assert budget.used == 50
     assert budget.total == 200
     assert budget.current_limit == 200
-    assert budget.pct_re_invest_profit == 0
+    assert budget.pct_reinvest_profit == 0
 
     budget.set(25)  # change budget down
     assert budget.set_limit == 25
@@ -116,4 +116,4 @@ def test_budget_on_a_new_set_with_used_budget():
     assert budget.used == 50
     assert budget.total == 25
     assert budget.current_limit == 25
-    assert budget.pct_re_invest_profit == 0
+    assert budget.pct_reinvest_profit == 0

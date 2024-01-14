@@ -12,9 +12,9 @@ class BotBudget(BaseModel):
     set_limit: float = 0.0  # Limit set on the bot configuration.
     current_limit: float = 0.0  # Limit to use now, if profit is taken this number will increase over set_limit.
     used: float = 0.0  # Budget currently used
-    pct_re_invest_profit: float = 100.0  # set how much to re-invest en percentage.
+    pct_reinvest_profit: float = 100.0  # set how much to re-invest en percentage.
 
-    def set(self, budget: float, clear_used: bool = False):
+    def set(self, budget: float):
         # Every time a set comes with a new value the budget is changed
         # No matter if there are accumulated profit.
         # While the user kept the same budget on the bot configuration
@@ -22,8 +22,6 @@ class BotBudget(BaseModel):
         if self.set_limit != budget:
             self.set_limit = budget
             self.current_limit = budget
-            if clear_used:
-                self.used = 0.0
 
     def lock(self, locked: float):
         if self.is_budget_limited and self.free > locked:
@@ -40,8 +38,8 @@ class BotBudget(BaseModel):
         self.used = self.used - released_without_profit
 
         re_usable_profit = rtn
-        if self.pct_re_invest_profit != 100.0 and rtn > 0.0:
-            re_usable_profit = (rtn * (self.pct_re_invest_profit / 100))
+        if self.pct_reinvest_profit != 100.0 and rtn > 0.0:
+            re_usable_profit = (rtn * (self.pct_reinvest_profit / 100))
 
         self.current_limit = self.current_limit + re_usable_profit
 
