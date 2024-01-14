@@ -32,7 +32,6 @@ class GenericBot(Bot):
     manager: StrategyManager
     exchange_manager: ExchangeManager
     bot_config: BotConfig
-    initial_status: BotStatus  # for testing/development TODO: delete
     status: BotStatus
     _logger: Logger
     _metrics_manager: MetricsManager
@@ -56,8 +55,9 @@ class GenericBot(Bot):
         self.config = bot_config.config
         self.manager = manager
         self.bot_config = bot_config
-        self.initial_status = bot_status  # for testing/development TODO: delete
         self.status = bot_status
+        self.status.budget.set(bot_config.budget_limit)
+        self.status.budget.pct_reinvest_profit = bot_config.pct_reinvest_profit
         self._logger = logger
         self._metrics_manager = metrics_manager
         self._notifications_manager = notifications_manager

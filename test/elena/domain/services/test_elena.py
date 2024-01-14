@@ -159,7 +159,7 @@ class ExchangeBasicOperationsBot(GenericBot):
         # 6.1 BUY twice
         active_orders_before_order, archived_orders_before_order, active_trades_before_order, closed_trades_before_order = self._orders_trades_status()
 
-        self.status.budget.set(0.0, True)  # reset free and used
+        self.status.budget.set(0.0)  # reset free and used
 
         amount_to_buy_75 = amount_to_buy * 0.75
         amount_to_buy_rest = amount_to_buy - amount_to_buy_75

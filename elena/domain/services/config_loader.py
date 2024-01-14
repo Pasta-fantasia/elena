@@ -66,6 +66,8 @@ class ConfigLoader:
                     exchange_id=ExchangeType(bot["exchange"]),
                     time_frame=TimeFrame(bot["time_frame"]),
                     cron_expression=bot["cron_expression"],
+                    budget_limit=bot["budget_limit"],
+                    pct_reinvest_profit=bot["pct_reinvest_profit"],
                     tags=bot["tags"],
                     config=bot["config"],
                 )
