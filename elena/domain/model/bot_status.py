@@ -150,7 +150,7 @@ class BotStatus(BaseModel):
 
         if order.side == OrderSide.buy:
             trade_id = self._new_trade_by_order(order)
-            order.parent_trade = trade_id
+            # order.parent_trade = trade_id
             self.budget.lock(order.cost)
             if order.status == OrderStatusType.closed:
                 self.archived_orders.append(order)
