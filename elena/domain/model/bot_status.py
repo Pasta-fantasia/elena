@@ -65,7 +65,7 @@ class BotStatus(BaseModel):
     closed_trades: List[Trade]
     budget: BotBudget
 
-    def _new_trade_by_order(self, order: Order):
+    def _new_trade_by_order(self, order: Order) -> str:
         # All Trades start/"born" here...
         new_trade = Trade(
             exchange_id=order.exchange_id,
@@ -82,6 +82,7 @@ class BotStatus(BaseModel):
             exit_cost=0.0,
         )
         self.active_trades.append(new_trade)
+        return new_trade.id
 
     @staticmethod
     def _get_trade_precision(f1: float) -> int:
@@ -148,7 +149,8 @@ class BotStatus(BaseModel):
             raise "Order condition unhandled (canceled or rejected)"
 
         if order.side == OrderSide.buy:
-            self._new_trade_by_order(order)
+            trade_id = self._new_trade_by_order(order)
+            order.parent_trade = trade_id
             self.budget.lock(order.cost)
             if order.status == OrderStatusType.closed:
                 self.archived_orders.append(order)

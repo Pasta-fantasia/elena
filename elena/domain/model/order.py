@@ -53,3 +53,4 @@ class Order(BaseModel):
     stop_price: Optional[float]
     take_profit_price: Optional[float]
     stop_loss_price: Optional[float]
+    parent_trade: Optional[str]
