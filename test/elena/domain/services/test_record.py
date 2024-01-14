@@ -12,7 +12,7 @@ expected_limit_min_amount = {
 
 
 def test_deserialize_from_json():
-    actual = Record._deserialize_from_json("limit_min_amount-1702485154578.json")
+    actual = Record._deserialize_from_json("limit_min_amount-1705235113804.json")
     assert actual == expected_limit_min_amount
 
 
@@ -33,6 +33,6 @@ def test_load_recorded_output():
         "amount_to_precision",
         all_recorded_data,
         pair=TradingPair(base="BTC", quote="USDT"),
-        amount=0.009451835273816727,
+        amount=0.028450000000000003,
     )
-    assert actual == 0.00945
+    assert actual == 0.02845
