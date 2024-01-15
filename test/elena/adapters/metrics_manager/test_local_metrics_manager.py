@@ -3,7 +3,7 @@ from os import path
 
 from mockito import mock
 
-from elena.domain.ports.metrics_manager import Metric
+from elena.domain.ports.metrics_manager import ORDER_CANCELLED
 from elena.domain.services.elena import get_metrics_manager, get_storage_manager
 
 config = {
@@ -30,14 +30,14 @@ def test_counter():
     )
 
     strategy_id = "test_strategy"
-    df_id = f"Counter-{Metric.ORDER_CANCELLED.value}-{strategy_id}"
+    df_id = f"Counter-{ORDER_CANCELLED}-{strategy_id}"
 
     try:
         storage_manager.delete_data_frame(df_id)
     except Exception:
         pass
 
-    sut.counter(Metric.ORDER_CANCELLED, strategy_id, 7, ["tag7"])
+    sut.counter(ORDER_CANCELLED, strategy_id, 7, ["tag7"])
 
     actual = storage_manager.load_data_frame(df_id).to_dict()
     assert len(actual) == 3
@@ -45,7 +45,7 @@ def test_counter():
     assert actual["value"] == {"0": 7}
     assert actual["tags"] == {"0": "tag7"}
 
-    sut.counter(Metric.ORDER_CANCELLED, strategy_id, 77, ["tag77"])
+    sut.counter(ORDER_CANCELLED, strategy_id, 77, ["tag77"])
 
     actual = storage_manager.load_data_frame(df_id).to_dict()
     assert len(actual) == 3
@@ -66,14 +66,14 @@ def test_gauge():
     )
 
     strategy_id = "test_strategy"
-    df_id = f"Gauge-{Metric.ORDER_CANCELLED.value}-{strategy_id}"
+    df_id = f"Gauge-{ORDER_CANCELLED}-{strategy_id}"
 
     try:
         storage_manager.delete_data_frame(df_id)
     except Exception:
         pass
 
-    sut.gauge(Metric.ORDER_CANCELLED, strategy_id, 8.8, ["tag88"])
+    sut.gauge(ORDER_CANCELLED, strategy_id, 8.8, ["tag88"])
 
     actual = storage_manager.load_data_frame(df_id).to_dict()
     assert len(actual) == 3
@@ -81,7 +81,7 @@ def test_gauge():
     assert actual["value"] == {"0": 8.8}
     assert actual["tags"] == {"0": "tag88"}
 
-    sut.gauge(Metric.ORDER_CANCELLED, strategy_id, 9.9, ["tag99"])
+    sut.gauge(ORDER_CANCELLED, strategy_id, 9.9, ["tag99"])
 
     actual = storage_manager.load_data_frame(df_id).to_dict()
     assert len(actual) == 3
