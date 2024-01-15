@@ -16,7 +16,7 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.metrics_manager import Metric, MetricsManager
+from elena.domain.ports.metrics_manager import MetricsManager, ORDER_CANCELLED
 from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
 
@@ -209,7 +209,7 @@ class GenericBot(Bot):
                 bot_config=self.bot_config,
                 order_id=order_id,
             )
-            self._metrics_manager.counter(Metric.ORDER_CANCELLED, self.bot_config.strategy_id, 1, [self.bot_config.exchange_id.value])
+            self._metrics_manager.counter(ORDER_CANCELLED, self.bot_config.strategy_id, 1, [self.bot_config.exchange_id.value])
             self._notifications_manager.medium(f"Order {order_id} was cancelled")
             self.status.archive_order_on_cancel(order)
             return order
