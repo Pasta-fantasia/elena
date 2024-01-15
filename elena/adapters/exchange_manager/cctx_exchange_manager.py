@@ -451,9 +451,28 @@ class CctxExchangeManager(ExchangeManager):
         result = self._map_order(exchange, bot_config, bot_config.pair, order)
         return result
 
+    def get_precision_amount(self, exchange: Exchange, pair: TradingPair) -> float:
+        # min order size
+        # TODO:add testing on elena_test.py, add to generic_bot, set on status?
+        conn = self._connect(exchange)
+        return float(conn.markets[str(pair)]["precision"]["amount"])
+
+    def get_precision_price(self, exchange: Exchange, pair: TradingPair) -> float:
+        # min order size
+        # TODO:add testing on elena_test.py, add to generic_bot, set on status?
+        conn = self._connect(exchange)
+        return float(conn.markets[str(pair)]["precision"]["price"])
+
     def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
+        # min order size
         conn = self._connect(exchange)
         return float(conn.markets[str(pair)]["limits"]["amount"]["min"])
+
+    def limit_min_cost(self, exchange: Exchange, pair: TradingPair) -> float:
+        # min order price
+        # TODO:add testing on elena_test.py
+        conn = self._connect(exchange)
+        return float(conn.markets[str(pair)]["limits"]["cost"]["min"])
 
     def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
         conn = self._connect(exchange)

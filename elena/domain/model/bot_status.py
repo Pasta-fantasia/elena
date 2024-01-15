@@ -81,6 +81,7 @@ class BotStatus(BaseModel):
             exit_price=0.0,
             exit_cost=0.0,
         )
+        new_trade.id = str(int(time.time() * 1000))  # TODO: improve trade.id auto generation
         self.active_trades.append(new_trade)
         return new_trade.id
 

@@ -1,3 +1,4 @@
+import time
 from typing import Dict, Optional
 
 import pandas as pd
@@ -80,6 +81,9 @@ class GenericBot(Bot):
             exit_order_id=exit_order_id,
             exit_price=exit_price,
         )
+        new_trade.id = str(int(time.time() * 1000))  # TODO: improve trade.id auto generation
+        new_trade.entry_cost = entry_price * size
+        new_trade.entry_time = int(new_trade.id)
         self.status.active_trades.append(new_trade)
         return new_trade.id
 
@@ -149,6 +153,17 @@ class GenericBot(Bot):
         except Exception as err:
             print(f"Error getting limit min amount: {err}")
             self._logger.error("Error getting limit min amount", exc_info=1)
+            return None
+
+    def limit_min_cost(self) -> Optional[float]:
+        try:
+            return self.exchange_manager.limit_min_cost(
+                self.exchange,
+                pair=self.pair,
+            )
+        except Exception as err:
+            print(f"Error getting limit min cost: {err}")
+            self._logger.error("Error getting limit min cost", exc_info=1)
             return None
 
     def amount_to_precision(self, amount: float) -> Optional[float]:

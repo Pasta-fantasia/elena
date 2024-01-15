@@ -28,3 +28,4 @@ class Trade(BaseModel):
     duration: Optional[int] = 0
     return_pct: Optional[float] = 0.0
     profit: Optional[float] = 0.0
+

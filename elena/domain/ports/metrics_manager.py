@@ -7,6 +7,7 @@ from elena.domain.ports.storage_manager import StorageManager
 
 class Metric(str, Enum):
     ORDER_CANCELLED = "OrderCancelled"
+    INDICATOR = "Indicator"
 
 
 @runtime_checkable
