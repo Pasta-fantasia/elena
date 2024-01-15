@@ -1,0 +1,19 @@
+Logger:
+  class: elena.adapters.logger.local_logger.LocalLogger
+  level: DEBUG
+  path: logs  # relative path under home directory
+  max_bytes: 1000000 # 1 MB max log files size
+  backup_count: 1  # Number of log backup files
+MetricsManager:
+  class: elena.adapters.metrics_manager.local_metrics_manager.LocalMetricsManager
+NotificationsManager:
+  class: elena.adapters.notifications_manager.local_notifications_manager.LocalNotificationsManager
+BotManager:
+  class: elena.adapters.bot_manager.local_bot_manager.LocalBotManager
+ExchangeManager:
+  class: test.elena.domain.services.fake_exchange_manager.FakeExchangeManager
+  fetch_ohlcv_limit: 100
+  fetch_ohlcv_limit_retry_every_milliseconds: 1000
+StorageManager:
+  class: elena.adapters.storage_manager.local_storage_manager.LocalStorageManager
+  path: storage # relative path under home directory

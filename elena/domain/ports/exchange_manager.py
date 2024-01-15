@@ -1,4 +1,4 @@
-from typing import Protocol, Optional, Dict
+from typing import Dict, Optional, Protocol, runtime_checkable
 
 import pandas as pd
 
@@ -9,15 +9,21 @@ from elena.domain.model.order import Order, OrderSide, OrderType
 from elena.domain.model.order_book import OrderBook
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
+from elena.domain.ports.logger import Logger
+from elena.domain.ports.storage_manager import StorageManager
 
 
+@runtime_checkable
 class ExchangeManager(Protocol):
+    def init(self, config: Dict, logger: Logger, storage_manager: StorageManager):
+        ...
 
     def read_candles(
-            self,
-            exchange: Exchange,
-            pair: TradingPair,
-            time_frame: TimeFrame = TimeFrame.min_1
+        self,
+        exchange: Exchange,
+        pair: TradingPair,
+        time_frame: TimeFrame = TimeFrame.min_1,  # type: ignore
+        page_size: int = 100,
     ) -> pd.DataFrame:
         """
         Reads market candles from exchange
@@ -34,12 +40,7 @@ class ExchangeManager(Protocol):
     def price_to_precision(self, exchange: Exchange, pair: TradingPair, price: float) -> float:
         ...
 
-
-    def read_order_book(
-            self,
-            exchange: Exchange,
-            pair: TradingPair
-    ) -> OrderBook:
+    def read_order_book(self, exchange: Exchange, pair: TradingPair) -> OrderBook:
         """
         Reads exchange order book
         :param exchange: exchange where to read exchange data
@@ -48,12 +49,7 @@ class ExchangeManager(Protocol):
         """
         ...
 
-
-
-    def get_balance(
-            self,
-            exchange: Exchange
-    ) -> Balance:
+    def get_balance(self, exchange: Exchange) -> Balance:
         """
         Gets the amount of funds available for trading or funds locked in orders
         :param exchange: exchange where to read market data
@@ -62,14 +58,14 @@ class ExchangeManager(Protocol):
         ...
 
     def place_order(
-            self,
-            exchange: Exchange,
-            bot_config: BotConfig,
-            order_type: OrderType,
-            side: OrderSide,
-            amount: float,
-            price: Optional[float] = None,
-            params: Optional[Dict] = {}
+        self,
+        exchange: Exchange,
+        bot_config: BotConfig,
+        order_type: OrderType,
+        side: OrderSide,
+        amount: float,
+        price: Optional[float] = None,
+        params: Optional[Dict] = {},
     ) -> Order:
         """
         Places an order to an Exchange
@@ -79,17 +75,13 @@ class ExchangeManager(Protocol):
         :param side: the direction of your order
         :param amount: how much of currency you want to trade
         :param price: the price at which the order is to be fulfilled (ignored in market orders)
-        :param dict [params]: extra parameters specific to the exchange api endpoint, check https://docs.ccxt.com/#/README?id=orders
+        :param dict [params]: extra parameters specific to the exchange api endpoint,
+               check https://docs.ccxt.com/#/README?id=orders
         :return: the placed Order, error if any
         """
         ...
 
-    def cancel_order(
-            self,
-            exchange: Exchange,
-            bot_config: BotConfig,
-            order_id: str
-    ):
+    def cancel_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         """
         Cancels an order on a Exchange
         :param exchange: exchange where to read market data
@@ -99,12 +91,7 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    def fetch_order(
-            self,
-            exchange: Exchange,
-            bot_config: BotConfig,
-            order_id: str
-    ) -> Order:
+    def fetch_order(self, exchange: Exchange, bot_config: BotConfig, order_id: str) -> Order:
         """
         Retrieves an order from Exchange
         :param exchange: exchange where to read market data
@@ -114,5 +101,14 @@ class ExchangeManager(Protocol):
         """
         ...
 
-    def limit_min_amount(self, exchange: Exchange, bot_config: BotConfig) -> float:
+    def get_precision_amount(self, exchange: Exchange, pair: TradingPair) -> float:
+        ...
+
+    def get_precision_price(self, exchange: Exchange, pair: TradingPair) -> float:
+        ...
+
+    def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
+        ...
+
+    def limit_min_cost(self, exchange: Exchange, pair: TradingPair) -> float:
         ...

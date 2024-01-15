@@ -1,6 +1,6 @@
 pyyaml~=6.0
 schedule~=1.1.0
 pydantic~=1.10.2
-dependency_injector~=4.40.0
 ccxt~=4.0.32
 pandas~=2.0.3
+cron-converter~=1.0.2

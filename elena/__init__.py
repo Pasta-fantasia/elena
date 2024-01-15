@@ -1,5 +1,7 @@
+from importlib.metadata import version
 
 try:
-    from elena import __version__ as version
-except:
-    __version__ = '2-local'
+    __version__ = version("elena")
+except Exception as e:
+    __version__ = "2.1.0-SNAPSHOT"
+    print(f"Error retrieving version: {e}")

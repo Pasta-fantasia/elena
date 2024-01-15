@@ -134,13 +134,14 @@ dmypy.json
 # Joe's backups
 *~
 
-# User config files
+# User test_home files
 /cfg/dev-user.yaml
 /cfg/prod-user.yaml
 /cfg/test-user.yaml
 
 /.github/
-/elena/sample/logs/
-/elena/sample/bots/
 
 /TODO.md
+/test/test_home/secrets.yaml
+/test/test_home/storage/
+/test/test_home/logs/

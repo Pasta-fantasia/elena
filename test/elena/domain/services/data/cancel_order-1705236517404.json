@@ -1,0 +1,65 @@
+{
+    "function": "cancel_order",
+    "input": {
+        "bot_config": {
+            "type": "BaseModel",
+            "model_class": "elena.domain.model.bot_config.BotConfig",
+            "value": {
+                "id": "Exchange_Test_Ops_BTC_USDT",
+                "strategy_id": "ExchangeBasicOperationsTest-1",
+                "name": "Exchange Basic Operations Test 1 on BTC/USDT",
+                "enabled": true,
+                "pair": {
+                    "base": "BTC",
+                    "quote": "USDT"
+                },
+                "exchange_id": "binance",
+                "time_frame": "1m",
+                "cron_expression": "*/5 * * * *",
+                "budget_limit": 0.0,
+                "pct_reinvest_profit": 100.0,
+                "tags": [
+                    "ranging",
+                    "bear"
+                ],
+                "config": {
+                    "band_length": 13,
+                    "band_mult": 1
+                }
+            }
+        },
+        "order_id": {
+            "type": "str",
+            "value": "2879870"
+        }
+    },
+    "output": {
+        "type": "BaseModel",
+        "model_class": "elena.domain.model.order.Order",
+        "value": {
+            "id": "2879870",
+            "exchange_id": "binance",
+            "bot_id": "Exchange_Test_Ops_BTC_USDT",
+            "strategy_id": "ExchangeBasicOperationsTest-1",
+            "pair": {
+                "base": "BTC",
+                "quote": "USDT"
+            },
+            "timestamp": 1705236517194,
+            "type": "stop_loss_limit",
+            "side": "sell",
+            "price": 32529.52,
+            "amount": 0.02845,
+            "cost": 0.0,
+            "average": null,
+            "filled": 0.0,
+            "remaining": 0.02845,
+            "status": "canceled",
+            "fee": null,
+            "trigger_price": 34241.6,
+            "stop_price": 34241.6,
+            "take_profit_price": null,
+            "stop_loss_price": null
+        }
+    }
+}

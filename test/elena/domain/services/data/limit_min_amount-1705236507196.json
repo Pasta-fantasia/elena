@@ -1,0 +1,17 @@
+{
+    "function": "limit_min_amount",
+    "input": {
+        "pair": {
+            "type": "BaseModel",
+            "model_class": "elena.domain.model.trading_pair.TradingPair",
+            "value": {
+                "base": "BTC",
+                "quote": "USDT"
+            }
+        }
+    },
+    "output": {
+        "type": "float",
+        "value": 1e-05
+    }
+}
