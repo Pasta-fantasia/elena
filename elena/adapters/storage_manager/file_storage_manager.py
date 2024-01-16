@@ -17,6 +17,7 @@ class Record(BaseModel):
     class_name: str
     class_module: str
     value: Union[str, Dict[str, Any]]
+    name: str
 
 
 class FileStorageManager(StorageManager):
@@ -115,9 +116,9 @@ class FileStorageManager(StorageManager):
             raise StorageError(f"Error saving object {record.class_name} {data_id}: {err}") from err
 
     @staticmethod
-    def _to_record(data_id: str, data: Any) -> Record:
-        if isinstance(data, pd.DataFrame):
-            value = data.to_dict()
+    def _to_record(data_id: str, data: Any, name: Optional[str] = None) -> Record:
+        if isinstance(data, dict):
+            value = data
         elif isinstance(data, pydantic.BaseModel):
             value = data.dict()
         else:
@@ -127,6 +128,7 @@ class FileStorageManager(StorageManager):
             class_module=data.__class__.__module__,
             class_name=data.__class__.__qualname__,
             value=value,
+            name=name or data.__class__.__qualname__,
         )
 
     @abstractmethod
