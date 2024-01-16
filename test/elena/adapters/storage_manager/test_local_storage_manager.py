@@ -5,6 +5,7 @@ import pandas as pd
 from mockito import mock
 from pandas import DataFrame
 
+from elena.adapters.storage_manager.local_storage_manager import LocalStorageManager
 from elena.domain.model.bot_status import BotStatus, BotBudget
 from elena.domain.model.order import Order, OrderSide, OrderType
 from elena.domain.model.trading_pair import TradingPair
@@ -339,3 +340,30 @@ def test_merge_data_frame_using_candles():
     actual = sut.merge_data_frame("test_df_id", df_to_be_merged, "Open time")
 
     actual.to_dict() == expected_df.to_dict()
+
+
+def test_append_to_file():
+
+    sut = LocalStorageManager()
+    sut.init(
+        config={
+            "home": path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
+            "StorageManager": {
+                "path": "storage",
+            },
+        },
+        logger=mock(),
+    )
+
+    filepath = sut._get_filepath("test_file", "DataFrame", extension="jsonl")
+    with open(filepath, "w") as writer:
+        writer.write('{"test": "line1"}\n')
+
+    sut._append_to_file(
+        filepath=filepath,
+        json_data='{"test": "line2"}',
+    )
+
+    with open(filepath) as reader:
+        actual = reader.read()
+    assert actual == '{"test": "line1"}\n{"test": "line2"}\n'

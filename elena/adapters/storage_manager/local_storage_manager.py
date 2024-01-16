@@ -14,10 +14,10 @@ class LocalStorageManager(FileStorageManager):
         Path(self._path).mkdir(parents=True, exist_ok=True)
         self._logger.info("LocalStorageManager working at %s", self._path)
 
-    def _get_filepath(self, data_id: str, class_name: str) -> str:
+    def _get_filepath(self, data_id: str, class_name: str, extension: str = "json") -> str:
         dir_path = path.join(self._path, class_name)
         Path(dir_path).mkdir(parents=True, exist_ok=True)
-        return path.join(dir_path, f"{data_id}.json")
+        return path.join(dir_path, f"{data_id}.{extension}")
 
     def _load_file(self, filepath: str) -> str:
         with open(filepath) as reader:
@@ -30,3 +30,7 @@ class LocalStorageManager(FileStorageManager):
 
     def _delete_file(self, filepath: str):
         Path(filepath).unlink()
+
+    def _append_to_file(self, filepath: str, json_data: str):
+        with open(filepath, "a") as writer:
+            writer.write(json_data + "\n")

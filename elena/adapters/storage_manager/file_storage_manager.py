@@ -134,7 +134,7 @@ class FileStorageManager(StorageManager):
         ...
 
     @abstractmethod
-    def _get_filepath(self, data_id: str, class_name: str) -> Any:
+    def _get_filepath(self, data_id: str, class_name: str, extension: str = "json") -> str:
         ...
 
     def _delete(self, data_id: str, class_name: str):
@@ -148,4 +148,8 @@ class FileStorageManager(StorageManager):
 
     @abstractmethod
     def _delete_file(self, filepath: str):
+        ...
+
+    @abstractmethod
+    def _append_to_file(self, filepath: str, json_data: str):
         ...
