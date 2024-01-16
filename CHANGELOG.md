@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.2.2
+- Notifications
+- Metrics
+- Storage Abstraction
+- Trade, orders and budget control
+- Testing
+- Github actions
+- Lint and pre-commit
+
 ## 2.1.0
 - Dynamic instance of Strategy
 - Log rotation
