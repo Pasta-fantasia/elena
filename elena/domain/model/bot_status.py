@@ -59,11 +59,11 @@ class BotBudget(BaseModel):
 class BotStatus(BaseModel):
     bot_id: str
     timestamp: int = int(time.time() * 1000)
+    budget: BotBudget
     active_orders: List[Order]
     archived_orders: List[Order]
     active_trades: List[Trade]
     closed_trades: List[Trade]
-    budget: BotBudget
 
     def _new_trade_by_order(self, order: Order) -> str:
         # All Trades start/"born" here...
