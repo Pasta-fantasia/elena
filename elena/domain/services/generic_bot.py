@@ -16,7 +16,7 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.metrics_manager import MetricsManager, ORDER_CANCELLED
+from elena.domain.ports.metrics_manager import MetricsManager, ORDER_CANCELLED, ORDER_STOP_LOSS, ORDER_BUY_MARKET, ORDER_SELL_MARKET
 from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
 
@@ -209,8 +209,8 @@ class GenericBot(Bot):
                 bot_config=self.bot_config,
                 order_id=order_id,
             )
-            self._metrics_manager.counter(ORDER_CANCELLED, self.bot_config.strategy_id, 1, [self.bot_config.exchange_id.value])
-            self._notifications_manager.medium(f"Order {order_id} was cancelled")
+            self._metrics_manager.counter(ORDER_CANCELLED, self.id, 1, [self.bot_config.exchange_id.value])
+            self._notifications_manager.low(f"Order {order_id} was cancelled by strategy.")
             self.status.archive_order_on_cancel(order)
             return order
         except Exception as err:
@@ -247,7 +247,9 @@ class GenericBot(Bot):
                 price=precision_price,
                 params=params,
             )
-            self._logger.info("Placed market stop loss: %s", order)
+            self._logger.info("Placed stop loss: %s", order)
+            self._metrics_manager.counter(ORDER_STOP_LOSS, self.id, 1, [self.bot_config.exchange_id.value])
+            self._notifications_manager.low(f"Placed stop loss: {order.id}")
 
             self.status.register_new_order_on_trades(order)
             return order
@@ -277,6 +279,8 @@ class GenericBot(Bot):
                 params=params,
             )
             self._logger.info("Placed market buy: %s", order)
+            self._metrics_manager.counter(ORDER_BUY_MARKET, self.id, 1, [self.bot_config.exchange_id.value])
+            self._notifications_manager.low(f"Placed market buy: {order.id} for  {order.amount} {order.pair.base} at {order.average} {order.pair.quote} , spending: {order.cost}{order.pair.quote}")
 
             self.status.register_new_order_on_trades(order)
             return order
@@ -299,6 +303,8 @@ class GenericBot(Bot):
                 params=params,
             )
             self._logger.info("Placed market sell: %s", order)
+            self._metrics_manager.counter(ORDER_SELL_MARKET, self.id, 1, [self.bot_config.exchange_id.value])
+            self._notifications_manager.low(f"Placed market sell: {order.id} for  {order.amount} {order.pair.base} at {order.average} {order.pair.quote} , getting: {order.cost}{order.pair.quote}")
 
             self.status.register_new_order_on_trades(order)
             return order
