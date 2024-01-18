@@ -11,14 +11,33 @@ def test_to_record_with_pydantic_base_model():
         ),
     )
     assert actual == Record(
-        id='id',
-        class_name='PriceAmount',
-        class_module='elena.domain.model.order_book',
+        id="id",
+        class_name="PriceAmount",
+        class_module="elena.domain.model.order_book",
         value={
-            'price': 1.664123,
-            'amount': 1584.3333,
+            "price": 1.664123,
+            "amount": 1584.3333,
         },
-        name='PriceAmount',
+        name="PriceAmount",
+    )
+
+
+def test_from_record_with_pydantic_base_model():
+    actual = FileStorageManager._from_record(
+        Record(
+            id="id",
+            class_name="PriceAmount",
+            class_module="elena.domain.model.order_book",
+            value={
+                "price": 1.664123,
+                "amount": 1584.3333,
+            },
+            name="PriceAmount",
+        )
+    )
+    assert actual == PriceAmount(
+        price=1.664123,
+        amount=1584.3333,
     )
 
 
@@ -33,9 +52,9 @@ def test_to_record_with_dict():
         name="Metric",
     )
     assert actual == Record(
-        id='test_metric',
-        class_name='dict',
-        class_module='builtins',
+        id="test_metric",
+        class_name="dict",
+        class_module="builtins",
         value={
             "time": 59864986984,
             "value": 1584.3333,
@@ -43,3 +62,26 @@ def test_to_record_with_dict():
         },
         name="Metric",
     )
+
+
+def test_from_record_with_dict():
+    actual = FileStorageManager._from_record(
+        Record(
+            id="test_metric",
+            class_name="dict",
+            class_module="builtins",
+            value={
+                "time": 59864986984,
+                "value": 1584.3333,
+                "tags": ["tag1", "tag2"],
+            },
+            name="Metric",
+        )
+    )
+    assert actual == {
+        "time": 59864986984,
+        "value": 1584.3333,
+        "tags": ["tag1", "tag2"],
+    }
+
+

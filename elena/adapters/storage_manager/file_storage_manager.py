@@ -92,8 +92,8 @@ class FileStorageManager(StorageManager):
     @classmethod
     def _from_record(self, record: Record) -> Any:
         try:
-            if record.class_name == "DataFrame":
-                return pd.DataFrame.from_dict(record.value)
+            if record.class_name == "dict":
+                return record.value
             else:
                 _class = get_class(f"{record.class_module}.{record.class_name}")
                 return _class.parse_obj(record.value)
@@ -117,7 +117,7 @@ class FileStorageManager(StorageManager):
 
     @staticmethod
     def _to_record(data_id: str, data: Any, name: Optional[str] = None) -> Record:
-        if isinstance(data, dict):
+        if isinstance(data, dict) or isinstance(data, list):
             value = data
         elif isinstance(data, pydantic.BaseModel):
             value = data.dict()
