@@ -32,7 +32,7 @@ class FileStorageManager(StorageManager):
         return self._load(bot_id, "BotStatus")  # type: ignore
 
     def _load(self, data_id: str, class_name: str) -> Optional[Any]:
-        filepath = self._get_filepath(data_id, class_name)
+        filepath = self._get_filepath(file_path=class_name, file_name=data_id)
         self._logger.debug("Loading %s %s from storage: %s", class_name, data_id, filepath)
         try:
             json_data = self._load_file(filepath)
@@ -58,7 +58,7 @@ class FileStorageManager(StorageManager):
         record = self._to_record(data_id, data)
         record_dict = record.dict()
         json_data = json.dumps(record_dict, indent=4)
-        filepath = self._get_filepath(data_id, record.class_name)
+        filepath = self._get_filepath(file_path=record.class_name, file_name=data_id)
         self._logger.debug("Saving %s %s to storage: %s", record.class_name, data_id, filepath)
         try:
             self._save_file(filepath, json_data)
@@ -84,7 +84,7 @@ class FileStorageManager(StorageManager):
         self._delete(bot_id, "BotStatus")
 
     def _delete(self, data_id: str, class_name: str):
-        filepath = self._get_filepath(data_id, class_name)
+        filepath = self._get_filepath(file_path=class_name, file_name=data_id)
         self._logger.debug("Deleting %s %s from storage: %s", class_name, data_id, filepath)
         try:
             self._delete_file(filepath)
