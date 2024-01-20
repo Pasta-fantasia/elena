@@ -159,8 +159,8 @@ class CctxExchangeManager(ExchangeManager):
                     conn.urls["api"]["public"],
                 )
                 self._conn = conn
-            except Exception:
-                self._logger.error("Connection error", exc_info=1)
+            except Exception as err:
+                self._logger.error("Connection error: %s", err, exc_info=1)
                 self._conn = None
         return self._conn
 
