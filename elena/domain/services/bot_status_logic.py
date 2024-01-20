@@ -1,4 +1,5 @@
 import time
+from typing import Tuple
 
 from elena.domain.model.bot_status import BotStatus
 from elena.domain.model.order import Order, OrderSide, OrderStatusType
@@ -20,7 +21,7 @@ class BotStatusLogic:
         self._notifications_manager = notifications_manager
 
     @staticmethod
-    def _new_trade_by_order(bot_status: BotStatus, order: Order) -> str:
+    def _new_trade_by_order(bot_status: BotStatus, order: Order) -> Tuple[BotStatus, str]:
         # All Trades start/"born" here...
         new_trade = Trade(
             exchange_id=order.exchange_id,
@@ -38,7 +39,7 @@ class BotStatusLogic:
         )
         new_trade.id = str(int(time.time() * 1000))  # TODO: improve trade.id auto generation
         bot_status.active_trades.append(new_trade)
-        return new_trade.id
+        return bot_status, new_trade.id
 
     @staticmethod
     def _get_trade_precision(f1: float) -> int:
@@ -103,7 +104,7 @@ class BotStatusLogic:
 
         return rtn
 
-    def register_new_order_on_trades(self, bot_status: BotStatus, order: Order):
+    def register_new_order_on_trades(self, bot_status: BotStatus, order: Order) -> BotStatus:
         if order is None:
             raise "Order can't be None"
 
@@ -112,8 +113,8 @@ class BotStatusLogic:
             raise RuntimeError("Order condition unhandled (canceled or rejected)")
 
         if order.side == OrderSide.buy:
-            self._new_trade_by_order(bot_status, order)
-            # order.parent_trade = trade_id
+            bot_status, new_trade_id = self._new_trade_by_order(bot_status, order)
+            # order.parent_trade = new_trade_id
             bot_status.budget.lock(order.cost)  # type: ignore
             if order.status == OrderStatusType.closed:
                 bot_status.archived_orders.append(order)
@@ -131,8 +132,9 @@ class BotStatusLogic:
                 bot_status.active_orders.append(order)
         else:
             raise RuntimeError("Order condition unhandled (OrderSide)")
+        return bot_status
 
-    def update_trades_on_update_orders(self, bot_status: BotStatus, order: Order):
+    def update_trades_on_update_orders(self, bot_status: BotStatus, order: Order) -> BotStatus:
         if order is None:
             raise "Order can't be None"
 
@@ -200,7 +202,9 @@ class BotStatusLogic:
         else:
             raise RuntimeError("Order condition unhandled (OrderSide)")
 
-    def archive_order_on_cancel(self, bot_status: BotStatus, order: Order):
+        return bot_status
+
+    def archive_order_on_cancel(self, bot_status: BotStatus, order: Order) -> BotStatus:
         found_order = False
         for loop_order in bot_status.active_orders[:]:
             if loop_order.id == order.id:
@@ -210,4 +214,4 @@ class BotStatusLogic:
             # self._logger.error(f"Order {order.id} canceled but not found in active_orders. Bot: {self.bot_id}")
             pass
         bot_status.archived_orders.append(order)
-        self.update_trades_on_update_orders(bot_status, order)  # TODO: check
+        return self.update_trades_on_update_orders(bot_status, order)  # TODO: check

@@ -100,7 +100,7 @@ class GenericBot(Bot):
             updated_order = self.fetch_order(order.id)
 
             if updated_order:
-                self._bot_status_logic.update_trades_on_update_orders(self.status, updated_order)
+                self.status = self._bot_status_logic.update_trades_on_update_orders(self.status, updated_order)
                 if updated_order.status in [OrderStatusType.closed, OrderStatusType.canceled, OrderStatusType.rejected]:
                     # move to archived
                     self.status.archived_orders.append(updated_order)
@@ -214,7 +214,7 @@ class GenericBot(Bot):
             )
             self._metrics_manager.counter(ORDER_CANCELLED, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
             self._notifications_manager.low(f"Order {order_id} was cancelled by strategy.")
-            self._bot_status_logic.archive_order_on_cancel(self.status, order)
+            self.status = self._bot_status_logic.archive_order_on_cancel(self.status, order)
             return order
         except Exception as err:
             print(f"Error cancelling order: {err}")
@@ -254,7 +254,7 @@ class GenericBot(Bot):
             self._metrics_manager.counter(ORDER_STOP_LOSS, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
             self._notifications_manager.low(f"Placed stop loss: {order.id}")
 
-            self._bot_status_logic.register_new_order_on_trades(self.status, order)
+            self.status = self._bot_status_logic.register_new_order_on_trades(self.status, order)
             return order
         except Exception as err:
             print(f"Error creating stop loss: {err}")
@@ -285,7 +285,7 @@ class GenericBot(Bot):
             self._metrics_manager.counter(ORDER_BUY_MARKET, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
             self._notifications_manager.low(f"Placed market buy: {order.id} for  {order.amount} {order.pair.base} at {order.average} {order.pair.quote} , spending: {order.cost}{order.pair.quote}")
 
-            self._bot_status_logic.register_new_order_on_trades(self.status, order)
+            self.status = self._bot_status_logic.register_new_order_on_trades(self.status, order)
             return order
         except Exception as err:
             print(f"Error creating market buy order: {err}")
@@ -309,7 +309,7 @@ class GenericBot(Bot):
             self._metrics_manager.counter(ORDER_SELL_MARKET, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
             self._notifications_manager.low(f"Placed market sell: {order.id} for  {order.amount} {order.pair.base} at {order.average} {order.pair.quote} , getting: {order.cost}{order.pair.quote}")
 
-            self._bot_status_logic.register_new_order_on_trades(self.status, order)
+            self.status = self._bot_status_logic.register_new_order_on_trades(self.status, order)
             return order
         except Exception as err:
             print(f"Error creating market sell order: {err}")
