@@ -122,7 +122,7 @@ class GenericBot(Bot):
             return self.exchange_manager.get_balance(self.exchange)
         except Exception as err:
             print(f"Error getting balance: {err}")
-            self._logger.error("Error creating stop loss", exc_info=1)
+            self._logger.error("Error creating stop loss: %s", err, exc_info=1)
             return None
 
     def read_candles(
@@ -141,7 +141,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error reading candles: {err}")
-            self._logger.error("Error reading candles", exc_info=1)
+            self._logger.error("Error reading candles: %s", err, exc_info=1)
             return pd.DataFrame()
 
     def limit_min_amount(self) -> Optional[float]:
@@ -152,7 +152,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error getting limit min amount: {err}")
-            self._logger.error("Error getting limit min amount", exc_info=1)
+            self._logger.error("Error getting limit min amount: %s", err, exc_info=1)
             return None
 
     def limit_min_cost(self) -> Optional[float]:
@@ -163,7 +163,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error getting limit min cost: {err}")
-            self._logger.error("Error getting limit min cost", exc_info=1)
+            self._logger.error("Error getting limit min cost: %s", err, exc_info=1)
             return None
 
     def amount_to_precision(self, amount: float) -> Optional[float]:
@@ -175,7 +175,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error getting amount to precision: {err}")
-            self._logger.error("Error getting amount to precision", exc_info=1)
+            self._logger.error("Error getting amount to precision: %s", err, exc_info=1)
             return None
 
     def price_to_precision(self, price: float) -> Optional[float]:
@@ -187,7 +187,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error getting price to precision: {err}")
-            self._logger.error("Error getting price to precision", exc_info=1)
+            self._logger.error("Error getting price to precision: %s", err, exc_info=1)
             return None
 
     def get_order_book(self) -> Optional[OrderBook]:
@@ -198,7 +198,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error getting order book: {err}")
-            self._logger.error("Error getting order book", exc_info=1)
+            self._logger.error("Error getting order book: %s", err, exc_info=1)
             return None
 
     #  ---- Orders operations
@@ -215,7 +215,7 @@ class GenericBot(Bot):
             return order
         except Exception as err:
             print(f"Error cancelling order: {err}")
-            self._logger.error(f"Error cancelling order {order_id}", exc_info=1)
+            self._logger.error(f"Error cancelling order {order_id}: %s", err, exc_info=1)
             return None
 
     def stop_loss(self, amount: float, stop_price: float, price: float) -> Optional[Order]:
@@ -255,7 +255,7 @@ class GenericBot(Bot):
             return order
         except Exception as err:
             print(f"Error creating stop loss: {err}")
-            self._logger.error("Error creating stop loss.", exc_info=1)
+            self._logger.error("Error creating stop loss: %s", err, exc_info=1)
             return None
 
     def create_limit_buy_order(self, amount, price) -> Optional[Order]:
@@ -286,7 +286,7 @@ class GenericBot(Bot):
             return order
         except Exception as err:
             print(f"Error creating market buy order: {err}")
-            self._logger.error("Error creating market buy order", exc_info=1)
+            self._logger.error("Error creating market buy order: %s", err, exc_info=1)
             return None
 
     def create_market_sell_order(self, amount) -> Optional[Order]:
@@ -310,7 +310,7 @@ class GenericBot(Bot):
             return order
         except Exception as err:
             print(f"Error creating market sell order: {err}")
-            self._logger.error("Error creating market sell order ", exc_info=1)
+            self._logger.error("Error creating market sell order: %s", err, exc_info=1)
             return None
 
     def fetch_order(self, order_id: str) -> Optional[Order]:
@@ -322,12 +322,12 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error fetching order: {err}")
-            self._logger.error("Error fetching order", exc_info=1)
+            self._logger.error("Error fetching order: %s", err, exc_info=1)
             return None
 
     def get_estimated_last_close(self) -> float:
         # https://docs.ccxt.com/#/?id=ticker-structure
-        # Although some exchanges do mix-in orderbook's top bid/ask prices into their tickers
+        # Although some exchanges do mix-in order book's top bid/ask prices into their tickers
         # (and some exchanges even serve top bid/ask volumes) you should not treat a ticker as a fetchOrderBook
         # replacement. The main purpose of a ticker is to serve statistical data, as such,
         # treat it as "live 24h OHLCV". It is known that exchanges discourage frequent fetchTicker requests by
@@ -345,5 +345,5 @@ class GenericBot(Bot):
             return estimated_last_close
         except Exception as err:
             print(f"Error getting estimated last close: {err}")
-            self._logger.error("Error fetching order", exc_info=1)
+            self._logger.error("Error fetching order: %s", err, exc_info=1)
             raise err
