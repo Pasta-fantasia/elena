@@ -1,16 +1,39 @@
+import json
 import pathlib
 from os import path
+from unittest.mock import patch, Mock, call
 
-from mockito import mock
+import pytest
 
-from elena.adapters.storage_manager.local_storage_manager import LocalStorageManager
 from elena.domain.model.bot_status import BotStatus, BotBudget
 from elena.domain.model.order import Order, OrderSide, OrderType
 from elena.domain.model.trading_pair import TradingPair
+from elena.domain.ports.metrics_manager import ORDER_CANCELLED
 from elena.domain.services.elena import get_storage_manager
 
 
-def test_save_and_load_bot_status():
+@pytest.fixture
+def logger():
+    return Mock()
+
+
+@pytest.fixture
+def storage_manager(logger):
+    sut = get_storage_manager(
+        config={
+            "home": path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
+            "StorageManager": {
+                "class": "elena.adapters.storage_manager.local_storage_manager.LocalStorageManager",
+                "path": "storage",
+            },
+        },
+        logger=logger,
+    )
+
+    return sut
+
+
+def test_save_and_load_bot_status(logger, storage_manager):
     bot_status = BotStatus(
         bot_id="test_bot_id",
         timestamp=1703944135288,
@@ -67,43 +90,52 @@ def test_save_and_load_bot_status():
         budget=BotBudget(),
     )
 
-    sut = get_storage_manager(
-        config={
-            "home": path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
-            "StorageManager": {
-                "class": "elena.adapters.storage_manager.local_storage_manager.LocalStorageManager",
-                "path": "storage",
-            },
-        },
-        logger=mock(),
-    )
-    sut.save_bot_status(bot_status)
+    storage_manager.save_bot_status(bot_status)
 
-    actual = sut.load_bot_status(bot_status.bot_id)
+    actual = storage_manager.load_bot_status(bot_status.bot_id)
     assert actual == bot_status
 
+    assert logger.mock_calls == [
+        call.info("LocalStorageManager working at %s", "/Users/pere/dev/elena/test/test_home/storage"),
+        call.debug("Saving %s %s to storage: %s", "BotStatus", "test_bot_id", "/Users/pere/dev/elena/test/test_home/storage/BotStatus/test_bot_id.json"),
+        call.debug("Loading %s %s from storage: %s", "BotStatus", "test_bot_id", "/Users/pere/dev/elena/test/test_home/storage/BotStatus/test_bot_id.json"),
+    ]
 
-def test_append_to_file():
-    sut = LocalStorageManager()
-    sut.init(
-        config={
-            "home": path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
-            "StorageManager": {
-                "path": "storage",
-            },
-        },
-        logger=mock(),
-    )
 
-    filepath = sut._get_filepath("test_file", "DataFrame", extension="jsonl")
-    with open(filepath, "w") as writer:
-        writer.write('{"test": "line1"}\n')
+def test_append_metric(logger, storage_manager):
+    filepath = path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home", "storage", "Metric", "test_append_metric_bot", "240119.jsonl")
+    try:
+        pathlib.Path(filepath).unlink()
+    except FileNotFoundError:
+        pass
 
-    sut._append_to_file(
-        filepath=filepath,
-        json_data='{"test": "line2"}',
-    )
+    with patch("elena.adapters.storage_manager.file_storage_manager.time") as mocked_datetime:
+        mocked_datetime.time.return_value = 1705685253
+        mocked_datetime.strftime.return_value = "240119"
+        storage_manager.append_metric("test_append_metric_bot", ORDER_CANCELLED, "counter", 1, ["tag1:abc", "tag2:def"])
+        storage_manager.append_metric("test_append_metric_bot", ORDER_CANCELLED, "gauge", 77, ["tag1:abc", "tag2:def"])
 
     with open(filepath) as reader:
-        actual = reader.read()
-    assert actual == '{"test": "line1"}\n{"test": "line2"}\n'
+        lines = reader.read().splitlines()
+
+    assert len(lines) == 2
+    assert json.loads(lines[0]) == {
+        "timestamp": 1705685253000,
+        "bot_id": "test_append_metric_bot",
+        "metric_name": "OrderCancelled",
+        "metric_type": "counter",
+        "value": 1,
+        "tags": "tag1:abc#tag2:def",
+    }
+    assert json.loads(lines[1]) == {
+        "timestamp": 1705685253000,
+        "bot_id": "test_append_metric_bot",
+        "metric_name": "OrderCancelled",
+        "metric_type": "gauge",
+        "value": 77,
+        "tags": "tag1:abc#tag2:def",
+    }
+
+    assert logger.mock_calls == [
+        call.info("LocalStorageManager working at %s", "/Users/pere/dev/elena/test/test_home/storage"),
+    ]
