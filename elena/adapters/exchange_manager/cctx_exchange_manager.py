@@ -308,7 +308,15 @@ class CctxExchangeManager(ExchangeManager):
         return self._map_balance(bal)
 
     def _map_balance(self, bal: Dict) -> Balance:
-        timestamp = self._map_timestamp(bal["timestamp"])
+        if "timestamp" in bal:
+            timestamp = self._map_timestamp(bal["timestamp"])
+        elif "info" in bal and "time" in bal["info"]:
+            timestamp = self._map_timestamp(bal["info"]["time"])
+        elif "info" in bal and "datetime" in bal["info"]:
+            timestamp = self._map_timestamp(bal["info"]["datetime"])
+        else:
+            timestamp = _map_timestamp(None)
+
         free = self._map_by_availability(bal["free"])
         used = self._map_by_availability(bal["used"])
         total = self._map_by_availability(bal["total"])
