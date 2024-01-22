@@ -466,13 +466,21 @@ class CctxExchangeManager(ExchangeManager):
     def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
         # min order size
         conn = self._connect(exchange)
-        return float(conn.markets[str(pair)]["limits"]["amount"]["min"])
+        try:
+            min = float(conn.markets[str(pair)]["limits"]["amount"]["min"])
+        except:
+            min = 0.0
+        return min
 
     def limit_min_cost(self, exchange: Exchange, pair: TradingPair) -> float:
         # min order price
         # TODO:add testing on elena_test.py
         conn = self._connect(exchange)
-        return float(conn.markets[str(pair)]["limits"]["cost"]["min"])
+        try:
+            min = float(conn.markets[str(pair)]["limits"]["cost"]["min"])
+        except:
+            min = 0.0
+        return min
 
     def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
         conn = self._connect(exchange)
