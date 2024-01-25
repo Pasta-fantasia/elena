@@ -122,7 +122,7 @@ class GenericBot(Bot):
             return self.exchange_manager.get_balance(self.exchange)
         except Exception as err:
             print(f"Error getting balance: {err}")
-            self._logger.error("Error creating stop loss", exc_info=1)
+            self._logger.error("Error get_balance", exc_info=1)
             return None
 
     def read_candles(
