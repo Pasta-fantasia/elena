@@ -177,6 +177,7 @@ class CctxExchangeManager(ExchangeManager):
             pair,
         )
 
+        # TODO: review post merge
         if False:
             candles_dataframe_id = self._get_dataframe_id(exchange, pair, time_frame)
 
