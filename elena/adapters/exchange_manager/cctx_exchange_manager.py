@@ -176,16 +176,18 @@ class CctxExchangeManager(ExchangeManager):
             exchange.id,
             pair,
         )
-        candles_dataframe_id = self._get_dataframe_id(exchange, pair, time_frame)
 
-        try:
-            stored_candles = self._storage_manager.load_data_frame(candles_dataframe_id)
-        except Exception:
-            stored_candles = pd.DataFrame()
+        if False:
+            candles_dataframe_id = self._get_dataframe_id(exchange, pair, time_frame)
 
-        if not stored_candles.empty and self._are_stored_candles_up_to_date(stored_candles, time_frame, datetime.now()):
-            # If the stored candles are up-to-date, return them
-            return stored_candles
+            try:
+                stored_candles = self._storage_manager.load_data_frame(candles_dataframe_id)
+            except Exception:
+                stored_candles = pd.DataFrame()
+
+            if not stored_candles.empty and self._are_stored_candles_up_to_date(stored_candles, time_frame, datetime.now()):
+                # If the stored candles are up-to-date, return them
+                return stored_candles
 
         conn = self._connect(exchange)
         candles = self._fetch_candles(conn, pair, time_frame)
