@@ -194,10 +194,12 @@ class CctxExchangeManager(ExchangeManager):
         candles = self._fetch_candles(conn, pair, time_frame)
         self._logger.info("Read %d %s candles from %s", candles.shape[0], pair, exchange.id.value)
 
-        try:
-            self._storage_manager.save_data_frame(candles_dataframe_id, candles)
-        except Exception as err:
-            self._logger.error("Error saving candles: %s", err, exc_info=1)
+        # TODO: review post merge
+        if False:
+            try:
+                self._storage_manager.save_data_frame(candles_dataframe_id, candles)
+            except Exception as err:
+                self._logger.error("Error saving candles: %s", err, exc_info=1)
 
         return candles
 
