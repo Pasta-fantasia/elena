@@ -6,10 +6,12 @@ from elena.domain.model.strategy_config import StrategyConfig
 from elena.domain.model.tag import Tag
 from elena.domain.model.time_frame import TimeFrame
 from elena.domain.model.trading_pair import TradingPair
+from elena.domain.ports.logger import Logger
 
 
 class ConfigLoader:
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict, logger: Logger):
+        self._logger = logger
         self._tags, self._tag_ids = self._load_tags(config)
         self._strategies = self._load_strategies(config)
         self._exchanges = self._load_exchanges(config)
@@ -26,8 +28,7 @@ class ConfigLoader:
     def exchanges(self) -> List[Exchange]:
         return self._exchanges
 
-    @staticmethod
-    def _load_tags(config) -> Tuple[List[Tag], List[str]]:
+    def _load_tags(self, config) -> Tuple[List[Tag], List[str]]:
         results = []
         for tags in config["Tags"]:
             tag = Tag(
@@ -36,6 +37,8 @@ class ConfigLoader:
             )
             if tag.enabled:
                 results.append(tag)
+            else:
+                self._logger.info("Skipping tag %s", tag.id)
         ids = [tag.id for tag in results]
         return results, ids
 
@@ -51,6 +54,8 @@ class ConfigLoader:
             )
             if strategy.enabled:
                 results.append(strategy)
+            else:
+                self._logger.info("Skipping strategy %s: %s", strategy.id, strategy.name)
         return results
 
     def _load_bots(self, bots: List[Dict], strategy_id: str) -> List[BotConfig]:
@@ -75,14 +80,16 @@ class ConfigLoader:
                 raise ValueError(f"Missing bot configuration: {err}")
             if self._enabled(config):
                 results.append(config)
+            else:
+                self._logger.info("Skipping bot %s: %s", config.id, config.name)
+
         return results
 
     def _enabled(self, bot: BotConfig) -> bool:
         match = set(self._tag_ids).intersection(bot.tags)
         return bot.enabled and match  # type: ignore
 
-    @staticmethod
-    def _load_exchanges(config) -> List[Exchange]:
+    def _load_exchanges(self, config) -> List[Exchange]:
         results = []
         for exchanges in config["Exchanges"]:
             exchange = Exchange(
@@ -95,4 +102,6 @@ class ConfigLoader:
             )
             if exchange.enabled:
                 results.append(exchange)
+            else:
+                self._logger.info("Skipping exchange %s", exchange.id)
         return results
