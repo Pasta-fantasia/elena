@@ -1,7 +1,7 @@
 import json
 import pathlib
 from os import path
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, Mock, call, ANY
 
 import pytest
 
@@ -96,9 +96,9 @@ def test_save_and_load_bot_status(logger, storage_manager):
     assert actual == bot_status
 
     assert logger.mock_calls == [
-        call.info("LocalStorageManager working at %s", "/Users/pere/dev/elena/test/test_home/storage"),
-        call.debug("Saving %s %s to storage: %s", "BotStatus", "test_bot_id", "/Users/pere/dev/elena/test/test_home/storage/BotStatus/test_bot_id.json"),
-        call.debug("Loading %s %s from storage: %s", "BotStatus", "test_bot_id", "/Users/pere/dev/elena/test/test_home/storage/BotStatus/test_bot_id.json"),
+        call.info("LocalStorageManager working at %s", ANY),
+        call.debug("Saving %s %s to storage: %s", "BotStatus", "test_bot_id", ANY),
+        call.debug("Loading %s %s from storage: %s", "BotStatus", "test_bot_id", ANY),
     ]
 
 
@@ -137,5 +137,5 @@ def test_append_metric(logger, storage_manager):
     }
 
     assert logger.mock_calls == [
-        call.info("LocalStorageManager working at %s", "/Users/pere/dev/elena/test/test_home/storage"),
+        call.info("LocalStorageManager working at %s", ANY),
     ]
