@@ -249,7 +249,7 @@ class GenericBot(Bot):
             )
             self._logger.info("Placed stop loss: %s", order)
             self._metrics_manager.counter(ORDER_STOP_LOSS, self.id, 1, [self.bot_config.exchange_id.value])
-            self._notifications_manager.low(f"Placed stop loss: {order.id}")
+            self._notifications_manager.low(f"Placed stop loss: {order.id} for {order.amount} {order.pair.base}. Will trigger at {precision_stop_price} {order.pair.quote} stop at: {precision_price} {order.pair.quote}")
 
             self.status.register_new_order_on_trades(order)
             return order
@@ -339,12 +339,16 @@ class GenericBot(Bot):
                 self.exchange,
                 pair=self.pair,
             )
+        except Exception as err:
+            print(f"Error getting estimated last close: {err}")
+            self._logger.error("Error getting estimated last close", exc_info=1)
+            raise err
+        
+        try:
             # TODO order_book.bids and asks could be empty
             last_bid = order_book.bids[0].price
             last_ask = order_book.asks[0].price
             estimated_last_close = (last_bid + last_ask) / 2
             return estimated_last_close
         except Exception as err:
-            print(f"Error getting estimated last close: {err}")
-            self._logger.error("Error getting estimated last close", exc_info=1)
-            raise err
+            return None

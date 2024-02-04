@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.9
+- fix: force never use or store candles
+- fix: stop loss notification message 
+- fix: preparation for other exchanges, not ready
+- fix: get_estimated_last_close can get empty asks/bids -> don't log error but still return None
+- fix: error messages
+
 ## 2.2.2
 - Notifications
 - Metrics
