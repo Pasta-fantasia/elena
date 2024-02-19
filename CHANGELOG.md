@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.3.0
+- Merge from /main
+
 ## 2.2.9
 - fix: force never use or store candles
 - fix: stop loss notification message 
