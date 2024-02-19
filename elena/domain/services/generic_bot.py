@@ -125,7 +125,7 @@ class GenericBot(Bot):
             return self.exchange_manager.get_balance(self.exchange)
         except Exception as err:
             print(f"Error getting balance: {err}")
-            self._logger.error("Error creating stop loss: %s", err, exc_info=1)
+            self._logger.error("Error get_balance", exc_info=1)
             return None
 
     def read_candles(
@@ -342,11 +342,16 @@ class GenericBot(Bot):
                 self.exchange,
                 pair=self.pair,
             )
+        except Exception as err:
+            print(f"Error getting estimated last close: {err}")
+            self._logger.error("Error getting estimated last close  %s", exc_info=1)
+            raise err
+
+        try:
+            # TODO order_book.bids and asks could be empty
             last_bid = order_book.bids[0].price
             last_ask = order_book.asks[0].price
             estimated_last_close = (last_bid + last_ask) / 2
             return estimated_last_close
         except Exception as err:
-            print(f"Error getting estimated last close: {err}")
-            self._logger.error("Error fetching order: %s", err, exc_info=1)
-            raise err
+            return None
