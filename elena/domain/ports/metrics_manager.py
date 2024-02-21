@@ -5,6 +5,7 @@ from elena.domain.ports.storage_manager import StorageManager
 
 ORDER_CANCELLED = "OrderCancelled"
 ORDER_STOP_LOSS = "OrderStopLoss"
+ORDER_STOP_LOSS_CLOSED = "OrderStopLossClosed"
 ORDER_BUY_MARKET = "OrderBuyMarket"
 ORDER_SELL_MARKET = "OrderSellMarket"
 

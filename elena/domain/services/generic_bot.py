@@ -16,7 +16,7 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.metrics_manager import MetricsManager, ORDER_CANCELLED, ORDER_STOP_LOSS, ORDER_BUY_MARKET, ORDER_SELL_MARKET
+from elena.domain.ports.metrics_manager import MetricsManager, ORDER_CANCELLED, ORDER_STOP_LOSS, ORDER_BUY_MARKET, ORDER_SELL_MARKET, ORDER_STOP_LOSS_CLOSED
 from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.services.bot_status_logic import BotStatusLogic
@@ -104,6 +104,10 @@ class GenericBot(Bot):
                 if updated_order.status in [OrderStatusType.closed, OrderStatusType.canceled, OrderStatusType.rejected]:
                     # move to archived
                     self.status.archived_orders.append(updated_order)
+                    # TODO:
+                    #  - OrderStatusType.canceled, OrderStatusType.rejected is not considered
+                    #  - now, only stop loss orders can be found closed, as we add limit buy and sell we should send correspondant metrics.
+                    self._metrics_manager.counter(ORDER_STOP_LOSS_CLOSED, self.id, 1,[f"exchange:{self.bot_config.exchange_id.value}"])
                 else:
                     # keep active with new status
                     updated_orders.append(updated_order)
