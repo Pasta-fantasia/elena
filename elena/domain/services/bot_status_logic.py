@@ -70,8 +70,11 @@ class BotStatusLogic:
             trade.exit_time = order.timestamp
             trade.exit_price = order.average
             trade.exit_cost = order.cost * (trade.size / order.amount)  # type: ignore
-            rtn = rtn + self._calc_update_trade_return_and_duration(trade)
+            individual_rtn = self._calc_update_trade_return_and_duration(trade)
+            rtn = rtn + individual_rtn
             bot_status.closed_trades.append(trade)
+            self._notifications_manager.medium(f"Closed trade for {trade.size} on {order.pair} with beneift of {individual_rtn}. Entry price at: {trade.entry_price}, exit price at: {trade.exit_price}. Entry cost at: {trade.entry_cost}, exit cost at: {trade.exit_cost}")
+            self._metrics_manager.gauge("benefit", bot_status.bot_id, individual_rtn, tags=["trades", f"exchange:{order.exchange_id.value}"])
             return amount_to_close - trade.size, rtn
         else:
             self._logger.error(f"Amount to close is insufficient for trade id:{trade.id} size: {trade.size} on order {order.id} size: {order.amount} with pending to close {amount_to_close}")
