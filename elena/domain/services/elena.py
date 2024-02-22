@@ -31,16 +31,19 @@ class Elena:
         self._notifications_manager = notifications_manager
         self._bot_manager = bot_manager
         self._exchange_manager = exchange_manager
+        self._config_loader = ConfigLoader(self._config, self._logger)
         self._logger.info("Elena initialized")
 
     def run(self):
-        config_loader = ConfigLoader(self._config)
         now = datetime.now()
         self._logger.info("Starting cycle at %s", now.isoformat())
-        for _strategy_config in config_loader.strategies:
-            self._run_strategy(config_loader, _strategy_config)
+        for _strategy_config in self._config_loader.strategies:
+            self._run_strategy(_strategy_config)
 
-    def _run_strategy(self, config_loader: ConfigLoader, strategy_config: StrategyConfig):
+    def _run_strategy(self, strategy_config: StrategyConfig):
+        if not strategy_config.enabled:
+            self._logger.info("Skipping strategy %s: %s", strategy_config.id, strategy_config.name)
+            return
         self._logger.info("Running strategy %s: %s", strategy_config.id, strategy_config.name)
         strategy_manager = StrategyManagerImpl(
             strategy_config=strategy_config,
@@ -49,7 +52,7 @@ class Elena:
             notifications_manager=self._notifications_manager,
             bot_manager=self._bot_manager,
             exchange_manager=self._exchange_manager,
-            exchanges=config_loader.exchanges,
+            exchanges=self._config_loader.exchanges,
         )
         previous_statuses = self._bot_manager.load_all(strategy_config)
         new_statuses = strategy_manager.run(previous_statuses)

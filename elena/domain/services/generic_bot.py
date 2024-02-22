@@ -16,9 +16,10 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.metrics_manager import MetricsManager, ORDER_CANCELLED, ORDER_STOP_LOSS, ORDER_BUY_MARKET, ORDER_SELL_MARKET
+from elena.domain.ports.metrics_manager import MetricsManager, ORDER_CANCELLED, ORDER_STOP_LOSS, ORDER_BUY_MARKET, ORDER_SELL_MARKET, ORDER_STOP_LOSS_CLOSED
 from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
+from elena.domain.services.bot_status_logic import BotStatusLogic
 
 
 class GenericBot(Bot):
@@ -36,6 +37,7 @@ class GenericBot(Bot):
     _logger: Logger
     _metrics_manager: MetricsManager
     _notifications_manager: NotificationsManager
+    _bot_status_logic: BotStatusLogic
 
     def init(
         self,
@@ -61,6 +63,7 @@ class GenericBot(Bot):
         self._logger = logger
         self._metrics_manager = metrics_manager
         self._notifications_manager = notifications_manager
+        self._bot_status_logic = BotStatusLogic(logger, metrics_manager, notifications_manager)
 
         exchange = manager.get_exchange(bot_config.exchange_id)
         if not exchange:
@@ -97,10 +100,14 @@ class GenericBot(Bot):
             updated_order = self.fetch_order(order.id)
 
             if updated_order:
-                self.status.update_trades_on_update_orders(updated_order)
+                self.status = self._bot_status_logic.update_trades_on_update_orders(self.status, updated_order)
                 if updated_order.status in [OrderStatusType.closed, OrderStatusType.canceled, OrderStatusType.rejected]:
                     # move to archived
                     self.status.archived_orders.append(updated_order)
+                    # TODO:
+                    #  - OrderStatusType.canceled, OrderStatusType.rejected is not considered
+                    #  - now, only stop loss orders can be found closed, as we add limit buy and sell we should send correspondant metrics.
+                    self._metrics_manager.counter(ORDER_STOP_LOSS_CLOSED, self.id, 1,[f"exchange:{self.bot_config.exchange_id.value}"])
                 else:
                     # keep active with new status
                     updated_orders.append(updated_order)
@@ -141,7 +148,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error reading candles: {err}")
-            self._logger.error("Error reading candles", exc_info=1)
+            self._logger.error("Error reading candles: %s", err, exc_info=1)
             return pd.DataFrame()
 
     def limit_min_amount(self) -> Optional[float]:
@@ -152,7 +159,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error getting limit min amount: {err}")
-            self._logger.error("Error getting limit min amount", exc_info=1)
+            self._logger.error("Error getting limit min amount: %s", err, exc_info=1)
             return None
 
     def limit_min_cost(self) -> Optional[float]:
@@ -163,7 +170,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error getting limit min cost: {err}")
-            self._logger.error("Error getting limit min cost", exc_info=1)
+            self._logger.error("Error getting limit min cost: %s", err, exc_info=1)
             return None
 
     def amount_to_precision(self, amount: float) -> Optional[float]:
@@ -175,7 +182,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error getting amount to precision: {err}")
-            self._logger.error("Error getting amount to precision", exc_info=1)
+            self._logger.error("Error getting amount to precision: %s", err, exc_info=1)
             return None
 
     def price_to_precision(self, price: float) -> Optional[float]:
@@ -187,7 +194,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error getting price to precision: {err}")
-            self._logger.error("Error getting price to precision", exc_info=1)
+            self._logger.error("Error getting price to precision: %s", err, exc_info=1)
             return None
 
     def get_order_book(self) -> Optional[OrderBook]:
@@ -198,7 +205,7 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error getting order book: {err}")
-            self._logger.error("Error getting order book", exc_info=1)
+            self._logger.error("Error getting order book: %s", err, exc_info=1)
             return None
 
     #  ---- Orders operations
@@ -209,13 +216,13 @@ class GenericBot(Bot):
                 bot_config=self.bot_config,
                 order_id=order_id,
             )
-            self._metrics_manager.counter(ORDER_CANCELLED, self.id, 1, [self.bot_config.exchange_id.value])
+            self._metrics_manager.counter(ORDER_CANCELLED, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
             self._notifications_manager.low(f"Order {order_id} was cancelled by strategy.")
-            self.status.archive_order_on_cancel(order)
+            self.status = self._bot_status_logic.archive_order_on_cancel(self.status, order)
             return order
         except Exception as err:
             print(f"Error cancelling order: {err}")
-            self._logger.error(f"Error cancelling order {order_id}", exc_info=1)
+            self._logger.error(f"Error cancelling order {order_id}: %s", err, exc_info=1)
             return None
 
     def stop_loss(self, amount: float, stop_price: float, price: float) -> Optional[Order]:
@@ -248,14 +255,14 @@ class GenericBot(Bot):
                 params=params,
             )
             self._logger.info("Placed stop loss: %s", order)
-            self._metrics_manager.counter(ORDER_STOP_LOSS, self.id, 1, [self.bot_config.exchange_id.value])
-            self._notifications_manager.low(f"Placed stop loss: {order.id} for {order.amount} {order.pair.base}. Will trigger at {precision_stop_price} {order.pair.quote} stop at: {precision_price} {order.pair.quote}")
+            self._metrics_manager.counter(ORDER_STOP_LOSS, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
+            self._notifications_manager.low(f"Placed stop loss: {order.id}")
 
-            self.status.register_new_order_on_trades(order)
+            self.status = self._bot_status_logic.register_new_order_on_trades(self.status, order)
             return order
         except Exception as err:
             print(f"Error creating stop loss: {err}")
-            self._logger.error("Error creating stop loss.", exc_info=1)
+            self._logger.error("Error creating stop loss: %s", err, exc_info=1)
             return None
 
     def create_limit_buy_order(self, amount, price) -> Optional[Order]:
@@ -279,14 +286,14 @@ class GenericBot(Bot):
                 params=params,
             )
             self._logger.info("Placed market buy: %s", order)
-            self._metrics_manager.counter(ORDER_BUY_MARKET, self.id, 1, [self.bot_config.exchange_id.value])
+            self._metrics_manager.counter(ORDER_BUY_MARKET, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
             self._notifications_manager.low(f"Placed market buy: {order.id} for  {order.amount} {order.pair.base} at {order.average} {order.pair.quote} , spending: {order.cost}{order.pair.quote}")
 
-            self.status.register_new_order_on_trades(order)
+            self.status = self._bot_status_logic.register_new_order_on_trades(self.status, order)
             return order
         except Exception as err:
             print(f"Error creating market buy order: {err}")
-            self._logger.error("Error creating market buy order", exc_info=1)
+            self._logger.error("Error creating market buy order: %s", err, exc_info=1)
             return None
 
     def create_market_sell_order(self, amount) -> Optional[Order]:
@@ -303,14 +310,14 @@ class GenericBot(Bot):
                 params=params,
             )
             self._logger.info("Placed market sell: %s", order)
-            self._metrics_manager.counter(ORDER_SELL_MARKET, self.id, 1, [self.bot_config.exchange_id.value])
+            self._metrics_manager.counter(ORDER_SELL_MARKET, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
             self._notifications_manager.low(f"Placed market sell: {order.id} for  {order.amount} {order.pair.base} at {order.average} {order.pair.quote} , getting: {order.cost}{order.pair.quote}")
 
-            self.status.register_new_order_on_trades(order)
+            self.status = self._bot_status_logic.register_new_order_on_trades(self.status, order)
             return order
         except Exception as err:
             print(f"Error creating market sell order: {err}")
-            self._logger.error("Error creating market sell order ", exc_info=1)
+            self._logger.error("Error creating market sell order: %s", err, exc_info=1)
             return None
 
     def fetch_order(self, order_id: str) -> Optional[Order]:
@@ -322,12 +329,12 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error fetching order: {err}")
-            self._logger.error("Error fetching order", exc_info=1)
+            self._logger.error("Error fetching order: %s", err, exc_info=1)
             return None
 
     def get_estimated_last_close(self) -> float:
         # https://docs.ccxt.com/#/?id=ticker-structure
-        # Although some exchanges do mix-in orderbook's top bid/ask prices into their tickers
+        # Although some exchanges do mix-in order book's top bid/ask prices into their tickers
         # (and some exchanges even serve top bid/ask volumes) you should not treat a ticker as a fetchOrderBook
         # replacement. The main purpose of a ticker is to serve statistical data, as such,
         # treat it as "live 24h OHLCV". It is known that exchanges discourage frequent fetchTicker requests by
@@ -341,9 +348,9 @@ class GenericBot(Bot):
             )
         except Exception as err:
             print(f"Error getting estimated last close: {err}")
-            self._logger.error("Error getting estimated last close", exc_info=1)
+            self._logger.error("Error getting estimated last close  %s", exc_info=1)
             raise err
-        
+
         try:
             # TODO order_book.bids and asks could be empty
             last_bid = order_book.bids[0].price

@@ -63,7 +63,7 @@ class StrategyManagerImpl(StrategyManager):
                 except Exception as err:
                     # A bad implemented bot should never crash Elena.
                     # The other bot may work and may need to do operations
-                    self._logger.error("Unhandled exception", exc_info=1)
+                    self._logger.error("Unhandled exception: %s", err, exc_info=1)
                     # Except we are on a test session.
                     if "PYTEST_CURRENT_TEST" in os.environ:
                         raise err

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.1
+- Send benefit and stop close count as metric
+
+## 2.3.0
+- Merge from /main
+
 ## 2.2.9
 - fix: force never use or store candles
 - fix: stop loss notification message 

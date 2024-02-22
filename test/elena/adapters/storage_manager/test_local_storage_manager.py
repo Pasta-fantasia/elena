@@ -1,17 +1,39 @@
+import json
 import pathlib
 from os import path
+from unittest.mock import patch, Mock, call, ANY
 
-import pandas as pd
-from mockito import mock
-from pandas import DataFrame
+import pytest
 
 from elena.domain.model.bot_status import BotStatus, BotBudget
 from elena.domain.model.order import Order, OrderSide, OrderType
 from elena.domain.model.trading_pair import TradingPair
+from elena.domain.ports.metrics_manager import ORDER_CANCELLED
 from elena.domain.services.elena import get_storage_manager
 
 
-def test_save_and_load_bot_status():
+@pytest.fixture
+def logger():
+    return Mock()
+
+
+@pytest.fixture
+def storage_manager(logger):
+    sut = get_storage_manager(
+        config={
+            "home": path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
+            "StorageManager": {
+                "class": "elena.adapters.storage_manager.local_storage_manager.LocalStorageManager",
+                "path": "storage",
+            },
+        },
+        logger=logger,
+    )
+
+    return sut
+
+
+def test_save_and_load_bot_status(logger, storage_manager):
     bot_status = BotStatus(
         bot_id="test_bot_id",
         timestamp=1703944135288,
@@ -68,274 +90,52 @@ def test_save_and_load_bot_status():
         budget=BotBudget(),
     )
 
-    sut = get_storage_manager(
-        config={
-            "home": path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
-            "StorageManager": {
-                "class": "elena.adapters.storage_manager.local_storage_manager.LocalStorageManager",
-                "path": "storage",
-            },
-        },
-        logger=mock(),
-    )
-    sut.save_bot_status(bot_status)
+    storage_manager.save_bot_status(bot_status)
 
-    actual = sut.load_bot_status(bot_status.bot_id)
+    actual = storage_manager.load_bot_status(bot_status.bot_id)
     assert actual == bot_status
 
+    assert logger.mock_calls == [
+        call.info("LocalStorageManager working at %s", ANY),
+        call.debug("Saving %s %s to storage: %s", "BotStatus", "test_bot_id", ANY),
+        call.debug("Loading %s %s from storage: %s", "BotStatus", "test_bot_id", ANY),
+    ]
 
-def test_save_and_load_data_frame():
-    data = {
-        "Name": {
-            0: "Person_1",
-            1: "Person_2",
-            2: "Person_3",
-            3: "Person_4",
-            4: "Person_5",
-            5: "Person_6",
-            6: "Person_7",
-            7: "Person_8",
-            8: "Person_9",
-            9: "Person_10",
-        },
-        "Age": {
-            0: 56,
-            1: 46,
-            2: 32,
-            3: 25,
-            4: 38,
-            5: 56,
-            6: 36,
-            7: 40,
-            8: 28,
-            9: 28,
-        },
-        "City": {
-            0: "City_A",
-            1: "City_B",
-            2: "City_C",
-            3: "City_A",
-            4: "City_B",
-            5: "City_C",
-            6: "City_A",
-            7: "City_B",
-            8: "City_C",
-            9: "City_A",
-        },
+
+def test_append_metric(logger, storage_manager):
+    filepath = path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home", "storage", "Metric", "test_append_metric_bot", "240119.jsonl")
+    try:
+        pathlib.Path(filepath).unlink()
+    except FileNotFoundError:
+        pass
+
+    with patch("elena.adapters.storage_manager.file_storage_manager.time") as mocked_datetime:
+        mocked_datetime.time.return_value = 1705685253
+        mocked_datetime.strftime.return_value = "240119"
+        storage_manager.append_metric("test_append_metric_bot", ORDER_CANCELLED, "counter", 1, ["tag1:abc", "tag2:def"])
+        storage_manager.append_metric("test_append_metric_bot", ORDER_CANCELLED, "gauge", 77, ["tag1:abc", "tag2:def"])
+
+    with open(filepath) as reader:
+        lines = reader.read().splitlines()
+
+    assert len(lines) == 2
+    assert json.loads(lines[0]) == {
+        "timestamp": 1705685253000,
+        "bot_id": "test_append_metric_bot",
+        "metric_name": "OrderCancelled",
+        "metric_type": "counter",
+        "value": 1,
+        "tags": "tag1:abc#tag2:def",
     }
-    df = DataFrame(data)
+    assert json.loads(lines[1]) == {
+        "timestamp": 1705685253000,
+        "bot_id": "test_append_metric_bot",
+        "metric_name": "OrderCancelled",
+        "metric_type": "gauge",
+        "value": 77,
+        "tags": "tag1:abc#tag2:def",
+    }
 
-    sut = get_storage_manager(
-        config={
-            "home": path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
-            "StorageManager": {
-                "class": "elena.adapters.storage_manager.local_storage_manager.LocalStorageManager",
-                "path": "storage",
-            },
-        },
-        logger=mock(),
-    )
-    sut.save_data_frame("test_df_id", df)
-
-    actual = sut.load_data_frame("test_df_id")
-    actual.to_dict() == df.to_dict()
-
-
-def test_merge_data_frame_using_candles():
-    existing_df = pd.DataFrame(
-        {
-            "Open time": {
-                0: 1702479180000,
-                1: 1702479240000,
-                2: 1702479300000,
-                3: 1702479360000,
-                4: 1702479420000,
-                5: 1702479480000,
-            },
-            "Open": {
-                0: 41372.11111,
-                1: 41350.22222,
-                2: 41353.33333,
-                3: 41357.44444,
-                4: 41345.55555,  # This value should be overwritten
-                5: 41374.66666,  # This value should be overwritten
-            },
-            "High": {
-                0: 41381.04,
-                1: 41353.37,
-                2: 41357.35,
-                3: 41357.66,
-                4: 41378.94,
-                5: 41378.8,
-            },
-            "Low": {
-                0: 41354.07,
-                1: 41339.94,
-                2: 41345.76,
-                3: 41345.54,
-                4: 40757.6,
-                5: 41371.49,
-            },
-            "Close": {
-                0: 41354.07,
-                1: 41353.37,
-                2: 41357.35,
-                3: 41347.93,
-                4: 41378.86,
-                5: 41371.49,
-            },
-            "Volume": {
-                0: 0.3119400144,
-                1: 0.3297800124,
-                2: 0.2395299971,
-                3: 0.1104699969,
-                4: 0.7769600153,
-                5: 0.1653700024,
-            },
-        }
-    )
-
-    df_to_be_merged = pd.DataFrame(
-        {
-            "Open time": {
-                0: 1702479420000,
-                1: 1702479480000,
-                2: 1702479540000,
-                3: 1702479600000,
-                4: 1702479660000,
-                5: 1702479720000,
-            },
-            "Open": {
-                0: 41345.77777,  # This value has changed
-                1: 41374.88888,  # This value has changed
-                2: 41371.99999,
-                3: 41369.10101,
-                4: 41352.11111,
-                5: 41375.12121,
-            },
-            "High": {
-                0: 41378.94,
-                1: 41378.8,
-                2: 41378.5,
-                3: 41369.79,
-                4: 41375.0,
-                5: 41392.71,
-            },
-            "Low": {
-                0: 40757.6,
-                1: 41371.49,
-                2: 41364.81,
-                3: 41345.44,
-                4: 41352.15,
-                5: 41375.0,
-            },
-            "Close": {
-                0: 41378.86,
-                1: 41371.49,
-                2: 41369.0,
-                3: 41350.59,
-                4: 41375.0,
-                5: 41392.71,
-            },
-            "Volume": {
-                0: 0.7769600153,
-                1: 0.1653700024,
-                2: 0.2307499945,
-                3: 0.3550100029,
-                4: 0.3790900111,
-                5: 0.1978600025,
-            },
-        }
-    )
-
-    expected_df = pd.DataFrame(
-        {
-            "Open time": {
-                0: 1702479180000,
-                1: 1702479240000,
-                2: 1702479300000,
-                3: 1702479360000,
-                4: 1702479420000,
-                5: 1702479480000,
-                6: 1702479540000,
-                7: 1702479600000,
-                8: 1702479660000,
-                9: 1702479720000,
-            },
-            "Open": {
-                0: 41372.11111,
-                1: 41350.22222,
-                2: 41353.33333,
-                3: 41357.44444,
-                4: 41345.77777,  # Overwrote value
-                5: 41374.88888,  # Overwrote value
-                6: 41371.99999,
-                7: 41369.10101,
-                8: 41352.11111,
-                9: 41375.12121,
-            },
-            "High": {
-                0: 41381.04,
-                1: 41353.37,
-                2: 41357.35,
-                3: 41357.66,
-                4: 41378.94,
-                5: 41378.8,
-                6: 41378.5,
-                7: 41369.79,
-                8: 41375.0,
-                9: 41392.71,
-            },
-            "Low": {
-                0: 41354.07,
-                1: 41339.94,
-                2: 41345.76,
-                3: 41345.54,
-                4: 40757.6,
-                5: 41371.49,
-                6: 41364.81,
-                7: 41345.44,
-                8: 41352.15,
-                9: 41375.0,
-            },
-            "Close": {
-                0: 41354.07,
-                1: 41353.37,
-                2: 41357.35,
-                3: 41347.93,
-                4: 41378.86,
-                5: 41371.49,
-                6: 41369.0,
-                7: 41350.59,
-                8: 41375.0,
-                9: 41392.71,
-            },
-            "Volume": {
-                0: 0.3119400144,
-                1: 0.3297800124,
-                2: 0.2395299971,
-                3: 0.1104699969,
-                4: 0.7769600153,
-                5: 0.1653700024,
-                6: 0.2307499945,
-                7: 0.3550100029,
-                8: 0.3790900111,
-                9: 0.1978600025,
-            },
-        }
-    )
-
-    sut = get_storage_manager(
-        config={
-            "home": path.join(pathlib.Path(__file__).parent.parent.parent.parent, "test_home"),
-            "StorageManager": {
-                "class": "elena.adapters.storage_manager.local_storage_manager.LocalStorageManager",
-                "path": "storage",
-            },
-        },
-        logger=mock(),
-    )
-    sut.save_data_frame("test_df_id", existing_df)
-    actual = sut.merge_data_frame("test_df_id", df_to_be_merged, "Open time")
-
-    actual.to_dict() == expected_df.to_dict()
+    assert logger.mock_calls == [
+        call.info("LocalStorageManager working at %s", ANY),
+    ]
