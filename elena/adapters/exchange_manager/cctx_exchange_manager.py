@@ -291,7 +291,15 @@ class CctxExchangeManager(ExchangeManager):
         return self._map_balance(bal)
 
     def _map_balance(self, bal: Dict) -> Balance:
-        timestamp = self._map_timestamp(bal["timestamp"])
+        if "timestamp" in bal:
+            timestamp = self._map_timestamp(bal["timestamp"])
+        elif "info" in bal and "time" in bal["info"]:
+            timestamp = self._map_timestamp(bal["info"]["time"])
+        elif "info" in bal and "datetime" in bal["info"]:
+            timestamp = self._map_timestamp(bal["info"]["datetime"])
+        else:
+            timestamp = _map_timestamp(None)
+
         free = self._map_by_availability(bal["free"])
         used = self._map_by_availability(bal["used"])
         total = self._map_by_availability(bal["total"])
@@ -449,13 +457,21 @@ class CctxExchangeManager(ExchangeManager):
     def limit_min_amount(self, exchange: Exchange, pair: TradingPair) -> float:
         # min order size
         conn = self._connect(exchange)
-        return float(conn.markets[str(pair)]["limits"]["amount"]["min"])
+        try:
+            min = float(conn.markets[str(pair)]["limits"]["amount"]["min"])
+        except:
+            min = 0.0
+        return min
 
     def limit_min_cost(self, exchange: Exchange, pair: TradingPair) -> float:
         # min order price
         # TODO:add testing on elena_test.py
         conn = self._connect(exchange)
-        return float(conn.markets[str(pair)]["limits"]["cost"]["min"])
+        try:
+            min = float(conn.markets[str(pair)]["limits"]["cost"]["min"])
+        except:
+            min = 0.0
+        return min
 
     def amount_to_precision(self, exchange: Exchange, pair: TradingPair, amount: float) -> float:
         conn = self._connect(exchange)
