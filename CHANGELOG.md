@@ -1,10 +1,17 @@
 # Changelog
 
+## 2.3.2
+- fix: stop loss notification message
+- doc: changelog
+
 ## 2.3.1
 - Send benefit and stop close count as metric
 
 ## 2.3.0
 - Merge from /main
+- refactor: BotStatusLogic
+- style: more detail in errors
+- feat: Store metrics in jsonl
 
 ## 2.2.9
 - fix: force never use or store candles
