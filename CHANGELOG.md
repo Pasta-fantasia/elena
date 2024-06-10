@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.3.3
+- fix: Amount to close is insufficient for trade #75
+
 ## 2.3.2
 - fix: stop loss notification message
 - doc: changelog

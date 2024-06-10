@@ -63,13 +63,16 @@ class GenericBot(Bot):
         self._logger = logger
         self._metrics_manager = metrics_manager
         self._notifications_manager = notifications_manager
-        self._bot_status_logic = BotStatusLogic(logger, metrics_manager, notifications_manager)
-
         exchange = manager.get_exchange(bot_config.exchange_id)
         if not exchange:
             raise Exception(f"Cannot get Exchange from {bot_config.exchange_id} ID")
         self.exchange = exchange  # type: ignore
         self.exchange_manager = exchange_manager
+
+        precision_amount = self.exchange_manager.get_precision_amount(self.exchange, self.pair)
+        precision_price = self.exchange_manager.get_precision_price(self.exchange, self.pair)
+        self._bot_status_logic = BotStatusLogic(logger, metrics_manager, notifications_manager, precision_amount, precision_price)
+
         self._update_orders_status()
 
     def new_trade_manual(self, size: float, entry_price: float, exit_order_id, exit_price: float) -> str:
@@ -98,7 +101,8 @@ class GenericBot(Bot):
         for order in self.status.active_orders:
             # update order status
             updated_order = self.fetch_order(order.id)
-
+            updated_order = order # testing
+            updated_order.status = OrderStatusType.closed # testing
             if updated_order:
                 self.status = self._bot_status_logic.update_trades_on_update_orders(self.status, updated_order)
                 if updated_order.status in [OrderStatusType.closed, OrderStatusType.canceled, OrderStatusType.rejected]:
