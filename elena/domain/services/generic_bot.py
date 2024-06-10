@@ -101,8 +101,7 @@ class GenericBot(Bot):
         for order in self.status.active_orders:
             # update order status
             updated_order = self.fetch_order(order.id)
-            updated_order = order # testing
-            updated_order.status = OrderStatusType.closed # testing
+
             if updated_order:
                 self.status = self._bot_status_logic.update_trades_on_update_orders(self.status, updated_order)
                 if updated_order.status in [OrderStatusType.closed, OrderStatusType.canceled, OrderStatusType.rejected]:
@@ -111,7 +110,7 @@ class GenericBot(Bot):
                     # TODO:
                     #  - OrderStatusType.canceled, OrderStatusType.rejected is not considered
                     #  - now, only stop loss orders can be found closed, as we add limit buy and sell we should send correspondant metrics.
-                    self._metrics_manager.counter(ORDER_STOP_LOSS_CLOSED, self.id, 1,[f"exchange:{self.bot_config.exchange_id.value}"])
+                    self._metrics_manager.counter(ORDER_STOP_LOSS_CLOSED, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
                 else:
                     # keep active with new status
                     updated_orders.append(updated_order)
@@ -336,7 +335,7 @@ class GenericBot(Bot):
             self._logger.error("Error fetching order: %s", err, exc_info=1)
             return None
 
-    def get_estimated_last_close(self) -> float:
+    def get_estimated_last_close(self) -> Optional[float]:
         # https://docs.ccxt.com/#/?id=ticker-structure
         # Although some exchanges do mix-in order book's top bid/ask prices into their tickers
         # (and some exchanges even serve top bid/ask volumes) you should not treat a ticker as a fetchOrderBook
@@ -361,5 +360,5 @@ class GenericBot(Bot):
             last_ask = order_book.asks[0].price
             estimated_last_close = (last_bid + last_ask) / 2
             return estimated_last_close
-        except Exception as err:
+        except Exception as err:  # noqa: F841
             return None

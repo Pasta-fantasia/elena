@@ -10,13 +10,7 @@ from elena.domain.ports.notifications_manager import NotificationsManager
 
 
 class BotStatusLogic:
-    def __init__(
-        self,
-        logger: Logger,
-        metrics_manager: MetricsManager,
-        notifications_manager: NotificationsManager,
-        precision_amount: float, precision_price: float
-    ):
+    def __init__(self, logger: Logger, metrics_manager: MetricsManager, notifications_manager: NotificationsManager, precision_amount: float, precision_price: float):
         self._logger = logger
         self._metrics_manager = metrics_manager
         self._notifications_manager = notifications_manager
@@ -44,7 +38,6 @@ class BotStatusLogic:
         bot_status.active_trades.append(new_trade)
         return bot_status, new_trade.id
 
-
     @staticmethod
     def _calc_update_trade_return_and_duration(trade: Trade) -> float:
         trade.duration = trade.exit_time - trade.entry_time  # type: ignore
@@ -52,17 +45,26 @@ class BotStatusLogic:
         trade.return_pct = (trade.profit / trade.entry_cost) * 100
         return trade.profit
 
-    def _close_individual_trade_on_new_order(self, bot_status: BotStatus, trade: Trade, order: Order, amount_to_close: float, rtn: float,) -> [float, float]:  # type: ignore
+    def _close_individual_trade_on_new_order(
+        self,
+        bot_status: BotStatus,
+        trade: Trade,
+        order: Order,
+        amount_to_close: float,
+        rtn: float,
+    ) -> [float, float]:  # type: ignore
         if trade.size <= round(amount_to_close, self.precision_amount):
             bot_status.active_trades.remove(trade)
             trade.exit_order_id = order.id
             trade.exit_time = order.timestamp
             trade.exit_price = order.average
-            trade.exit_cost = round(order.cost * (trade.size / order.amount), self.precision_price) # type: ignore
+            trade.exit_cost = round(order.cost * (trade.size / order.amount), self.precision_price)  # type: ignore
             individual_rtn = round(self._calc_update_trade_return_and_duration(trade), self.precision_price)
             rtn = rtn + individual_rtn
             bot_status.closed_trades.append(trade)
-            self._notifications_manager.medium(f"Closed trade for {trade.size} on {order.pair} with beneift of {individual_rtn}. Entry price at: {trade.entry_price}, exit price at: {trade.exit_price}. Entry cost at: {trade.entry_cost}, exit cost at: {trade.exit_cost}")
+            self._notifications_manager.medium(
+                f"Closed trade for {trade.size} on {order.pair} with beneift of {individual_rtn}. Entry price at: {trade.entry_price}, exit price at: {trade.exit_price}. Entry cost at: {trade.entry_cost}, exit cost at: {trade.exit_cost}"
+            )
             self._metrics_manager.gauge("benefit", bot_status.bot_id, individual_rtn, tags=["trades", f"exchange:{order.exchange_id.value}"])
             return round(amount_to_close - trade.size, self.precision_amount), rtn
         else:

@@ -298,7 +298,7 @@ class CctxExchangeManager(ExchangeManager):
         elif "info" in bal and "datetime" in bal["info"]:
             timestamp = self._map_timestamp(bal["info"]["datetime"])
         else:
-            timestamp = _map_timestamp(None)
+            timestamp = self._map_timestamp(None)
 
         free = self._map_by_availability(bal["free"])
         used = self._map_by_availability(bal["used"])
@@ -459,7 +459,7 @@ class CctxExchangeManager(ExchangeManager):
         conn = self._connect(exchange)
         try:
             min = float(conn.markets[str(pair)]["limits"]["amount"]["min"])
-        except:
+        except (ValueError, KeyError):
             min = 0.0
         return min
 
@@ -469,7 +469,7 @@ class CctxExchangeManager(ExchangeManager):
         conn = self._connect(exchange)
         try:
             min = float(conn.markets[str(pair)]["limits"]["cost"]["min"])
-        except:
+        except (ValueError, KeyError):
             min = 0.0
         return min
 
