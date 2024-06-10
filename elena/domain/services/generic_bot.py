@@ -69,9 +69,10 @@ class GenericBot(Bot):
         self.exchange = exchange  # type: ignore
         self.exchange_manager = exchange_manager
 
-        precision_amount = self.exchange_manager.get_precision_amount(self.exchange, self.pair)
-        precision_price = self.exchange_manager.get_precision_price(self.exchange, self.pair)
+        precision_amount = int(self.exchange_manager.get_precision_amount(self.exchange, self.pair))
+        precision_price = int(self.exchange_manager.get_precision_price(self.exchange, self.pair))
         self._bot_status_logic = BotStatusLogic(logger, metrics_manager, notifications_manager, precision_amount, precision_price)
+        self.status.budget.precision_price = precision_price
 
         self._update_orders_status()
 

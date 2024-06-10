@@ -176,8 +176,8 @@ class ExchangeBasicOperationsBot(GenericBot):
         time.sleep(sleep_time)
 
         # Check budget
-        assert self.status.budget.used == market_buy_order_75.cost
-        assert self.status.budget.free == -market_buy_order_75.cost
+        assert self.status.budget.used == round(market_buy_order_75.cost, self.status.budget.precision_price)
+        assert self.status.budget.free == round(-market_buy_order_75.cost, self.status.budget.precision_price)
         assert self.status.budget.total == 0.0
 
         market_buy_order_rest = self.create_market_buy_order(amount_to_buy_rest)
@@ -187,8 +187,8 @@ class ExchangeBasicOperationsBot(GenericBot):
         time.sleep(sleep_time)
 
         # Check budget
-        assert self.status.budget.used == market_buy_order_rest.cost + market_buy_order_75.cost  # type: ignore
-        assert self.status.budget.free == -market_buy_order_rest.cost - market_buy_order_75.cost  # type: ignore
+        assert self.status.budget.used == round(market_buy_order_rest.cost, self.status.budget.precision_price) + round(market_buy_order_75.cost, self.status.budget.precision_price)  # type: ignore
+        assert self.status.budget.free == round(-market_buy_order_rest.cost, self.status.budget.precision_price) - round(market_buy_order_75.cost, self.status.budget.precision_price)  # type: ignore
         assert self.status.budget.total == 0.0
 
         # Check orders & trades
@@ -212,7 +212,7 @@ class ExchangeBasicOperationsBot(GenericBot):
 
         # Check budget
         assert self.status.budget.used == 0.0
-        assert self.status.budget.free == round(-(market_buy_order_rest.cost + market_buy_order_75.cost - market_sell_order.cost), 8)  # type: ignore
+        assert self.status.budget.free == round(-(round(market_buy_order_rest.cost, self.status.budget.precision_price) + round(market_buy_order_75.cost, self.status.budget.precision_price) - round(market_sell_order.cost, self.status.budget.precision_price)), self.status.budget.precision_price)  # type: ignore
         assert self.status.budget.total == self.status.budget.free
 
         # Check orders & trades

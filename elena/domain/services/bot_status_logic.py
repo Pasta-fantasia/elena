@@ -10,12 +10,12 @@ from elena.domain.ports.notifications_manager import NotificationsManager
 
 
 class BotStatusLogic:
-    def __init__(self, logger: Logger, metrics_manager: MetricsManager, notifications_manager: NotificationsManager, precision_amount: float, precision_price: float):
+    def __init__(self, logger: Logger, metrics_manager: MetricsManager, notifications_manager: NotificationsManager, precision_amount: int, precision_price: int):
         self._logger = logger
         self._metrics_manager = metrics_manager
         self._notifications_manager = notifications_manager
-        self.precision_amount = int(precision_amount)
-        self.precision_price = int(precision_price)
+        self.precision_amount = precision_amount
+        self.precision_price = precision_price
 
     @staticmethod
     def _new_trade_by_order(bot_status: BotStatus, order: Order) -> Tuple[BotStatus, str]:
