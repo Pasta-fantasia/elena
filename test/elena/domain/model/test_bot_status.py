@@ -36,6 +36,27 @@ def test_budget_simple():
     assert budget.used == 0
 
 
+def test_budget_simple_rounding():
+    budget = BotBudget()
+
+    budget.precision_price = 3
+    budget.set(10)
+    budget.lock(8.0005)
+    assert budget.free == 1.999
+    assert budget.used == 8.001
+    assert budget.total == 10
+
+    budget.lock(1.0005)
+    assert budget.free == 0.998
+    assert budget.used == 9.002
+    assert budget.total == 10
+    # check unlock whit profit handling with default budget.pct_re_invest_profit = 100
+    budget.unlock(12.0012, 2.999)
+
+    assert budget.free == 12.999
+    assert budget.used == 0
+
+
 def test_budget_partial_unlock_with_100_benefits():
     budget = BotBudget()
     budget.set(100)

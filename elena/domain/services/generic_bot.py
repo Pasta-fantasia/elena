@@ -63,13 +63,17 @@ class GenericBot(Bot):
         self._logger = logger
         self._metrics_manager = metrics_manager
         self._notifications_manager = notifications_manager
-        self._bot_status_logic = BotStatusLogic(logger, metrics_manager, notifications_manager)
-
         exchange = manager.get_exchange(bot_config.exchange_id)
         if not exchange:
             raise Exception(f"Cannot get Exchange from {bot_config.exchange_id} ID")
         self.exchange = exchange  # type: ignore
         self.exchange_manager = exchange_manager
+
+        precision_amount = int(self.exchange_manager.get_precision_amount(self.exchange, self.pair))
+        precision_price = int(self.exchange_manager.get_precision_price(self.exchange, self.pair))
+        self._bot_status_logic = BotStatusLogic(logger, metrics_manager, notifications_manager, precision_amount, precision_price)
+        self.status.budget.precision_price = precision_price
+
         self._update_orders_status()
 
     def new_trade_manual(self, size: float, entry_price: float, exit_order_id, exit_price: float) -> str:
@@ -107,7 +111,7 @@ class GenericBot(Bot):
                     # TODO:
                     #  - OrderStatusType.canceled, OrderStatusType.rejected is not considered
                     #  - now, only stop loss orders can be found closed, as we add limit buy and sell we should send correspondant metrics.
-                    self._metrics_manager.counter(ORDER_STOP_LOSS_CLOSED, self.id, 1,[f"exchange:{self.bot_config.exchange_id.value}"])
+                    self._metrics_manager.counter(ORDER_STOP_LOSS_CLOSED, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
                 else:
                     # keep active with new status
                     updated_orders.append(updated_order)
@@ -332,7 +336,7 @@ class GenericBot(Bot):
             self._logger.error("Error fetching order: %s", err, exc_info=1)
             return None
 
-    def get_estimated_last_close(self) -> float:
+    def get_estimated_last_close(self) -> Optional[float]:
         # https://docs.ccxt.com/#/?id=ticker-structure
         # Although some exchanges do mix-in order book's top bid/ask prices into their tickers
         # (and some exchanges even serve top bid/ask volumes) you should not treat a ticker as a fetchOrderBook
@@ -357,5 +361,5 @@ class GenericBot(Bot):
             last_ask = order_book.asks[0].price
             estimated_last_close = (last_bid + last_ask) / 2
             return estimated_last_close
-        except Exception as err:
+        except Exception as err:  # noqa: F841
             return None
