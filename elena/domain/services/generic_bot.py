@@ -341,7 +341,7 @@ class GenericBot(Bot):
             self._logger.error("Error fetching order: %s", err, exc_info=1)
             return None
 
-    def get_estimated_last_close(self) -> [Optional[float], Optional[OrderBook]]:
+    def get_estimated_last_close(self) -> Optional[float]:
         # https://docs.ccxt.com/#/?id=ticker-structure
         # Although some exchanges do mix-in order book's top bid/ask prices into their tickers
         # (and some exchanges even serve top bid/ask volumes) you should not treat a ticker as a fetchOrderBook
@@ -365,6 +365,25 @@ class GenericBot(Bot):
             last_bid = order_book.bids[0].price
             last_ask = order_book.asks[0].price
             estimated_last_close = (last_bid + last_ask) / 2
-            return estimated_last_close, order_book
+            return estimated_last_close
+        except Exception as err:  # noqa: F841
+            return None
+
+    def get_estimated_sell_price(self) -> Optional[float]:
+        # https://docs.ccxt.com/#/?id=ticker-structure
+        try:
+            order_book = self.exchange_manager.read_order_book(
+                self.exchange,
+                pair=self.pair,
+            )
+        except Exception as err:
+            print(f"Error getting estimated_sell_price: {err}")
+            self._logger.error("Error getting estimated_sell_price  %s", exc_info=1)
+            raise err
+
+        try:
+            # TODO order_book.bids and asks could be empty
+            estimated_sell_price = (order_book.bids[0].price + order_book.bids[1].price + order_book.bids[2].price) / 3
+            return estimated_sell_price
         except Exception as err:  # noqa: F841
             return None
