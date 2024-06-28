@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.4.0
+- feat: NoiseTrader v0 #77
+
 ## 2.3.3
 - fix: Amount to close is insufficient for trade #75
 - test: tests and test data

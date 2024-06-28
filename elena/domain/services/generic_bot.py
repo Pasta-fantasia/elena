@@ -1,5 +1,5 @@
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import pandas as pd
 
@@ -276,7 +276,7 @@ class GenericBot(Bot):
     def create_limit_sell_order(self, amount, price) -> Optional[Order]:
         raise NotImplementedError
 
-    def create_market_buy_order(self, amount) -> Optional[Order]:
+    def create_market_buy_order(self, amount: float) -> Optional[Order]:
         try:
             params = {"type": "spot"}
 
@@ -300,7 +300,7 @@ class GenericBot(Bot):
             self._logger.error("Error creating market buy order: %s", err, exc_info=1)
             return None
 
-    def create_market_sell_order(self, amount) -> Optional[Order]:
+    def create_market_sell_order(self, amount: float, trades_to_close: Optional[List[Trade]]) -> Optional[Order]:
         try:
             params = {"type": "spot"}
 
@@ -315,7 +315,12 @@ class GenericBot(Bot):
             )
             self._logger.info("Placed market sell: %s", order)
             self._metrics_manager.counter(ORDER_SELL_MARKET, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
-            self._notifications_manager.low(f"Placed market sell: {order.id} for  {order.amount} {order.pair.base} at {order.average} {order.pair.quote} , getting: {order.cost}{order.pair.quote}")
+            self._notifications_manager.low(f"Placed market sell: {order.id} for {order.amount} {order.pair.base} at {order.average} {order.pair.quote}, getting: {order.cost}{order.pair.quote}")
+
+            for trade in trades_to_close:
+                trade.exit_order_id = order.id
+                trade.exit_time = order.timestamp
+                trade.exit_price = order.average
 
             self.status = self._bot_status_logic.register_new_order_on_trades(self.status, order)
             return order
@@ -336,7 +341,7 @@ class GenericBot(Bot):
             self._logger.error("Error fetching order: %s", err, exc_info=1)
             return None
 
-    def get_estimated_last_close(self) -> Optional[float]:
+    def get_estimated_last_close(self) -> [Optional[float], Optional[OrderBook]]:
         # https://docs.ccxt.com/#/?id=ticker-structure
         # Although some exchanges do mix-in order book's top bid/ask prices into their tickers
         # (and some exchanges even serve top bid/ask volumes) you should not treat a ticker as a fetchOrderBook
@@ -360,6 +365,6 @@ class GenericBot(Bot):
             last_bid = order_book.bids[0].price
             last_ask = order_book.asks[0].price
             estimated_last_close = (last_bid + last_ask) / 2
-            return estimated_last_close
+            return estimated_last_close, order_book
         except Exception as err:  # noqa: F841
             return None
