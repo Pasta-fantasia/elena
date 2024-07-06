@@ -308,7 +308,7 @@ class GenericBot(Bot):
             self._logger.error("Error creating market buy order: %s", err, exc_info=1)
             return None
 
-    def create_market_sell_order(self, amount: float, trades_to_close: Optional[List[Trade]]) -> Optional[Order]:
+    def create_market_sell_order(self, amount: float, trades_to_close: List[Trade] = []) -> Optional[Order]:
         try:
             params = {"type": "spot"}
 
