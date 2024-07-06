@@ -63,7 +63,7 @@ class BotStatusLogic:
             rtn = rtn + individual_rtn
             bot_status.closed_trades.append(trade)
             self._notifications_manager.medium(
-                f"Closed trade for {trade.size} on {order.pair} with beneift of {individual_rtn}. Entry price at: {trade.entry_price}, exit price at: {trade.exit_price}. Entry cost at: {trade.entry_cost}, exit cost at: {trade.exit_cost}"
+                f"Closed trade for {trade.size} on {order.pair} with benefit of {individual_rtn}. Entry price at: {trade.entry_price}, exit price at: {trade.exit_price}. Entry cost at: {trade.entry_cost}, exit cost at: {trade.exit_cost}"
             )
             self._metrics_manager.gauge("benefit", bot_status.bot_id, individual_rtn, tags=["trades", f"exchange:{order.exchange_id.value}"])
             return round(amount_to_close - trade.size, self.precision_amount), rtn
@@ -93,7 +93,7 @@ class BotStatusLogic:
                     amount_to_close, rtn = self._close_individual_trade_on_new_order(bot_status, trade, order, amount_to_close, rtn)
 
         if amount_to_close > 0:  # TODO: how to pass min_amount?
-            self._logger.error("The order size is bigger than any trade. {amount_to_close} left to close of {order.amount}.")
+            self._logger.error(f"The order size is bigger than any trade. {amount_to_close} left to close of {order.amount}.")
             pass
 
         return rtn
