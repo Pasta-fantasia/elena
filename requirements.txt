@@ -4,3 +4,4 @@ pydantic~=1.10.2
 ccxt~=4.0.32
 pandas~=2.0.3
 cron-converter~=1.0.2
+numpy~=1.26.2
