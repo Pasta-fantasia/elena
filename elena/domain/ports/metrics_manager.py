@@ -8,6 +8,8 @@ ORDER_STOP_LOSS = "OrderStopLoss"
 ORDER_STOP_LOSS_CLOSED = "OrderStopLossClosed"
 ORDER_BUY_MARKET = "OrderBuyMarket"
 ORDER_SELL_MARKET = "OrderSellMarket"
+ESTIMATED_LAST_CLOSE = "EstimatedLastClose"
+ESTIMATED_SALE_PRICE = "EstimatedSalePrice"
 
 
 @runtime_checkable

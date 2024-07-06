@@ -16,7 +16,7 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.metrics_manager import MetricsManager, ORDER_CANCELLED, ORDER_STOP_LOSS, ORDER_BUY_MARKET, ORDER_SELL_MARKET, ORDER_STOP_LOSS_CLOSED
+from elena.domain.ports.metrics_manager import MetricsManager, ORDER_CANCELLED, ORDER_STOP_LOSS, ORDER_BUY_MARKET, ORDER_SELL_MARKET, ORDER_STOP_LOSS_CLOSED, ESTIMATED_LAST_CLOSE, ESTIMATED_SALE_PRICE
 from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.services.bot_status_logic import BotStatusLogic
@@ -367,6 +367,7 @@ class GenericBot(Bot):
             last_bid = order_book.bids[0].price
             last_ask = order_book.asks[0].price
             estimated_last_close = (last_bid + last_ask) / 2
+            self._metrics_manager.gauge(ESTIMATED_LAST_CLOSE, self.id, estimated_last_close, ["indicator"])
             return estimated_last_close
         except Exception as err:  # noqa: F841
             return None
@@ -378,6 +379,8 @@ class GenericBot(Bot):
         try:
             # TODO order_book.bids and asks could be empty
             estimated_sell_price = (order_book.bids[0].price + order_book.bids[1].price + order_book.bids[2].price) / 3
+            self._metrics_manager.gauge(ESTIMATED_SALE_PRICE, self.id, estimated_sell_price, ["indicator"])
+
             return estimated_sell_price
         except Exception as err:  # noqa: F841
             return None
