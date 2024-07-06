@@ -1,5 +1,5 @@
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import pandas as pd
 
@@ -16,7 +16,7 @@ from elena.domain.model.trading_pair import TradingPair
 from elena.domain.ports.bot import Bot
 from elena.domain.ports.exchange_manager import ExchangeManager
 from elena.domain.ports.logger import Logger
-from elena.domain.ports.metrics_manager import MetricsManager, ORDER_CANCELLED, ORDER_STOP_LOSS, ORDER_BUY_MARKET, ORDER_SELL_MARKET, ORDER_STOP_LOSS_CLOSED
+from elena.domain.ports.metrics_manager import MetricsManager, ORDER_CANCELLED, ORDER_STOP_LOSS, ORDER_BUY_MARKET, ORDER_SELL_MARKET, ORDER_STOP_LOSS_CLOSED, ESTIMATED_LAST_CLOSE, ESTIMATED_SALE_PRICE
 from elena.domain.ports.notifications_manager import NotificationsManager
 from elena.domain.ports.strategy_manager import StrategyManager
 from elena.domain.services.bot_status_logic import BotStatusLogic
@@ -38,6 +38,7 @@ class GenericBot(Bot):
     _metrics_manager: MetricsManager
     _notifications_manager: NotificationsManager
     _bot_status_logic: BotStatusLogic
+    _order_book_cache: OrderBook
 
     def init(
         self,
@@ -73,6 +74,8 @@ class GenericBot(Bot):
         precision_price = int(self.exchange_manager.get_precision_price(self.exchange, self.pair))
         self._bot_status_logic = BotStatusLogic(logger, metrics_manager, notifications_manager, precision_amount, precision_price)
         self.status.budget.precision_price = precision_price
+
+        self._order_book_cache = None
 
         self._update_orders_status()
 
@@ -201,12 +204,17 @@ class GenericBot(Bot):
             self._logger.error("Error getting price to precision: %s", err, exc_info=1)
             return None
 
-    def get_order_book(self) -> Optional[OrderBook]:
+    def get_order_book(self, use_cache: bool = False) -> Optional[OrderBook]:
+        if use_cache and self._order_book_cache:
+            return self._order_book_cache
+
         try:
-            return self.exchange_manager.read_order_book(
+            order_book = self.exchange_manager.read_order_book(
                 self.exchange,
                 pair=self.pair,
             )
+            self._order_book_cache = order_book
+            return order_book
         except Exception as err:
             print(f"Error getting order book: {err}")
             self._logger.error("Error getting order book: %s", err, exc_info=1)
@@ -276,7 +284,7 @@ class GenericBot(Bot):
     def create_limit_sell_order(self, amount, price) -> Optional[Order]:
         raise NotImplementedError
 
-    def create_market_buy_order(self, amount) -> Optional[Order]:
+    def create_market_buy_order(self, amount: float) -> Optional[Order]:
         try:
             params = {"type": "spot"}
 
@@ -300,7 +308,7 @@ class GenericBot(Bot):
             self._logger.error("Error creating market buy order: %s", err, exc_info=1)
             return None
 
-    def create_market_sell_order(self, amount) -> Optional[Order]:
+    def create_market_sell_order(self, amount: float, trades_to_close: List[Trade] = []) -> Optional[Order]:
         try:
             params = {"type": "spot"}
 
@@ -315,7 +323,12 @@ class GenericBot(Bot):
             )
             self._logger.info("Placed market sell: %s", order)
             self._metrics_manager.counter(ORDER_SELL_MARKET, self.id, 1, [f"exchange:{self.bot_config.exchange_id.value}"])
-            self._notifications_manager.low(f"Placed market sell: {order.id} for  {order.amount} {order.pair.base} at {order.average} {order.pair.quote} , getting: {order.cost}{order.pair.quote}")
+            self._notifications_manager.low(f"Placed market sell: {order.id} for {order.amount} {order.pair.base} at {order.average} {order.pair.quote}, getting: {order.cost}{order.pair.quote}")
+
+            for trade in trades_to_close:
+                trade.exit_order_id = order.id
+                trade.exit_time = order.timestamp
+                trade.exit_price = order.average
 
             self.status = self._bot_status_logic.register_new_order_on_trades(self.status, order)
             return order
@@ -336,6 +349,8 @@ class GenericBot(Bot):
             self._logger.error("Error fetching order: %s", err, exc_info=1)
             return None
 
+
+
     def get_estimated_last_close(self) -> Optional[float]:
         # https://docs.ccxt.com/#/?id=ticker-structure
         # Although some exchanges do mix-in order book's top bid/ask prices into their tickers
@@ -345,21 +360,27 @@ class GenericBot(Bot):
         # imposing stricter rate limits on these queries. If you need a unified way to access bids and asks you
         # should use fetchL[123]OrderBook family instead.
         # The idea was to use fetch_ticker[close]
-        try:
-            order_book = self.exchange_manager.read_order_book(
-                self.exchange,
-                pair=self.pair,
-            )
-        except Exception as err:
-            print(f"Error getting estimated last close: {err}")
-            self._logger.error("Error getting estimated last close  %s", exc_info=1)
-            raise err
 
+        order_book = self.get_order_book()
         try:
             # TODO order_book.bids and asks could be empty
             last_bid = order_book.bids[0].price
             last_ask = order_book.asks[0].price
             estimated_last_close = (last_bid + last_ask) / 2
+            self._metrics_manager.gauge(ESTIMATED_LAST_CLOSE, self.id, estimated_last_close, ["indicator"])
             return estimated_last_close
+        except Exception as err:  # noqa: F841
+            return None
+
+    def get_estimated_sell_price_from_cache(self) -> Optional[float]:
+        # https://docs.ccxt.com/#/?id=ticker-structure
+        order_book = self.get_order_book(use_cache=True)
+
+        try:
+            # TODO order_book.bids and asks could be empty
+            estimated_sell_price = (order_book.bids[0].price + order_book.bids[1].price + order_book.bids[2].price) / 3
+            self._metrics_manager.gauge(ESTIMATED_SALE_PRICE, self.id, estimated_sell_price, ["indicator"])
+
+            return estimated_sell_price
         except Exception as err:  # noqa: F841
             return None
