@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.4.1
+- fix: Elena is not using page_size in the read_candles #81
+
 ## 2.4.0
 - feat: NoiseTrader v0 #77
 - small fixes
