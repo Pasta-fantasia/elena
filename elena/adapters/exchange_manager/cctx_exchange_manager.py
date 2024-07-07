@@ -177,7 +177,7 @@ class CctxExchangeManager(ExchangeManager):
             pair,
         )
         conn = self._connect(exchange)
-        candles = self._fetch_candles(conn, pair, time_frame)
+        candles = self._fetch_candles(conn, pair, time_frame, page_size=page_size)
         self._logger.info("Read %d %s candles from %s", candles.shape[0], pair, exchange.id.value)
         return candles
 
